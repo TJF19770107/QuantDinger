@@ -7,6 +7,8 @@ Thumbs.db
 *.tmp
 *.log
 *.lock
+*.baiduyun.p.downloading
 temp/
 logs/
 backup/
+知识库/马士兵教育LLM大模型场景题20250811/电子书/
