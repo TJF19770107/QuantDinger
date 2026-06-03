@@ -1,0 +1,12 @@
+﻿# 龙虾AI主控中心 .gitignore
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+*.tmp
+*.log
+*.lock
+temp/
+logs/
+backup/
