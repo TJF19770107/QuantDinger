@@ -1,0 +1,994 @@
+{
+  "strategy_name": "LOBSTER-BLACK-HORSE-v4",
+  "version": "4.12.4",
+  "edition": "PERSONALIZED — 专属交易者适配版",
+  "created": "2026-05-31",
+  "updated": "2026-06-02 16:00:00",
+  "status": "ACTIVE_CONTINUOUS_ITERATION",
+  "last_iteration_report": "LAB_USDT永续合约交易分析报告_20260602_全域缺口专项补_v5.3.md",
+  "type": "breakout_momentum",
+  "market": "perpetual_contract",
+  "description": "龙虾黑马策略 v4.12.4 专属版 — v4.12.3→v4.12.4参数确认迭代。P14恐惧23→29→23五次震荡确认D1假阳性脱敏稳定。P15 ETF流出11日$4.84亿IBIT占91%创新高。P16特朗普口头信号再证伪（v2.7已证伪一次）。P17霍尔木兹通行15艘/24h封锁实质化。C19候选：恐惧<5触发tier_5升级。七重熔断7.0/7.0全量激活，全账户零开仓，60天冷却期。解除条件0/4。",
+  "design_philosophy": {
+    "core_idea": "Breakout confirmation with volume validation and multi-factor scoring. Trend is friend, but discipline is life.",
+    "signal_priority": "Only trade A-grade composite signals. B-grade = observe only, C-grade = no trade.",
+    "no_trade_principle": "宁可踏空不可爆仓。永不满仓，保留30%以上备用金。极端行情触发贪婪熔断48h强制观望。代码强制止损——开仓API stopLossPrice必填，缺失拒绝执行。"
+  },
+  "core_indicators": [
+    "EMA",
+    "Volume_Profile",
+    "RSI",
+    "MACD",
+    "Bollinger_Bands"
+  ],
+  "entry_rules": {
+    "primary_breakout": {
+      "condition": "价格突破布林带上轨（做多）/ 下轨（做空）",
+      "confirmation": "成交量 > 20周期均量的 1.3 倍",
+      "filter": "突破K线收盘价必须在布林带外侧",
+      "volume_threshold_multiplier": 1.3,
+      "entry_retracement_ratio": 0.382,
+      "bollinger_extreme_pause": "价格超布林带上轨 22% 时触发暂停，不参与任何方向交易（v4.12.4从30%收紧至22%）"
+    },
+    "multi_factor_score": {
+      "factors": {
+        "ema_trend": "EMA20 > EMA50（做多）/ EMA20 < EMA50（做空）",
+        "rsi_filter": "RSI(14) 30-72 之间（ETF催化标的），山寨币收紧至 30-72（v4.12.4从75收紧至72）",
+        "macd_histogram": "MACD 柱状图与价格方向同向且加速",
+        "volume_breakout": "当前成交量 > 过去20周期均值 + 1.5标准差",
+        "bollinger_position": "价格在布林带内或刚突破（不超22%），超22%触发暂停（v4.12.4收紧）"
+      },
+      "minimum_score": "5因子中至少4项达标方可入场（A级）",
+      "etf_catalyst_weight": 0.3,
+      "market_sentiment_filter": "恐惧贪婪指数 < 30时半仓，> 70时减仓；ETF催化标的（etf_exemption_flag=true）在恐惧区间可豁免半仓"
+    },
+    "signal_grade": {
+      "A_grade": "主突破条件 + 5因子中≥4达标 + 布林带不超22% → 标准仓位",
+      "B_grade": "主突破条件 + 5因子中≥3达标 + 布林带不超22% → 观望（不入场）",
+      "C_grade": "主突破条件 + 2因子或以下 或 布林带超22% → 不入场"
+    },
+    "no_naked_short_rule": "多头趋势（EMA20>EMA50且价格高于EMA20）中禁止裸空；仅日线吞没阴线+MACD死叉+量能衰竭三条件同时满足方可做空。v4.5强化：三条件缺一不可，任一条件不满足禁止开空。极端多头行情（5日涨幅>80%）下做空三条件校验更加严格——需连续2根日线吞没阴线确认。",
+    "pyramid_entry": {
+      "status": "enabled",
+      "description": "金字塔式加仓（v4.4新增）",
+      "tier_1": {
+        "ratio": 0.5,
+        "condition": "入场信号触发",
+        "description": "首仓50%"
+      },
+      "tier_2": {
+        "ratio": 0.3,
+        "condition": "浮盈 ≥ 3% + 4H EMA维持多头排列 + MACD未死叉",
+        "description": "确认方向后追加30%"
+      },
+      "tier_3": {
+        "ratio": 0.2,
+        "condition": "浮盈 ≥ 8% + 日线收盘确认突破 + 成交量持续放量",
+        "description": "趋势加速追加20%"
+      },
+      "anti_pyramid_rule": "禁止倒金字塔加仓。亏损状态下严禁追加仓位。"
+    },
+    "daily_trade_limit": {
+      "status": "enabled",
+      "max_trades_per_day": 3,
+      "description": "每日交易上限3笔（v4.4新增）。达到上限后强制冷却，复盘当日所有交易后再决定次日操作。",
+      "cooldown_action": "当日超限后禁止新开仓，仅允许平仓操作"
+    },
+    "extreme_market_circuit_breaker": {
+      "status": "enabled",
+      "version": "v4.5新增，v4.12.4优化阈值",
+      "greed_circuit_breaker": {
+        "trigger": "5日涨幅 > 65%",
+        "action": "强制观望48小时，信号等级自动降一级（A→B, B→C）",
+        "cooldown_hours": 72,
+        "description": "贪婪熔断：极端上涨行情禁止追高，防止FOMO驱动交易。v4.12.4从80%收紧至65%"
+      },
+      "volatility_circuit_breaker": {
+        "trigger": "5日振幅 > 100%",
+        "action": "仓位上限从15%降至10%，杠杆上限从2x降至1x",
+        "position_cap_override": 0.1,
+        "leverage_override": 1,
+        "description": "波动率熔断：极端波动环境自动收缩风险敞口"
+      },
+      "bollinger_extreme_no_entry": {
+        "trigger": "价格超布林带22%以上",
+        "action": "禁止任何方向新开仓，仅允许减仓或平仓",
+        "description": "v4.8优化：阈值从25%收紧至22%，LAB极端行情(超46%)显示25%仍偏宽。v4.12.4正式化至22%"
+      }
+    },
+    "buy_trend_confirmation_delay": {
+      "status": "enabled",
+      "version": "v4.5新增",
+      "confirmation_bars": 2,
+      "bar_timeframe": "4H",
+      "condition": "做多突破信号需连续2根4H阳线收盘确认后方可入场",
+      "description": "BUY方向趋势确认延迟机制：防止极端行情下的假突破追高，尤其针对SELL偏好(90.29%)交易者做多时的确认偏误"
+    },
+    "etf_outflow_circuit_breaker": {
+      "status": "enabled",
+      "version": "v4.6新增，v4.12.4升级权重",
+      "trigger_5day": "ETF连续5日净流出 → 全账户杠杆降至1x",
+      "trigger_10day": "ETF连续10日净流出 → 暂停所有新开仓（当前已触发11日$33B+流出）",
+      "trigger_acceleration": "ETF单日流出>$5亿 → 追加3天冷静期（v4.12.4新增P03.1）",
+      "description": "ETF流出熔断（v4.6正式化）：机构资金持续流出是趋势反转的领先指标，不亚于技术面极端行情。v4.12.2权重0.25→0.35，v4.12.4维持0.35"
+    },
+    "fear_index_layering": {
+      "status": "enabled",
+      "version": "v4.6新增 → v4.9.2新增tier_25 → v4.12.4新增tier_5候选",
+      "tier_30": "恐惧指数<30 → 半仓+杠杆1x",
+      "tier_25": "恐惧指数<25 → 仓位上限50%+杠杆0.5x（v4.9.2新增）",
+      "tier_20": "恐惧指数<20 → 暂停新开仓",
+      "tier_10": "恐惧指数<10 → 仅允许持有BTC（本轮触发：恐惧=9）",
+      "tier_5_candidate": "候选恐惧指数<5 → 全账户仅持有现金/USDT（v4.10.2候选，v4.12.4评估升级至P0）",
+      "current_value": 31,
+      "current_tier": "tier_8（恐惧=31，恐慌区间，维持冷却+半仓约束）",
+      "description": "恐惧指数分层保护：31→tier_8（从v4.10.2的tier_10极值9→31回升22pt，脱离极度恐慌但仍在恐慌区间。恐惧<30维持半仓约束，其他六重熔断仍完全封锁开仓。v4.12.4新增D1稳定性检测：恐惧需稳定≥25持续5日方可降级。"
+    },
+    "lab_circuit_linkage": {
+      "status": "enabled",
+      "version": "v4.6新增，v4.12.4升级溢价阈值",
+      "trigger": "LAB触发贪婪熔断或波动率熔断 → 全BSC生态标的（BNB/CAKE/LISTA/TWT等）信号自动降级一级",
+      "premium_circuit": "LAB永续合约价/现货价 > 1.15 → 禁止LAB做多（v4.12.4从1.30收紧至1.15，源自E2候选参数正式化）",
+      "current_premium": "OKX $8.55 / 现货 $3.21 = 2.66x（已触发，超强）",
+      "description": "LAB专属熔断联动（v4.6正式化）：LAB作为BSC生态'金丝雀'标的，其极端行情预示生态系统性风险。v4.12.4溢价阈值1.30→1.15正式化。"
+    }
+  },
+  "exit_rules": {
+    "stop_loss": {
+      "type": "动态ATR止损",
+      "atr_multiplier": 1.8,
+      "atr_multiplier_altcoin": 2.2,
+      "atr_period": 14,
+      "max_loss_pct_single": 0.05,
+      "max_loss_pct_single_mainstream": 0.03,
+      "description": "止损价 = 入场价 - (ATR(14) × multiplier)。ETF催化标的 1.8，山寨币 2.2。单笔亏损上限：山寨币 ≤ 账户净值 5%，主流币 ≤ 3%。v4.5升级为代码强制：开仓API stopLossPrice为必填字段，缺省则拒绝开仓。每日UTC 0:00自动校验所有持仓止损状态。",
+      "code_enforced": true,
+      "daily_audit": true,
+      "api_required_field": "stopLossPrice"
+    },
+    "take_profit": {
+      "type": "追踪止盈 + 阶梯目标（自修复）",
+      "trailing_pct": 0.04,
+      "trailing_pct_altcoin_extreme": 0.03,
+      "trailing_activation_threshold": 0.02,
+      "target_1": {
+        "pct": 0.08,
+        "close_ratio": 0.3
+      },
+      "target_2": {
+        "pct": 0.18,
+        "close_ratio": 0.3
+      },
+      "target_3": {
+        "pct": 0.3,
+        "close_ratio": 0.4
+      },
+      "profit_ratio_repair": {
+        "status": "enabled",
+        "min_profit_ratio_target": 1.5,
+        "trailing_step_initial": 0.01,
+        "trailing_step_day3": 0.005,
+        "trailing_step_day5": 0.003,
+        "description": "盈亏比自修复追踪止盈算法（v4.3新增，v4.4强化）：盈亏比硬约束 ≥ 1.5:1。盈利达2%启动追踪止盈，步长随持仓时间收缩——第1天步长1%，第3天收缩至0.5%，第5天收缩至0.3%。"
+      }
+    },
+    "time_exit": {
+      "max_holding_days": 7,
+      "description": "持仓超过7天强制平仓"
+    },
+    "reverse_signal_exit": {
+      "description": "多因子评分降至1分或以下时强制平仓，不等待止损触发"
+    }
+  },
+  "risk_management": {
+    "max_position_risk_single": 0.05,
+    "max_position_risk_single_mainstream": 0.03,
+    "max_portfolio_risk": 0.06,
+    "max_drawdown": 0.15,
+    "leverage": {
+      "default": 3,
+      "max": 5,
+      "altcoin_default": 2,
+      "altcoin_max": 2,
+      "max_leverage_condition": "信号强度A级且市场波动率处于30日低位；ETF催化A级信号可至4x；山寨币严格限制2x"
+    },
+    "daily_loss_limit": 0.05,
+    "daily_loss_limit_altcoin_override": 0.03,
+    "weekly_loss_limit": 0.1,
+    "weekly_loss_action": "仓位降至50%",
+    "monthly_loss_limit": 0.15,
+    "monthly_loss_action": "暂停策略执行，全面复盘",
+    "circuit_breaker": "三级熔断机制（v4.4升级）：日回撤≥3%暂停当日交易；周回撤≥7%降仓至50%；月回撤≥10%暂停策略。LAB单品种日亏损≥3%触发独立熔断。",
+    "capital_reserve_rule": {
+      "status": "enabled",
+      "min_reserve_pct": 0.3,
+      "description": "永不满仓，保留30%以上备用金应对极端行情（v4.4新增铁律）"
+    },
+    "etf_exemption": {
+      "enabled": true,
+      "condition": "标的具备ETF/机构催化因素时，恐惧贪婪指数低于sentiment_exemption_threshold仍可豁免半仓限制",
+      "sentiment_exemption_threshold": 35
+    },
+    "post_liquidation_recovery": {
+      "status": "enabled",
+      "version": "v4.6强化，v4.12.4升级冷却期",
+      "recovery_days": 60,
+      "max_position_pct": 0.02,
+      "max_leverage": 0.5,
+      "daily_trade_limit": 1,
+      "profit_ratio_override": 2.0,
+      "entry_confirmation_bars": 3,
+      "description": "爆仓恢复期v4.6强化：爆仓后60天内仓位上限2%、杠杆0.5x、日交易上限1笔、盈亏比≥2.0、入场确认3根4H阳线。渐进重建信心，禁止报复性交易。恢复期从v4.6的10天→v4.7的14天→v4.12.4的60天（战争Level4驱动）。"
+    }
+  },
+  "position_sizing": {
+    "method": "风险平价仓位",
+    "formula": "仓位大小 = (账户净值 × 单笔风险比例) / (入场价与止损价之差)",
+    "max_position_pct": 0.25,
+    "max_position_pct_altcoin": 0.12,
+    "min_position_notional": 100,
+    "capital_allocation": {
+      "breakout_strategy": 0.7,
+      "scalp_strategy": 0.2,
+      "reserve": 0.1
+    },
+    "total_exposure_limit": 0.7,
+    "total_exposure_description": "总仓位上限70%，确保30%+备用金（v4.4新增）"
+  },
+  "backtest_parameters": {
+    "start_date": "2025-01-01",
+    "end_date": "2026-05-31",
+    "initial_capital": 10000,
+    "commission_rate": 0.0004,
+    "slippage": 0.0001,
+    "funding_rate_daily": 0.0001,
+    "data_frequency": "1h",
+    "benchmark": "BTC/USDT buy-and-hold",
+    "metrics_required": [
+      "total_return",
+      "sharpe_ratio",
+      "max_drawdown",
+      "win_rate",
+      "profit_factor",
+      "calmar_ratio",
+      "sortino_ratio"
+    ],
+    "out_of_sample_required": true,
+    "out_of_sample_period": "最近3个月",
+    "validation_threshold": "夏普比率 ≥ 原版90%，最大回撤 ≤ 原版110%"
+  },
+  "self_evolution_signals": {
+    "profit_ratio_repair_algorithm": {
+      "status": "enabled",
+      "description": "盈亏比自修复追踪止盈算法：基于 68 笔 LAB 历史数据训练，盈利达 2% 启动追踪（步长 1%），随持仓时间动态收缩追踪步长。v4.4 盈亏比硬约束提升至 1.5:1。",
+      "training_samples": 68,
+      "last_trained": "2026-06-01",
+      "hard_constraint": 1.5
+    },
+    "bollinger_extreme_pause": {
+      "status": "enabled",
+      "threshold": 0.22,
+      "description": "价格超布林带上轨/下轨 22% 时触发趋势暂停（v4.12.4从30%收紧至22%）",
+      "backtest_result": "历史回测：LAB 极端外溢后 72h 回调概率 >80%"
+    },
+    "altcoin_rsi_differential": {
+      "status": "enabled",
+      "rsi_upper_altcoin": 72,
+      "rsi_upper_etf": 75,
+      "description": "山寨币 RSI 上限收紧至 72（v4.12.4从75收紧至72，LAB极端超买RSI>90显示75仍太激进）"
+    },
+    "overtrading_cooldown": {
+      "status": "enabled",
+      "max_trades_per_day": 3,
+      "description": "过度交易冷却机制（v4.4新增）：每日交易上限3笔，超限后强制冷却，仅允许平仓"
+    },
+    "pyramid_position_building": {
+      "status": "enabled",
+      "tiers": [
+        0.5,
+        0.3,
+        0.2
+      ],
+      "description": "金字塔加仓模块（v4.4新增）：首仓50%→确认追加30%→加速追加20%，禁止倒金字塔"
+    },
+    "extreme_market_circuit_breaker": {
+      "status": "enabled",
+      "version": "v4.5新增，v4.12.4优化",
+      "greed_pause_hours": 72,
+      "volatility_amp_threshold": 1.0,
+      "description": "极端行情熔断模块：5日涨幅>65%触发贪婪熔断72h（v4.12.4从80%收紧至65%），5日振幅>100%触发仓位收缩至10%/杠杆降至1x"
+    },
+    "buy_trend_confirmation_delay": {
+      "status": "enabled",
+      "version": "v4.5新增",
+      "confirmation_bars": 2,
+      "bar_timeframe": "4H",
+      "description": "BUY方向趋势确认延迟机制：需连续2根4H阳线收盘确认突破，防止SELL偏好交易者做多时的确认偏误"
+    },
+    "stop_loss_code_enforcement": {
+      "status": "enabled",
+      "version": "v4.5新增",
+      "api_required": true,
+      "daily_audit": true,
+      "description": "止损代码强制执行：开仓API stopLossPrice必填字段，每日UTC 0:00自动校验持仓止损状态，缺失则强制市价平仓"
+    },
+    "post_liquidation_recovery": {
+      "status": "enabled",
+      "version": "v4.6强化，v4.12.4升级",
+      "recovery_days": 60,
+      "max_position_pct": 0.02,
+      "max_leverage": 0.5,
+      "daily_trade_limit": 1,
+      "profit_ratio_override": 2.0,
+      "entry_confirmation_bars": 3,
+      "description": "LAB专属爆仓恢复期v4.6强化：60天内仓位2%/杠杆0.5x/日交易1笔上限。比通用恢复期更严格，因为LAB是唯一爆仓品种，心理创伤需更长时间恢复。v4.12.4从30天→60天（战争Level4驱动）。"
+    },
+    "bsc_ecosystem_health": {
+      "status": "enabled",
+      "version": "v4.5新增",
+      "monitored_metrics": {
+        "bsc_tvl": "$19.5B",
+        "bsc_lsd_tvl": "$895M (占全链1.7%)",
+        "bsc_meme_sector_cap": "$252M",
+        "pancakeswap_tvl_status": "领先BSC DEX",
+        "bsc_active_users": "待接入API实时数据"
+      },
+      "alert_thresholds": {
+        "bsc_tvl_drop_20pct": "BSC TVL月度下降>20% → 全BSC生态标的自动降级一级",
+        "bsc_lsd_growth_30pct": "BSC LSD TVL月度增长>30% → LISTA升级至A级关注",
+        "pancakeswap_tvl_spike": "PancakeSwap TVL周增长>20% → CAKE自动升级至A级"
+      },
+      "description": "BSC生态健康度监控模块：实时追踪BSC TVL、LSD赛道、Meme板块、PancakeSwap TVL等核心指标，对BSC生态标的进行联动风控与信号增强"
+    },
+    "lab_exchange_risk_monitor": {
+      "status": "enabled",
+      "version": "v4.8新增，v4.12.4升级",
+      "description": "交易所风控监控模块：LAB在OKX/Gate.io/MEXC多源报价差异>30% → 信号自动降一级。v4.12.4新增：OKX $8.55 vs 现货 $3.21 = 2.66x溢价，庄家控盘明确。",
+      "okx_price": 8.55,
+      "gateio_price": 5.41637,
+      "spot_price": 3.21,
+      "premium_ratio": 2.66,
+      "action": "禁止LAB做多，D2溢价熔断超强触发"
+    },
+    "lab_volume_climax_cooling": {
+      "status": "enabled",
+      "version": "v4.8新增",
+      "trigger": "24h成交量达7日均量3倍",
+      "action": "48h冷却，禁止新开仓",
+      "description": "LAB成交量峰值检测：放量过猛通常预示短期顶部。v4.12.4更新：OKX $9.74亿成交额（合约排名第3），24h +27.68%，量价背离风险高。"
+    }
+  },
+  "iteration_log": [
+    {
+      "version": "4.12.3",
+      "date": "2026-06-02 15:22:00",
+      "changes": [
+        "【P12】恐惧29→23二次走弱确认D1假阳性脱敏模式稳定。恐惧需稳定≥25持续5日方可降级，当前23不满足→D1检测维持。",
+        "【P13】LAB合约溢价再恶化确认：1.396x→5.41x（$17.36/$3.21），D2溢价熔断从弱触发升级为超强触发。庄家控盘明确，禁止做多方向维持。",
+        "【C18候选】交易日志目录为空（E:\\龙虾AI主控中心\\我的AI分身\\量化策略资产\\交易日志\\），建议建立API自动归档机制补齐数据缺口。",
+        "【确认】七重熔断6.0/7.0维持，全账户零开仓维持，60天冷却期维持。解除条件四要素0/4全部未满足。",
+        "【确认】BNB/BTC=0.00888 D级自动排除。CAKE C级+熔断禁止。LAB D2溢价熔断超强触发。HYPE非BNB生态仅观察。",
+        "【确认】特朗普口头信号不构成降级依据（v2.7已证伪一次口头信号）。战争Level 4维持。",
+        "【产出】币安龙头黑马预测报告_20260602_1522，零标的通过",
+        "【闭环】策略v4.12.2→v4.12.3 参数确认迭代，无新增正式参数，C18候选建议归档机制"
+      ],
+      "triggers": [
+        "定时任务：AI分身×量化策略·币安龙头黑马预测闭环（每2小时）",
+        "恐惧指数29→23二次走弱，D1假阳性脱敏模式持续验证",
+        "LAB合约溢价5.41x极端恶化，D2超强触发",
+        "交易日志目录为空发现：数据完整性缺口需补齐",
+        "BTC逼近$70,000心理关口，市场承压持续",
+        "地缘冲突无降温信号：伊朗实际攻击美以船只"
+      ],
+      "verified": false
+    },
+    {
+      "version": "4.12.4",
+      "date": "2026-06-02 16:00:00",
+      "changes": [
+        "【P0】D2溢价熔断阈值正式化：1.30→1.15（E2候选参数升级为正式参数），当前OKX $8.55/现货$3.21=2.66x已触发",
+        "【P0】RSI山寨币上限收紧：75→72（LAB RSI>90显示75仍太激进），防止极端超买入场",
+        "【P0】布林带外溢阈值正式化：25%→22%（E1候选参数升级），LAB超46%显示25%仍偏宽",
+        "【P0】贪婪熔断阈值收紧：80%→65%（v4.12.4优化），LAB +96.68%显示80%过宽",
+        "【P1】C19候选tier_5升级评估：恐惧<5→全账户仅持现金，当前恐惧31暂不触发但结构预留",
+        "【P1】ETF流出加速惩罚正式化：单日>$5亿→追加3天冷静期（P03.1从候选→正式）",
+        "【数据】LAB OKX $8.55（+27.68%）/Gate.io $5.42（+18.92%），合约成交额$9.74亿（全市场第3）",
+        "【数据】5/25→今日：$3.50→$8.57，+96.68%，振幅118%，累计成交量3.08亿LAB/$18.31亿USDT",
+        "【数据】恐惧指数31（恐惧区间），D1稳定性检测维持（需≥25×5日）",
+        "【数据】战争Level4维持：伊朗双海峡威胁+实际攻击美以船只，霍尔木兹日均3艘",
+        "【产出】LAB_USDT永续合约交易分析报告_20260602_全域缺口专项补_v5.3.md（六大模块+道家心法）",
+        "【闭环】策略v4.12.3→v4.12.4，4个参数正式化（D2阈值/RSI上限/布林带阈值/贪婪阈值），七重熔断7.0/7.0全激活"
+      ],
+      "triggers": [
+        "全域缺口专项补·量化策略叠化任务（报告v5.3生成）",
+        "LAB OKX $8.55数据更新：合约溢价2.66x，D2熔断正式化需求",
+        "LAB 5日+96.68%：贪婪熔断80%→65%收紧需求",
+        "RSI>90极端超买：山寨币上限75→72收紧需求",
+        "布林带超22%：阈值25%→22%收紧需求",
+        "七重熔断全激活：7.0/7.0，解除条件0/4",
+        "道家心法融入：道可道非常道/观其复/知止不殆/利而不害/为道日损/上善若水"
+      ],
+      "verified": true
+    }
+  ],
+  "parameters_to_optimize": [
+    "ema_fast_period",
+    "ema_slow_period",
+    "rsi_period",
+    "rsi_upper",
+    "rsi_lower",
+    "atr_multiplier",
+    "trailing_pct",
+    "bollinger_period",
+    "bollinger_std",
+    "volume_threshold_multiplier",
+    "entry_retracement_ratio",
+    "etf_catalyst_weight",
+    "market_sentiment_upper",
+    "market_sentiment_lower",
+    "etf_exemption_flag",
+    "sentiment_exemption_threshold",
+    "bollinger_pause_threshold",
+    "profit_ratio_repair_enabled",
+    "trailing_activation_threshold",
+    "no_naked_short",
+    "pyramid_tier_ratios",
+    "daily_trade_limit",
+    "max_single_loss_pct",
+    "capital_reserve_pct",
+    "extreme_greed_pause_hours",
+    "extreme_volatility_amp_threshold",
+    "extreme_volatility_position_cap",
+    "extreme_volatility_max_leverage",
+    "post_liquidation_recovery_days",
+    "stop_loss_code_enforced",
+    "buy_trend_confirmation_bars",
+    "profit_ratio_extreme_override",
+    "lab_premium_circuit_threshold",
+    "altcoin_rsi_upper_tightened",
+    "bollinger_extreme_threshold_tightened",
+    "greed_circuit_threshold_tightened"
+  ],
+  "v4_6_candidate_parameters": {
+    "etf_outflow_circuit_breaker": {
+      "status": "formalized",
+      "formalized_in": "v4.6",
+      "description": "已正式化到 extreme_circuit_breakers.etf_outflow_circuit_breaker"
+    },
+    "fear_index_tiers": {
+      "status": "formalized",
+      "formalized_in": "v4.6",
+      "description": "已正式化到 extreme_circuit_breakers.fear_index_layering"
+    },
+    "lab_circuit_linkage": {
+      "status": "formalized",
+      "formalized_in": "v4.6",
+      "description": "已正式化到 extreme_circuit_breakers.lab_circuit_linkage"
+    },
+    "fundamental_divergence_bonus": {
+      "status": "proposed",
+      "trigger": "RWA TVL增长>50% 且 价格下跌>20% → 信号自动+1级",
+      "description": "基本面-价格背离度指标（P1候选）：捕捉被恐慌错杀的优质标的"
+    },
+    "stop_loss_reentry_rule": {
+      "status": "proposed",
+      "trigger": "止损出局后48h内价格收复止损价+1% → 允许半仓重新入场",
+      "description": "止损后反弹再入场逻辑（P1候选）：防止止损后踏空反弹"
+    },
+    "social_overheat_degradation": {
+      "status": "proposed",
+      "trigger": "Twitter/X提及量24h增长>500% → 信号自动-1级",
+      "description": "社交过热降级（P2候选）：防止社交狂热驱动FOMO交易"
+    },
+    "multi_exchange_aggregation": {
+      "status": "proposed",
+      "trigger": "整合MEXC/Binance/OKX的LAB数据取中位数",
+      "description": "多交易所数据聚合（P2候选）：防止单一交易所价格/费率操纵"
+    },
+    "onchain_holder_monitor": {
+      "status": "proposed",
+      "trigger": "LAB持币地址数变化>20% → 信号调整",
+      "description": "链上数据监控（P2候选）：大户动向是价格的领先指标"
+    },
+    "options_iv_monitor": {
+      "status": "proposed",
+      "trigger": "期权IV>150% → 波动率高级预警",
+      "description": "期权数据集成（P2候选）：IV异常飙升预示极端波动"
+    }
+  },
+  "v4_7_candidate_parameters": {
+    "war_escalation_tiered_response": {
+      "status": "formalized",
+      "formalized_in": "v4.9.2",
+      "description": "战争分级响应v2：局部冲突→全账户暂停新开仓；全面战争(伊朗封锁霍尔木兹海峡)→全账户清仓+恢复期重置Day0。已正式化为current_optimized_values.war_escalation_warning_level。"
+    },
+    "etf_outflow_7day_early_warning": {
+      "status": "formalized",
+      "formalized_in": "v4.12.2",
+      "trigger": "ETF连续7日净流出并累计>$20亿 → 提前触发半仓+杠杆1x预警",
+      "description": "C02 ETF流出预警线从10日优化为7日：当前已连续11日流出$33B+，10日阈值太慢"
+    },
+    "fear_desensitization_contrary_indicator": {
+      "status": "formalized",
+      "formalized_in": "v4.11.0",
+      "trigger": "恐惧指数>25 且 战争/重大黑天鹅进行中 → 触发额外谨慎信号，自动降仓至30%",
+      "description": "C03 恐惧脱敏反向指标：恐惧指数29在战争背景下异常偏高，需识别虚假安全感"
+    },
+    "bnb_btc_relative_strength": {
+      "status": "formalized",
+      "formalized_in": "v4.10.2",
+      "trigger": "BNB/BTC比率跌破0.009 → BNB信号自动降级一级",
+      "description": "C04 BNB-BTC相对强弱：当前BNB -4.79%远超BTC -0.72%，相对弱势异常"
+    },
+    "cake_bnb_decoupling_monitor": {
+      "status": "proposed",
+      "trigger": "CAKE涨>3% 且 BNB跌>3% 同日 → CAKE信号自动降级一级",
+      "description": "C05 CAKE与BNB脱钩监控：当前CAKE +4.74%但BNB -4.79%，生态领头羊弱势时小弟独立上涨不可持续"
+    }
+  },
+  "v4_9_candidates": {
+    "C04_bnb_btc_relative_strength": {
+      "status": "formalized",
+      "formalized_in": "v4.10.2",
+      "description": "BNB-BTC比率0.0088已跌破v4.9建议阈值0.009→全BNB生态D级自动排除。BNB -9.15%/24h远超BTC -2.88%，资金从BNB生态加速外逃。此指标成功提前预警BNB生态衰退。",
+      "suggested_threshold": 0.009,
+      "action": "BNB/BTC<阈值→BNB相关标的降为D级，自动排除做多候选"
+    },
+    "C05_etf_outflow_weighted": {
+      "status": "formalized",
+      "formalized_in": "v4.12.2",
+      "description": "当前连续11日触发，不考虑量级。建议增加累计日均流出>$5B作为并行触发条件，提升熔断精准度。v4.12.2已正式化：etf_outflow_weight=0.35。",
+      "suggested_threshold": "连续10日 且 日均流出>$5B"
+    },
+    "C06_lab_cooldown_timer": {
+      "status": "proposed",
+      "description": "LAB连续多周期处于极端区域(RSI>72)。建议加入冷却计时器：需在正常波动区间(RSI<72且布林带外溢<22%)停留≥6个周期方可解除禁令。",
+      "suggested_cooldown_cycles": 6
+    },
+    "C07_recovery_position_ladder": {
+      "status": "proposed",
+      "description": "当前爆仓恢复期Day1-60统一2%仓位×0.5x杠杆。建议Day31+适度放宽至5%×1x(若战争结束+ETF转流入+恐惧>40同时满足)。",
+      "phase": {
+        "day1_30": {
+          "max_position_pct": 0.02,
+          "max_leverage": 0.5
+        },
+        "day31_60": {
+          "max_position_pct": 0.05,
+          "max_leverage": 1.0,
+          "requires": [
+            "war_ceasefire",
+            "etf_inflow_resumed",
+            "fear_greed_above_40"
+          ]
+        }
+      }
+    },
+    "C08_crash_reversal_pattern": {
+      "status": "formalized",
+      "formalized_in": "v4.9.2",
+      "description": "暴跌后反转识别模块（v4.9.2强化：6→8周期+成交量确认）：极端超买暴跌>60%后，需连续8个4H周期企稳+MACD底背离+RSI<30后金叉+成交量缩量企稳方可入场。LAB $12.03→$4.29(-64.35%)是典型场景。",
+      "suggested_cycles": 8,
+      "min_drop_pct": 0.6,
+      "confirmations": [
+        "price_stabilization_8_cycles",
+        "macd_bullish_divergence",
+        "rsi_golden_cross_below_30",
+        "volume_shrink_stabilization"
+      ]
+    },
+    "C09_war_escalation_tiered_v2": {
+      "status": "formalized",
+      "formalized_in": "v4.9.2",
+      "description": "战争分级响应v2：局部冲突→全账户暂停新开仓（当前）；全面战争(伊朗封锁霍尔木兹海峡)→全账户清仓+恢复期重置Day0。已正式化为current_optimized_values.war_escalation_warning_level。",
+      "tiers": {
+        "0_ceasefire": "正常交易",
+        "1_local_conflict": {
+          "action": "halt_all_new_positions",
+          "current": false
+        },
+        "2_full_scale_war_warning": {
+          "trigger": "iran_threaten_blockade_hormuz",
+          "action": "position_0_percent_alert_only",
+          "current": true
+        },
+        "3_full_scale_war": {
+          "trigger": "iran_actual_blockade_hormuz",
+          "action": "full_liquidation_reset_day_zero",
+          "current": false
+        },
+        "4_full_scale_war_plus_attack": {
+          "trigger": "iran_actual_attack_us_israel_vessels_plus_blockade",
+          "action": "full_liquidation_reset_day_zero_plus_60day_cooldown",
+          "current": true,
+          "description": "v4.12.4新增Level4：伊朗实际攻击美以船只+双海峡威胁，等效战争Level4"
+        }
+      }
+    }
+  },
+  "v4_12_0_candidates": {
+    "D1_fear_stability_detection": {
+      "status": "activated",
+      "priority": "P0",
+      "trigger": "恐惧指数回升至>25但维持<5日",
+      "action": "维持当前tier，不降级",
+      "rationale": "恐惧9→29的断崖式回升可能是'死猫反弹'式情绪波动，需稳定≥5日方可作为解除条件。源自LAB 2026-06-02分析报告v5.1发现D1。",
+      "suggested_stable_days": 5,
+      "activated_date": "2026-06-02 09:07:39",
+      "current_status": "恐惧31，稳定0/5日，D1维持"
+    },
+    "D2_contract_spot_premium_circuit": {
+      "status": "activated_and_tightened",
+      "priority": "P0",
+      "trigger": "永续合约价/现货价 > 1.15（v4.12.4从1.30收紧至1.15）",
+      "action": "禁止该品种做多方向新开仓",
+      "current": "OKX $8.55 / 现货 $3.21 = 2.66x（已触发，超强）",
+      "rationale": "溢价>15%暗示庄家控盘/流动性操纵，风险极高。源自v5.1发现D2。v4.12.4正式化阈值1.15。",
+      "threshold_formalized": 1.15,
+      "formalized_in": "v4.12.4"
+    },
+    "D3_crash_rebound_volume_divergence": {
+      "status": "activated",
+      "priority": "P1",
+      "trigger": "暴跌>60%后反弹>30% 且 成交量<暴跌前7日均量50%",
+      "action": "信号自动降一级（A→B, B→C）",
+      "rationale": "无量反弹=诱多陷阱。LAB 2026-05-31→2026-06-02反弹+58.3%但成交量萎缩。源自v5.1发现D1。",
+      "suggested_crash_threshold": 0.6,
+      "suggested_rebound_threshold": 0.3,
+      "suggested_volume_ratio": 0.5,
+      "activated_date": "2026-06-02 09:07:39"
+    },
+    "D4_mstr_divestiture_weight_upgrade": {
+      "status": "activated",
+      "priority": "P1",
+      "trigger": "Strategy Inc.减持BTC",
+      "action": "全账户仓位上限×0.15（从×0.5升级）",
+      "rationale": "'永不卖出'信仰崩塌>普通机构流出，信号意义远超量级。源自v5.1发现D3。",
+      "current": "已减持32 BTC(~$2.5M)，触发mstr_divestiture_warning",
+      "activated_date": "2026-06-02 09:07:39",
+      "confirmed": true,
+      "confirmed_detail": "2026-06-01: Strategy Inc.出售32 BTC (~$2.5M)，2022年以来首次减持",
+      "new_weight": 0.15,
+      "additional_rule": "MSTR连续减持>3日 → 全账户禁止新开仓90天"
+    },
+    "D5_hormuz_traffic_recovery_monitor": {
+      "status": "activated",
+      "priority": "P1",
+      "trigger": "霍尔木兹日均商船通行恢复至>50艘",
+      "action": "war_escalation_weight从4.0降至3.0（等效Level4→3）",
+      "rationale": "海峡通行量是战争实际封锁程度的客观指标。当前日均3艘(vs战前100+)。源自v5.1发现D5。",
+      "suggested_recovery_threshold": 50,
+      "current_traffic": 3,
+      "activated_date": "2026-06-02 09:07:39",
+      "war_level_update": "Level 3→4（v4.12.4确认）",
+      "mandeb_strait_sub_monitor": {
+        "status": "activated",
+        "trigger": "伊朗圣城旅指挥官卡尼暗示曼德海峡将与霍尔木兹保持一致",
+        "action": "等效战争权重+0.5"
+      }
+    }
+  },
+  "v4_12_2_candidates": {
+    "E1_fear_stability_auto_check": {
+      "status": "activated",
+      "priority": "P0",
+      "trigger": "恐惧指数连续3日稳定≥25 且 单日波动<10pts",
+      "action": "方可降级tier（如tier_10→tier_8），否则维持当前tier",
+      "rationale": "恐惧9→29→10的假阳性震荡显示单日回升不可信。源自v4.12.2叠化发现E1。",
+      "suggested_stable_days": 3,
+      "suggested_max_daily_swing": 10,
+      "activated_date": "2026-06-02 14:00:00",
+      "current_status": "恐惧31，稳定0/3日（需≥25×3日），E1维持"
+    },
+    "E2_contract_spot_premium_tighten": {
+      "status": "formalized",
+      "priority": "P0",
+      "trigger": "永续合约价/现货价 > 1.15",
+      "action": "禁止该品种做多方向新开仓",
+      "current": "OKX $8.55/现货$3.21=2.66x（已触发，远超1.15阈值）",
+      "rationale": "印度溢价77.38%显示1.30阈值过宽，庄家控盘信号需更早捕获。源自v4.12.2叠化发现E2。v4.12.4正式化阈值1.15。",
+      "threshold_formalized": 1.15,
+      "formalized_in": "v4.12.4",
+      "current_ratio": 2.66
+    },
+    "E3_etf_outflow_secondary_penalty": {
+      "status": "formalized",
+      "priority": "P1",
+      "trigger": "ETF连续3日加速流出（日环比+20%）",
+      "action": "追加7天冷却期",
+      "rationale": "D4 MSTR减持已触发，但ETF流出加速（日$544.94M）未充分惩罚。连续加速流出=机构恐慌性撤离。源自v4.12.2叠化发现E3。v4.12.4正式化：单日>$5亿→追加3天冷静期。",
+      "suggested_acceleration_threshold_pct": 20,
+      "current_day_outflow": "$544.94M（已触发）",
+      "prior_day_outflow": "$500M+",
+      "activated_date": "2026-06-02 14:00:00",
+      "formalized_in": "v4.12.4"
+    }
+  },
+  "v4_12_4_candidates": {
+    "F1_tier_5_cash_only": {
+      "status": "candidate",
+      "priority": "P1",
+      "trigger": "恐惧指数<5",
+      "action": "全账户仅持有现金/USDT，连BTC也不持有",
+      "rationale": "C19候选：恐惧<5是2020年3月COVID崩盘(8)以来未见的极值。当前恐惧31暂不触发，但结构需预留。源自v4.10.2候选tier_5。",
+      "suggested_threshold": 5,
+      "current_fear": 31,
+      "activated_date": "2026-06-02 16:00:00"
+    },
+    "F2_lab_multi_exchange_median": {
+      "status": "candidate",
+      "priority": "P1",
+      "trigger": "OKX/Gate.io/MEXC三源LAB报价差异>30%",
+      "action": "取三源中位数作为策略参考价，信号自动降一级",
+      "rationale": "当前OKX $8.55 vs Gate.io $5.42 vs 现货$3.21，差异>30%，存在单一交易所操纵风险。源自v4.6候选参数multi_exchange_aggregation。",
+      "suggested_sources": ["OKX", "Gate.io", "MEXC", "现货中位数"],
+      "current_spread": "OKX $8.55 vs 现货 $3.21 = 166%差异",
+      "activated_date": "2026-06-02 16:00:00"
+    },
+    "F3_post_recovery_position_ladder": {
+      "status": "candidate",
+      "priority": "P1",
+      "description": "爆仓恢复期60天结束后，分阶段恢复仓位：Day61-75仓位5%/杠杆1x；Day76-90仓位8%/杠杆1.5x；Day91+仓位12%/杠杆2x（需连续10笔盈利）。",
+      "phase_1": {
+        "day": "61-75",
+        "max_position_pct": 0.05,
+        "max_leverage": 1.0,
+        "requires": ["war_over", "etf_inflow_10days", "fear_above_40", "5_consecutive_profitable_trades"]
+      },
+      "phase_2": {
+        "day": "76-90",
+        "max_position_pct": 0.08,
+        "max_leverage": 1.5,
+        "requires": ["phase_1_passed", "10_consecutive_profitable_trades", "no_drawdown_5pct"]
+      },
+      "phase_3": {
+        "day": "91+",
+        "max_position_pct": 0.12,
+        "max_leverage": 2.0,
+        "requires": ["phase_2_passed", "20_consecutive_profitable_trades", "max_drawdown_under_10pct"]
+      },
+      "activated_date": "2026-06-02 16:00:00"
+    }
+  },
+  "current_optimized_values": {
+    "rsi_upper": 72,
+    "rsi_upper_altcoin": 72,
+    "bollinger_std": 2.2,
+    "volume_threshold_multiplier": 1.3,
+    "entry_retracement_ratio": 0.382,
+    "etf_catalyst_weight": 0.3,
+    "etf_outflow_weight_in_circuit_breaker": 0.35,
+    "etf_outflow_weight_desc": "v4.12.2升级：ETF连续11天流出~$33B+，6/1单日$4.84亿(IBIT $4.40亿/91%)创新高。ETF流出已从领先指标升级为核心驱动因子，权重0.25→0.35。v4.12.4维持0.35。",
+    "market_sentiment_upper": 70,
+    "market_sentiment_lower": 30,
+    "etf_exemption_flag": true,
+    "sentiment_exemption_threshold": 35,
+    "atr_multiplier_etf": 1.8,
+    "atr_multiplier_altcoin": 2.2,
+    "trailing_pct": 0.04,
+    "bollinger_period_altcoin": 10,
+    "trailing_pct_altcoin_extreme": 0.03,
+    "trailing_activation_threshold": 0.02,
+    "bollinger_pause_threshold": 0.22,
+    "no_naked_short": true,
+    "profit_ratio_repair_enabled": true,
+    "profit_ratio_hard_constraint": 1.5,
+    "max_position_pct_altcoin": 0.12,
+    "leverage_altcoin_max": 2,
+    "daily_loss_limit_altcoin": 0.03,
+    "max_single_loss_pct_altcoin": 0.05,
+    "max_single_loss_pct_mainstream": 0.03,
+    "daily_trade_limit": 3,
+    "capital_reserve_pct": 0.3,
+    "pyramid_tier_ratios": [0.5, 0.3, 0.2],
+    "extreme_greed_pause_hours": 72,
+    "extreme_volatility_amp_threshold": 1.0,
+    "extreme_volatility_position_cap": 0.1,
+    "extreme_volatility_max_leverage": 1,
+    "post_liquidation_recovery_days": 60,
+    "post_liquidation_max_position": 0.02,
+    "post_liquidation_max_leverage": 0.5,
+    "post_liquidation_simulation_days": 21,
+    "post_liquidation_simulation_required": true,
+    "post_liquidation_recovery_no_reverse_trade": true,
+    "post_liquidation_recovery_no_reverse_trade_desc": "v4.10.1新增：爆仓恢复期内禁止开反向单（做空），防止情绪化追空抄底。对齐交易心理画像'止损缺失'根节点。",
+    "anti_dip_buying_ban_trigger_24h_drop_pct": 0.15,
+    "anti_dip_buying_ban_trigger_sentiment": 25,
+    "anti_dip_buying_ban_cooling_hours": 72,
+    "mstr_divestiture_warning": true,
+    "mstr_divestiture_desc": "v4.10.2新增：Strategy Inc.(MSTR)首次自2022年减持32 BTC(~$2.5M, avg $77,135/BTC)。CEO Phong Le公开表示'可能卖出部分持仓'，打破'永不卖出'承诺。触发全账户仓位上限额外×0.15系数（叠加现有熔断）。信号意义远超量级——机构'永不卖出'信仰崩塌是2020年减半以来最严重的情绪转折。",
+    "panic_peak_intervention_protocol": "恐惧9级恐慌极值干预协议(v4.10.2正式化)：①禁止一切'抄底'思维——恐惧9(2020/3 COVID以来最低)是反向诱惑最高时，也是受损最大时。②禁止任何非BTC开仓思考——tier_10规则下仅BTC允许。③每周至少2次重读交易心理画像§四(爆仓创伤根节点)。④如恐惧跌破5触发F1候选tier_5：全账户仅持现金/USDT。",
+    "bnb_btc_ratio_actual": 0.0088,
+    "bnb_btc_ratio_action": "v4.10.2：0.0088已跌破v4.9 C04阈值0.009→全BNB生态D级自动排除。BNB -9.15%/24h远超BTC -2.88%，资金从BNB生态加速外逃。",
+    "war_black_swan_enabled": true,
+    "war_black_swan_action": "halt_all_new_positions_allow_close_only",
+    "war_black_swan_escalation": "full_liquidation_reset_recovery_day_zero_plus_60day_cooldown",
+    "war_black_swan_deescalation_condition": "ceasefire_signed_plus_72h_no_attack_plus_hormuz_traffic_50plus",
+    "war_atr_multiplier_altcoin": 3.5,
+    "drawdown_daily_limit": 0.03,
+    "drawdown_weekly_limit": 0.07,
+    "drawdown_monthly_limit": 0.1,
+    "fear_desensitization_warning_enabled": true,
+    "position_progressive_recovery_tiers": [0.02, 0.05, 0.1],
+    "position_progressive_recovery_conditions": ["sim_period_win", "5_consecutive_win", "10_consecutive_win_war_over"],
+    "stop_loss_code_enforced": true,
+    "stop_loss_api_required": true,
+    "buy_trend_confirmation_bars": 2,
+    "profit_ratio_extreme_override": 2.0,
+    "max_position_pct_altcoin_normal": 0.15,
+    "lab_trailing_step_initial_override": 0.008,
+    "lab_rsi_divergence_required": true,
+    "lab_volume_climax_trigger_multiplier": 3.0,
+    "lab_volume_climax_cooldown_hours": 48,
+    "lab_funding_rate_ceiling": 0.02,
+    "lab_exchange_risk_monitor": true,
+    "lab_profit_ratio_asymmetric_long": 1.5,
+    "lab_profit_ratio_asymmetric_short": 2.0,
+    "crash_reversal_detection_enabled": true,
+    "crash_reversal_confirmation_cycles": 8,
+    "crash_reversal_min_drop_pct": 0.6,
+    "war_escalation_full_liquidation_trigger": "iran_blockade_hormuz_plus_attack_us_israel_vessels",
+    "crash_avoidance_bonus_days": 0,
+    "black_swan_protection_value_tracking_enabled": true,
+    "war_escalation_warning_level": 4.0,
+    "war_escalation_warning_level_desc": "0=停火/1=局部冲突/2=全面战争预警(仓位0%)/3=全面战争(全账户清仓+重置Day0)/4=全面战争+关键海峡封锁+攻击美以船只(等效Level3++)。当前4.0——伊朗6/1暂停谈判+计划彻底封锁霍尔木兹海峡+启动曼德海峡战线+科威特全国防空警报+美伊互相军事打击+美军引导不足日均3艘商船通行(vs战前日均100+)。v4.12.4确认Level4。",
+    "war_desensitization_detector": {
+      "status": "enabled",
+      "version": "v4.11.0-P01",
+      "description": "战争脱敏检测器：防止交易者习惯战争环境后冲动开仓。当恐惧指数连续3日<15时触发，追加7天冷却期。源自交易心理画像v2.7第五认知根节点'战争脱敏'。",
+      "trigger": "fear_greed_index < 15 for >= 3 consecutive days",
+      "action": "追加7天冷却期，覆盖恢复期结束时间",
+      "rationale": "恐惧9持续3日=交易者可能开始'习惯'恐慌→脱敏→冲动开仓→爆仓"
+    },
+    "hormuz_signal_weight": {
+      "status": "enabled",
+      "version": "v4.11.0-P02",
+      "description": "霍尔木兹海峡信号权重增强。全球油路封锁对风险资产的冲击远超普通战争Level3，实际等效Level4。",
+      "extra_cooldown_days": 7,
+      "trigger": "hormuz_blockade_active",
+      "current": true,
+      "daily_commercial_traffic": "日均3艘(vs战前100+)",
+      "action": "war_level有效值+0.5，冷却期叠加7天"
+    },
+    "etf_outflow_acceleration_penalty": {
+      "status": "enabled",
+      "version": "v4.11.0-P03，v4.12.4正式化",
+      "description": "ETF流出加速惩罚。单日流出>$5亿→追加3天冷静期。机构行为领先散户3-5天，加速流出=加速撤离。",
+      "trigger": "BTC_ETF_daily_outflow > $500M",
+      "action": "追加3天冷静期",
+      "current_day_outflow": "$544.94M（已触发）",
+      "cumulative_11day_outflow": "约$33B+"
+    },
+    "extreme_drawdown_secondary_protection": {
+      "status": "enabled",
+      "version": "v4.11.0-P04",
+      "description": "极端回撤二次保护。恢复期结束后首次开仓若亏损>2%，自动回退7天模拟交易期。防止'急着回本'心态。",
+      "trigger": "first_position_after_recovery_profit < -2%",
+      "action": "回退7天模拟交易期，重新评估策略有效性"
+    },
+    "opportunity_cost_journal": {
+      "status": "enabled",
+      "version": "v4.11.0-P05",
+      "description": "机会成本日记。每日强制记录'如果今天我开了仓会怎样'，用于元认知训练，防止'踏空焦虑'导致冲动开仓。",
+      "frequency": "daily",
+      "format": "假设开仓方向/入场价/当前价/盈亏评估",
+      "purpose": "事后验证'踏空焦虑'的合理性，积累元认知数据"
+    },
+    "fear_index_tier_25_enabled": true,
+    "fear_index_tier_25_desc": "<25→仓位上限50%+杠杆0.5x。填补<20暂停新开仓与<30半仓之间的缺口。当前31>25，tier_25未触发。D1要求5日稳定方可降级。",
+    "fear_index_tier_10_enabled": true,
+    "fear_index_tier_10_desc": "v4.10.2：恐惧9(29→9断崖式恶化-20pts)触发tier_10——仅允许持有BTC，禁止一切非BTC新开仓。当前恐惧31，tier_10已解除但D1假阳性检测维持。",
+    "oil_crypto_correlation_enabled": true,
+    "oil_crypto_correlation_desc": "WTI+Brent双轨监控。原油单日>5%→全局风控收紧(仓位上限×0.5)。当前WTI+6.16%/Brent+5.8%已触发。v4.12.4维持。",
+    "lab_premium_circuit_threshold": 1.15,
+    "lab_premium_circuit_desc": "v4.12.4正式化：LAB永续/现货溢价>1.15→禁止做多。当前OKX $8.55/现货$3.21=2.66x，远超阈值，D2超强触发。",
+    "altcoin_rsi_upper_tightened": 72,
+    "altcoin_rsi_tightened_desc": "v4.12.4正式化：山寨币RSI上限从75收紧至72，LAB RSI>90显示75仍太激进。",
+    "bollinger_extreme_threshold_tightened": 0.22,
+    "bollinger_extreme_desc": "v4.12.4正式化：布林带外溢阈值从25%收紧至22%，LAB超46%显示25%仍偏宽。",
+    "greed_circuit_threshold_tightened": 0.65,
+    "greed_circuit_desc": "v4.12.4优化：贪婪熔断阈值从80%收紧至65%，LAB +96.68%显示80%过宽。"
+  },
+  "market_state": {
+    "seven_circuit_breakers": {
+      "1_etf_outflow": {
+        "status": "🔴",
+        "weight": 1.0,
+        "detail": "ETF连续11日净流出~$33B+，6/1单日$4.84亿创新高（IBIT $4.40亿占91%）。有记录以来最长连续流出。",
+        "trigger": "10日累计>$15B",
+        "updated": "2026-06-02 16:00:00"
+      },
+      "2_liquidation_recovery": {
+        "status": "🔴",
+        "weight": 1.0,
+        "detail": "Day 0/60冷却期，因战争Level升级重置（v4.12.4从30天→60天）",
+        "trigger": "账户曾爆仓",
+        "updated": "2026-06-02 16:00:00"
+      },
+      "3_fear_index": {
+        "status": "🔴",
+        "weight": 1.0,
+        "detail": "恐惧指数31 (tier_8)，恐慌区间。D1稳定性检测：需稳定≥25持续5日方可降级，当前31稳定0/5日。",
+        "trigger": "恐惧<30即tier_8",
+        "updated": "2026-06-02 16:00:00"
+      },
+      "4_volatility": {
+        "status": "🟡",
+        "weight": 0.5,
+        "detail": "BTC 30d ann vol 56.88%，高波动预警。LAB 5日振幅118%，极端波动。",
+        "trigger": "vol>45%即预警",
+        "updated": "2026-06-02 16:00:00"
+      },
+      "5_war_escalation": {
+        "status": "🔴",
+        "weight": 1.0,
+        "detail": "Level 4 全面封锁+攻击美以船只：伊朗暂停谈判+双海峡威胁+实际攻击美以船只。特朗普声称一周内重启谈判但不可信（已在v2.7被证伪）。",
+        "trigger": "美伊军事冲突+海峡封锁威胁+实际攻击",
+        "updated": "2026-06-02 16:00:00",
+        "equivalent_weight": 4.0,
+        "previous_weight": 3.5,
+        "trump_signal_note": "特朗普声称一周内恢复谈判——口头信号不构成降级依据，维持Level 4。"
+      },
+      "6_oil_correlation": {
+        "status": "🔴",
+        "weight": 0.7,
+        "detail": "WTI +6.16%，战争驱动原油暴力拉升。v4.12.4维持触发。",
+        "trigger": "单日涨跌>5%",
+        "updated": "2026-06-02 16:00:00"
+      },
+      "7_hormuz_weight": {
+        "status": "🔴",
+        "weight": 1.0,
+        "detail": "日均通行3艘(vs战前100+)，伊朗威胁双海峡封锁。曼德海峡次级威胁已激活。",
+        "trigger": "通行量<50艘/日",
+        "updated": "2026-06-02 16:00:00",
+        "mandeb_strait_warning": true
+      }
+    },
+    "total_breaker_weight": 7.0,
+    "max_weight": 7.0,
+    "account_state": "全账户零开仓",
+    "cooldown_days_remaining": 60,
+    "simulation_days_remaining": 21,
+    "earliest_possible_entry": "2026-08-01",
+    "updated": "2026-06-02 16:00:00"
+  },
+  "lab_current_signal": {
+    "grade": "C",
+    "score": "1.5/5",
+    "action": "禁止任何方向开仓",
+    "reason_long": "合约溢价2.66x(D2熔断) + ATR止损-$1.87/-21.87%(超5%上限) + 七重熔断7.0/7.0全激活 + 战争Level4 + 60天冷却期",
+    "reason_short": "庄家控盘轧空风险 + 非对称盈亏比2.0不满足 + 裸空禁令(EMA20>EMA50) + 做空三条件未满足",
+    "only_allowed": "减仓或平仓（当前零持仓，无需操作）",
+    "okx_price": 8.55,
+    "gateio_price": 5.41637,
+    "spot_price": 3.21,
+    "premium_ratio_okx": 2.66,
+    "volume_24h_usdt": "9.74亿",
+    "rank_futures_market": 3,
+    "candle_5d_change_pct": 96.68,
+    "candle_5d_amplitude_pct": 118,
+    "updated": "2026-06-02 16:00:00"
+  },
+  "bnb_btc_exclusion": {
+    "status": "🔴 D级自动排除",
+    "current_ratio": 0.00888,
+    "threshold": 0.01,
+    "gap": "-11.2%",
+    "updated": "2026-06-02 16:00:00",
+    "note": "BNB ~$770 (₹65,814, -2.37%)，BNB/BTC 0.00888 维持D级排除。零标的通过。"
+  },
+  "war_ceasefire_reentry_delay_days": 30,
+  "war_ceasefire_reentry_delay_description": "v4.10.1更新：Level3全面战争升级为30天冷却期。停火协议签署+30天无攻击+海峡通航恢复三重条件方可解除战争熔断。v4.12.4更新：Level4需额外+30天，合计60天。",
+  "strategy_philosophy_dao": {
+    "dao_1": "道可道，非常道 —— LAB暴涨之相，是机会之相还是陷阱之相？可名之相已非真实价值。",
+    "dao_2": "观其复 —— 万物并作，吾以观复。LAB暴涨→原油飙升→ETF流出→战争升级，四重'并作'背后是同一根因果链条。",
+    "dao_3": "知止不殆 —— LAB $8.55，假设入场止损-$1.87，盈亏比1.27x<1.5硬约束。知止，则不殆。",
+    "dao_4": "天之道，利而不害 —— 当前零开仓、七重熔断，正是'利而不害'之境。保全本金是第一优先级。",
+    "dao_5": "为学日益，为道日损 —— 参数从10个膨胀到60+是'益'；当前的零开仓、七重熔断，是'损'。损之又损，以至于无为。",
+    "dao_6": "上善若水 —— 不争：不追涨(LAB +96.68%)；处下：接受'错过'LAB翻倍；利万物：零开仓为未来积蓄力量。",
+    "dao_7": "圣人不病，以其病病 —— 已知五大认知根节点，已知LAB是唯一爆仓品种，已知0%止损是致命缺陷——知病而病之，是以不病。",
+    "dao_8": "反者道之动 —— LAB从$3.50→$12.03→$4.29→$8.55，暴涨暴跌背后是庄家的'将欲歙之，必固张之'。",
+    "note": "v4.12.4新增：道家心法八条融入策略哲学，与交易心理画像v2.9五大认知根节点形成双向映射。"
+  }
+}

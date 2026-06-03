@@ -1,0 +1,152 @@
+{
+  "name": "龙虾·黑马猎手·专属版 v4.0",
+  "version": "4.0.1",
+  "date": "2026-05-31",
+  "data_basis": "12885笔实盘交易 | 126个币种 | 26-05-27 14:14:05~26-05-31 03:26:07",
+  "core_metrics": {
+    "net_pnl_usdt": 1336.0,
+    "win_rate_pct": 63.4,
+    "profit_factor": 1.15,
+    "avg_win_usdt": 2.2934,
+    "avg_loss_usdt": -5.0565,
+    "max_single_win": 206.92,
+    "max_single_loss": -171.99,
+    "win_loss_ratio": 0.45
+  },
+  "top_symbols": [
+    {
+      "symbol": "MYXUSDT",
+      "pnl": 509.99,
+      "win_rate": 73.6
+    },
+    {
+      "symbol": "BNBUSDT",
+      "pnl": 408.75,
+      "win_rate": 82.6
+    },
+    {
+      "symbol": "PUMPBTCUSDT",
+      "pnl": 212.8,
+      "win_rate": 96.2
+    },
+    {
+      "symbol": "COAIUSDT",
+      "pnl": 175.55,
+      "win_rate": 75.7
+    },
+    {
+      "symbol": "AIAUSDT",
+      "pnl": 144.42,
+      "win_rate": 69.3
+    },
+    {
+      "symbol": "RIVERUSDT",
+      "pnl": 130.52,
+      "win_rate": 76.8
+    },
+    {
+      "symbol": "XPINUSDT",
+      "pnl": 95.08,
+      "win_rate": 66.7
+    },
+    {
+      "symbol": "AVNTUSDT",
+      "pnl": 75.05,
+      "win_rate": 66.7
+    },
+    {
+      "symbol": "MUSDT",
+      "pnl": 62.13,
+      "win_rate": 75.6
+    },
+    {
+      "symbol": "RAVEUSDT",
+      "pnl": 52.66,
+      "win_rate": 95.7
+    }
+  ],
+  "entry_signals": [
+    {
+      "id": "E1",
+      "name": "动量突破",
+      "weight": "L2(10%)",
+      "condition": "突破4H高点+量>1.5x均值"
+    },
+    {
+      "id": "E2",
+      "name": "回调支撑",
+      "weight": "L3(15%)",
+      "condition": "MA20回踩+RSI 40-55+缩量"
+    },
+    {
+      "id": "E3",
+      "name": "波动率压缩",
+      "weight": "L2(10%)",
+      "condition": "布林带收缩+上轨突破"
+    },
+    {
+      "id": "E4",
+      "name": "趋势跟随",
+      "weight": "L3(15%)",
+      "condition": "EMA20>50>100+MACD金叉+ADX>25"
+    },
+    {
+      "id": "E5",
+      "name": "反转狙击",
+      "weight": "L1(5%)",
+      "condition": "RSI<25+布林下轨+锤子/吞没形态"
+    }
+  ],
+  "position_sizing": {
+    "L1_试仓": "5%",
+    "L2_标准": "10%",
+    "L3_加仓": "15%",
+    "L4_重仓": "20%",
+    "L5_上限": "50%",
+    "max_positions": 8,
+    "single_symbol_max": "25%",
+    "single_trade_risk": "2%总资产"
+  },
+  "risk_rules": [
+    {
+      "id": "RM1",
+      "rule": "单笔最大亏损≤2%总资产",
+      "action": "硬止损",
+      "priority": "CRITICAL"
+    },
+    {
+      "id": "RM2",
+      "rule": "日亏损≥5%",
+      "action": "停止当日交易",
+      "priority": "CRITICAL"
+    },
+    {
+      "id": "RM3",
+      "rule": "连续3笔亏损",
+      "action": "暂停30分钟+复盘",
+      "priority": "HIGH"
+    },
+    {
+      "id": "RM4",
+      "rule": "回撤≥15%",
+      "action": "降仓至L1+策略审查",
+      "priority": "HIGH"
+    },
+    {
+      "id": "RM5",
+      "rule": "强平后24H",
+      "action": "禁止同币种",
+      "priority": "MEDIUM"
+    },
+    {
+      "id": "RM6",
+      "rule": "连续10笔胜率<40%",
+      "action": "暂停+全面复盘",
+      "priority": "MEDIUM"
+    }
+  ],
+  "session_optimization": {
+    "best": "18:00 窗口（高PnL）",
+    "worst": "23:00 窗口（低效，降仓L1）"
+  }
+}

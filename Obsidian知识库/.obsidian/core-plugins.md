@@ -1,0 +1,38 @@
+# core-plugins.json
+
+> 原始文件: `core-plugins.json`  |  类型: `.json`  |  自动转换
+
+```json
+{
+  "file-explorer": true,
+  "global-search": true,
+  "switcher": true,
+  "graph": true,
+  "backlink": true,
+  "canvas": true,
+  "outgoing-link": true,
+  "tag-pane": true,
+  "properties": false,
+  "page-preview": true,
+  "daily-notes": false,
+  "templates": true,
+  "note-composer": true,
+  "command-palette": true,
+  "slash-command": true,
+  "editor-status": true,
+  "bookmarks": true,
+  "markdown-importer": true,
+  "zk-prefixer": false,
+  "random-note": false,
+  "outline": true,
+  "word-count": true,
+  "slides": false,
+  "audio-recorder": false,
+  "workspaces": true,
+  "file-recovery": true,
+  "publish": false,
+  "sync": false,
+  "bases": false
+}
+
+```

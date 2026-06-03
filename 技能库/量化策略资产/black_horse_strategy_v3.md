@@ -1,0 +1,106 @@
+# black_horse_strategy_v3.json
+
+> 原始文件: `black_horse_strategy_v3.json`  |  类型: `.json`  |  自动转换
+
+```json
+---
+file_type: 策略文档
+created: 2026-05-31
+tags: [量化交易, DOGE, 黑马策略]
+aliases: ['黑马策略v3']
+related: [[[black_horse_strategy.json]], [[general_strategy_v3.json]]]
+---
+
+{
+  "strategy_name": "龙虾黑马策略 v1.0 (Lobster Black Horse Strategy)",
+  "version": "3.0.0",
+  "type": "event_driven",
+  "market": "CRYPTO",
+  "symbols": ["DOGE_USDT", "SHIB_USDT", "PEPE_USDT", "BONK_USDT"],
+  "timeframes": ["1D", "4H"],
+  "description": "针对社交媒体驱动的Meme币脉冲行情的暴利捕捉策略，基于2021年DOGE十倍行情提炼。核心逻辑：事件催化剂识别 + 技术面爆发确认 + 分批止盈锁定利润 + Sell the News纪律退出。",
+  "entry_conditions": {
+    "primary": {
+      "rsi": {"period": 14, "min": 55, "max": 75, "description": "强趋势但不极端"},
+      "ma_alignment": {"rule": "price > MA20 AND MA20 > MA50", "description": "多头排列确认"},
+      "macd": {"rule": "MACD_HIST > 0 AND consecutive_increase >= 3", "description": "MACD柱连续3日扩大"},
+      "volume": {"rule": "vol > VOL_MA20 * 1.5", "description": "放量确认"}
+    },
+    "social_sentiment": {
+      "social_mentions": {"rule": "7d_avg > 30d_avg * 3", "source": "LunarCrush/Santiment"},
+      "google_trends": {"rule": "trending_up", "source": "Google Trends"},
+      "celebrity_catalyst": {"trigger": "celebrity_tweet_detected", "description": "Elon Musk/名人推文"}
+    },
+    "confirmation": "至少满足 primary 条件 3/4，且有明确事件催化剂",
+    "black_horse_sub_strategy": {
+      "description": "暴利行情专属子策略，更保守的仓位+更激进的跟踪止损",
+      "asset_filter": {
+        "price_surge_7d": "> 100%",
+        "social_trending": true,
+        "exchange_new_users": "surge",
+        "funding_rate": "> 0.1%"
+      },
+      "entry": "确认催化剂 + 突破前3日高点 + 成交量 > VOL_MA20 * 2",
+      "position": "总资金 20% max",
+      "trailing_stop": "盈利 > 100% 后启用 4H ATR * 3 跟踪",
+      "profit_lock": "每50%涨幅锁定20%利润"
+    }
+  },
+  "position_management": {
+    "initial_entry": {"ratio": 0.30, "description": "总仓位30%一次性建仓"},
+    "add_position": {
+      "trigger": "价格突破前高且回调不破MA20",
+      "size": {"ratio": 0.15, "description": "每次追加总仓位15%"},
+      "max_additions": 2,
+      "max_total": {"ratio": 0.60, "description": "最大总仓位60%"}
+    },
+    "scale_out": {
+      "level_1": {"trigger": "RSI > 85", "action": "减仓25%"},
+      "level_2": {"trigger": "价格偏离MA20 > 40%", "action": "减仓25%"},
+      "level_3": {"trigger": "接近ATH区域", "action": "减仓剩余50%"}
+    }
+  },
+  "risk_management": {
+    "stop_loss": {
+      "primary": "MA20 * 0.97",
+      "secondary": "entry_price - ATR * 2.5",
+      "rule": "取较紧者",
+      "type": "hard_stop"
+    },
+    "max_drawdown": {"ratio": 0.15, "description": "单笔交易最大回撤不超过入场资金的15%"},
+    "trailing_stop": {"trigger": "盈利 > 50%", "method": "MA10跟踪止损"},
+    "black_swan_protection": {
+      "rapid_crash": {"trigger": "30分钟内跌幅 > 15%", "action": "市价全平"},
+      "catastrophe": {"trigger": "24小时内跌幅 > 30%", "action": "无条件全平"}
+    },
+    "position_sizing": {"max_single_symbol": 0.60, "max_correlation_group": 1.0}
+  },
+  "exit_rules": {
+    "signal_exit": [
+      {"condition": "RSI > 90 AND MACD_HIST_decreasing", "action": "全平"},
+      {"condition": "price < MA10", "action": "全平"},
+      {"condition": "vol < VOL_MA20 * 0.5", "action": "全平"},
+      {"condition": "catalyst_fulfilled", "action": "Sell the News 全平"}
+    ],
+    "time_exit": {"trigger": "持仓 > 90天", "action": "自动减仓50%"},
+    "catastrophe_exit": {"trigger": "24小时内跌幅 > 30%", "action": "无条件全平"}
+  },
+  "indicators": {
+    "ma_periods": [5, 10, 20, 50, 100, 200],
+    "ema_periods": [12, 26],
+    "rsi_period": 14,
+    "bb_period": 20,
+    "bb_std": 2,
+    "atr_period": 14,
+    "vol_ma_periods": [5, 20]
+  },
+  "notes": [
+    "本策略基于2021年DOGE极端行情提炼，存在过拟合风险，必须在其他Meme币和不同时间段完成回测验证后方可实盘使用",
+    "社交情绪指标依赖第三方API(LunarCrush/Santiment)，需确认API可用性和数据质量",
+    "黑马专属子策略触发条件苛刻(7日涨幅>100%+热搜暴增+资金费率极端)，预期触发频率极低",
+    "Sell the News纪律是本策略的生命线，ATH次日暴跌是Meme币行情的标配而非例外",
+    "仓位管理严格执行，初始30%+最多加至60%，绝不突破上限"
+  ]
+}
+
+```

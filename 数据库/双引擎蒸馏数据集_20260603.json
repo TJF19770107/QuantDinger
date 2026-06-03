@@ -1,0 +1,101 @@
+{
+  "dataset_meta": {
+    "name": "女娲+马斯克双引擎蒸馏数据集",
+    "version": "1.0",
+    "created": "2026-06-03",
+    "source": "LOBSTER-BLACK-HORSE-v4 全系列蒸馏",
+    "records_analyzed": 12885,
+    "time_span": "2025-08-22 ~ 2026-05-31 (281天)"
+  },
+  "summary_statistics": {
+    "total_trades": 12885,
+    "buy_count": 7262,
+    "sell_count": 5623,
+    "total_volume_usdt": 633261.05,
+    "total_fee_usdt": -288.16,
+    "total_realized_pnl_usdt": 1029.89,
+    "win_trades": 3872,
+    "loss_trades": 1635,
+    "win_rate_pct": 71.7,
+    "total_profit_usdt": 8495.77,
+    "total_loss_usdt": -7465.88,
+    "profit_factor": 1.14,
+    "avg_win_usdt": 2.29,
+    "avg_loss_usdt": -5.06,
+    "win_loss_ratio": 0.45
+  },
+  "profit_distribution": {
+    "0_to_1_usdt": {"count": 1938, "total": 763.13, "pct": 54.4},
+    "1_to_3_usdt": {"count": 933, "total": 1640.36, "pct": 26.2},
+    "3_to_5_usdt": {"count": 304, "total": 1154.72, "pct": 8.5},
+    "5_to_10_usdt": {"count": 257, "total": 1778.43, "pct": 7.2},
+    "10_to_20_usdt": {"count": 86, "total": 1181.78, "pct": 2.4},
+    "20_to_50_usdt": {"count": 41, "total": 1262.55, "pct": 1.2},
+    "50_plus_usdt": {"count": 4, "total": 390.46, "pct": 0.1}
+  },
+  "loss_distribution": {
+    "0_to_1_usdt": {"count": 527, "total": -200.21, "pct": 37.4},
+    "1_to_3_usdt": {"count": 368, "total": -651.80, "pct": 26.1},
+    "3_to_5_usdt": {"count": 167, "total": -644.24, "pct": 11.9},
+    "5_to_10_usdt": {"count": 155, "total": -1132.96, "pct": 11.0},
+    "10_to_20_usdt": {"count": 135, "total": -1927.36, "pct": 9.6},
+    "20_to_50_usdt": {"count": 44, "total": -1221.91, "pct": 3.1},
+    "50_plus_usdt": {"count": 13, "total": -1346.20, "pct": 0.9}
+  },
+  "monthly_pnl": {
+    "2025-08": -13.19,
+    "2025-09": 809.00,
+    "2025-10": 185.37,
+    "2025-11": -34.05,
+    "2025-12": -53.99,
+    "2026-01": 100.16,
+    "2026-02": 4.27,
+    "2026-03": -19.29,
+    "2026-04": 16.90,
+    "2026-05": 34.71
+  },
+  "top_profit_symbols": {
+    "MYXUSDT": 508.25,
+    "BNBUSDT": 408.75,
+    "PUMPBTCUSDT": 212.80,
+    "COAIUSDT": 175.55,
+    "AIAUSDT": 144.42
+  },
+  "top_loss_symbols": {
+    "BTCUSDT": -173.90,
+    "BEATUSDT": -85.67,
+    "HEMIUSDT": -74.27,
+    "TAUSDT": -59.75,
+    "ICNTUSDT": -55.16
+  },
+  "streak_analysis": {
+    "max_win_streak": 70,
+    "max_loss_streak": 24,
+    "top_win_streaks": [70, 58, 46, 44, 43, 43, 41, 39, 37, 37],
+    "top_loss_streaks": [24, 22, 20, 16, 14, 13, 13, 13, 13, 13]
+  },
+  "night_trading_analysis": {
+    "description": "深夜交易(UTC+8 0-6点)整体表现劣势",
+    "worst_night_symbols": {"TAUSDT": -124.73, "BNBUSDT": -108.46, "AIOUSDT": -43.78},
+    "best_night_symbols": {"MYXUSDT": 134.15, "RIVERUSDT": 106.40, "PUMPBTCUSDT": 96.02}
+  },
+  "hourly_pnl": {
+    "0": 206.29, "1": -12.85, "2": 55.58, "3": 15.28, "4": -215.83,
+    "5": 3.69, "6": 14.03, "7": 1.23, "8": 182.50, "9": -67.47,
+    "10": -91.82, "11": 134.43, "12": -60.86, "13": 66.31, "14": 157.92,
+    "15": 16.50, "16": -16.35, "17": 64.96, "18": 542.56, "19": -48.20,
+    "20": 277.95, "21": -26.21, "22": 114.00, "23": -283.75
+  },
+  "fomo_days": [
+    {"date": "2026-02-26", "trades": 134, "pnl": 121.57, "symbols": 3},
+    {"date": "2026-01-09", "trades": 114, "pnl": -14.52, "symbols": 5},
+    {"date": "2026-01-01", "trades": 93, "pnl": 14.98, "symbols": 5},
+    {"date": "2026-01-21", "trades": 88, "pnl": 47.32, "symbols": 9},
+    {"date": "2025-09-08", "trades": 60, "pnl": 508.62, "symbols": 5}
+  ],
+  "strategy_evolution": {
+    "v4_backup": {"version": "4.0", "date": "2026-05-31", "key_features": ["4因子评分", "布林带突破", "ETF催化权重"]},
+    "v4_12_1": {"date": "2026-06-02", "key_features": ["道家心法下沉API", "金字塔加仓", "日交易上限3笔"]},
+    "v4_12_6": {"date": "2026-06-03", "key_features": ["七重熔断7.0/7.0", "战争预警Level2", "原油联动双轨", "恐惧23->tier_25"]}
+  }
+}

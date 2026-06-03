@@ -1,0 +1,114 @@
+{
+  "采集时间": "2026-05-31 18:30",
+  "轮次": "R15",
+  "对标Agent": {
+    "Codex": {
+      "版本": "2026年5月重大更新",
+      "核心新增": [
+        "Computer Use 后台操控电脑（视觉识别+点击+输入）",
+        "多Agent并行工作（Mac上多个智能体互不干扰）",
+        "内置浏览器 + 页面标注（精准定位DOM元素）",
+        "记忆功能(Memory)预览版——记住偏好、修正、经验",
+        "任务延续自动化(Automation)——跨天/跨周长期任务",
+        "主动提议后续工作（上下文感知建议）",
+        "90+ 新增插件（JIRA/CircleCI/GitLab/MS套件等）",
+        "gpt-image-1.5 图像生成集成",
+        "PR审查 + 多标签终端 + SSH远程Devbox",
+        "摘要面板（实时追踪任务计划/来源/产出）",
+        "300万+周活开发者"
+      ],
+      "架构亮点": "从编码助手→全能协作伙伴；Computer Use + Memory + Automation 三位一体",
+      "可融合度": 9.2
+    },
+    "Claude": {
+      "版本": "Claude Opus 4.8 (2026-05-28)",
+      "核心新增": [
+        "动态工作流(Dynamic Workflows)——自动编写编排脚本",
+        "上百个子Agent协同（自动拆分→派活→查作业→互相找茬）",
+        "专设质疑Agent推翻前期结论，确保质量",
+        "超大型任务：Bun运行时Zig→Rust迁移(75万行代码/11天/99.8%通过率)",
+        "主会话不被中间结果淹没，进度实时保存/断点恢复",
+        "Claude Mythos 预告（几周内发布）",
+        "API侧已上线 Amazon Bedrock / Vertex AI / Microsoft Foundry"
+      ],
+      "架构亮点": "Dynamic Workflows = 军团模式；编排脚本+子Agent池+质疑Agent+迭代收敛",
+      "可融合度": 9.5
+    },
+    "Hermes": {
+      "版本": "v0.14.0 (2026-05)",
+      "核心新增": [
+        "GEPA自进化引擎——自动将成功路径沉淀为.md技能文件",
+        "技能补丁式更新(Patch)——只修改问题片段，避免全量重写",
+        "四层记忆架构：L1身份/L2会话/L3任务/L4长期(SQLite FTS5)",
+        "受控子Agent——短生命周期+专用上下文+专用工具集",
+        "200+模型兼容，15+消息平台(微信/飞书/Telegram等)",
+        "7种部署后端(本地/Docker/SSH/Singularity/Modal等)",
+        "内置Cron调度(日报/备份/审计无人值守)",
+        "Windows一键安装器 v0.10.0",
+        "140K+ GitHub Stars，OpenRouter使用量#1"
+      ],
+      "架构亮点": "GEPA自进化闭环 + 四层记忆 + 受控子Agent + 模型无锁定",
+      "可融合度": 9.8
+    },
+    "OpenClaw": {
+      "版本": "2026-05",
+      "核心新增": [
+        "247K GitHub Stars",
+        "Gateway进程架构——本地调度中枢",
+        "5400+ Skills生态（社区贡献）",
+        "微信/Telegram/WhatsApp 多平台桥接",
+        "MIT开源协议，完全本地运行",
+        "Peter Steinberger加入OpenAI"
+      ],
+      "架构亮点": "Gateway中枢+Skills市场+多平台消息桥接",
+      "可融合度": 8.5
+    },
+    "OpenCode": {
+      "版本": "v1.15.12 (2026-05-28)",
+      "核心新增": [
+        "ACP协议集成（Agent Communication Protocol）",
+        "WebSocket传输支持OpenAI实时响应",
+        "Anthropic Opus 4.7+ 自适应推理控制",
+        "LSP自动加载（语言服务器协议）",
+        "多会话并行（同一项目多个Agent同时跑）",
+        "75+ LLM提供商（含本地模型）",
+        "会话分享链接",
+        "120K+ Stars / 800+贡献者 / 5M月活开发者",
+        "隐私优先——不存储任何代码或上下文"
+      ],
+      "架构亮点": "开源AI IDE + LSP原生集成 + 多会话并行 + ACP协议",
+      "可融合度": 8.8
+    },
+    "Gemini": {
+      "版本": "Antigravity 2.0 (2026-05-20)",
+      "核心新增": [
+        "从'开发者IDE'→'通用Agent优先工作平台'转型",
+        "多子Agent并行编程（不同任务独立Agent）",
+        "定时任务(Scheduled Tasks) /schedule命令",
+        "按Project管理（非Workspace强绑定）",
+        "斜杠命令体系：/goal /grill-me /browser",
+        "Gemini CLI子Agent——主Agent编排+子Agent隔离执行+摘要回传",
+        "Managed Agents——1次API请求启动Linux沙箱Agent",
+        "沙箱持久化（关闭后状态保留）",
+        "AI Studio移动端+原生Android编译+直出Google Play"
+      ],
+      "架构亮点": "Agent优先工作平台 + 子Agent隔离 + 沙箱持久化 + 移动端联动",
+      "可融合度": 9.0
+    },
+    "Marvis": {
+      "版本": "v1.0 (2026-05-20 正式上线)",
+      "核心新增": [
+        "6个预装Agent：PM/File/Computer/Browser/App/Search",
+        "操作系统层级AI中间层（系统→文件→应用→算力→跨端）",
+        "虚拟办公室可视化（Agent状态：搬砖/打盹/健身/喝咖啡）",
+        "手机远程操控PC桌面（实时可视化+远程解锁）",
+        "跨端互联（Windows/Mac/Android/iOS）",
+        "每日1000万免费Token",
+        "Workbuddy→Marvis升级：办公自动化→全设备理解操控",
+        "合同审查/运营分析/参考文献整理/发票归类"
+      ],
+      "架构亮点": "OS层级AI中间层 + 6Agent协同团队 + 虚拟办公室 + 跨端远程操控",
+      "可融合度": 9.5
+    }
+  }
+}

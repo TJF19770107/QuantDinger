@@ -1,0 +1,27 @@
+# stable_checkpoint_20260531_154500_R15.json
+
+> 原始文件: `stable_checkpoint_20260531_154500_R15.json`  |  类型: `.json`  |  自动转换
+
+```json
+{
+  "version": "R15",
+  "date": "2026-05-31T15:45:00",
+  "total_gaps": 37,
+  "closed": 16,
+  "open": 21,
+  "designed_in_r15": ["GAP-001", "GAP-005", "GAP-045", "GAP-046"],
+  "next_round_r16": [
+    {"priority": "P0", "id": "GAP-005", "action": "Mem0 v3.0 + Qdrant 部署"},
+    {"priority": "P0", "id": "GAP-001", "action": "L1规则引擎100+规则实现"},
+    {"priority": "P1", "id": "GAP-045", "action": "Router模块编码（置信度评分+任务分类器）"},
+    {"priority": "P1", "id": "GAP-046", "action": "Graphiti引擎本地部署+会话KG建模"}
+  ],
+  "capability_score": {
+    "total": 40,
+    "stable": 9,
+    "active": 16,
+    "completed": 7,
+    "designed": 8
+  }
+}
+```

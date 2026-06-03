@@ -1,0 +1,122 @@
+{
+  "schema_version": "2.0",
+  "generated_at": "2026-05-31T12:58:00",
+  "iteration": "R13",
+  "project": "豆包Agent",
+  "total_skills": 19,
+  "skills": {
+    "core_engines": [
+      {
+        "skill_id": "claude_reasoning_enhanced_v2.0",
+        "name": "Claude分层推理增强引擎",
+        "version": "2.0",
+        "file": "architecture/claude_reasoning_enhanced_v2.0.py",
+        "maturity": "beta",
+        "category": "reasoning",
+        "description": "五层推理架构中文增强版：意图分类+上下文管理+深度回溯+工具联动+长文档推理",
+        "modules": [
+          "ChineseIntentClassifier",
+          "ContextLayerManager",
+          "DeepBacktrackManager",
+          "ToolLinkageReasoner",
+          "ChineseLongDocReasoner"
+        ]
+      },
+      {
+        "skill_id": "workflow_dashboard_v2.0",
+        "name": "可视化工作流运行状态看板",
+        "version": "2.0",
+        "file": "architecture/dashboard/workflow_dashboard_v2.0.html",
+        "maturity": "beta",
+        "category": "visualization",
+        "description": "暗色主题全功能HTML看板：5统计卡片+进度条+节点列表+日志面板+API轮询",
+        "features": ["状态指示灯", "节点监控", "四级日志过滤", "自动轮询", "文件协议兼容"]
+      },
+      {
+        "skill_id": "skill_auto_extractor_v1.0",
+        "name": "技能自动萃取引擎",
+        "version": "1.0",
+        "file": "architecture/skill_auto_extractor_v1.0.py",
+        "maturity": "beta",
+        "category": "evolution",
+        "description": "日志→模式识别→候选生成→审查→入库→迭代优化：完整萃取流水线",
+        "modules": [
+          "PatternRecognitionEngine",
+          "SkillGenerator",
+          "SkillReviewer",
+          "SkillIterationOptimizer"
+        ]
+      },
+      {
+        "skill_id": "integration_orchestrator_v1.0",
+        "name": "全域集成编排器",
+        "version": "1.0",
+        "file": "architecture/integration_orchestrator_v1.0.py",
+        "maturity": "beta",
+        "category": "orchestration",
+        "description": "串联推理→编排→进化的完整闭环编排器",
+        "pipeline": ["推理层", "工作流层", "自进化层"]
+      }
+    ],
+    "legacy_engines": [
+      {
+        "skill_id": "claude_reasoning_engine_v1.0",
+        "name": "Claude分层推理引擎",
+        "version": "1.0",
+        "file": "architecture/claude_reasoning_engine.py",
+        "maturity": "stable",
+        "status": "被v2.0继承"
+      },
+      {
+        "skill_id": "visual_workflow_engine_v1.0",
+        "name": "可视化工作流引擎",
+        "version": "1.0",
+        "file": "architecture/visual_workflow_engine.py",
+        "maturity": "stable",
+        "status": "被v2.0看板增强"
+      },
+      {
+        "skill_id": "self_evolution_orchestrator_v1.0",
+        "name": "深度自进化核心闭环",
+        "version": "1.0",
+        "file": "architecture/self_evolution_orchestrator.py",
+        "maturity": "stable",
+        "status": "被skill_auto_extractor增强"
+      }
+    ],
+    "agent_skills": [
+      {"skill_id": "龙虾自主驱动_v2.0", "name": "龙虾自主驱动引擎", "version": "2.0", "file": "子Agent/龙虾Agent/skills/龙虾自主驱动_v2.0.py"},
+      {"skill_id": "龙虾图谱感知_v2.0", "name": "龙虾知识图谱感知层", "version": "2.0", "file": "子Agent/龙虾Agent/skills/龙虾图谱感知_v2.0.py"},
+      {"skill_id": "龙虾推理引擎_v2.0", "name": "龙虾推理引擎", "version": "2.0", "file": "子Agent/龙虾Agent/skills/龙虾推理引擎_v2.0.py"},
+      {"skill_id": "龙虾接口网关_v2.0", "name": "龙虾全域接口网关", "version": "2.0", "file": "子Agent/龙虾Agent/skills/龙虾接口网关_v2.0.py"},
+      {"skill_id": "龙虾记忆体_v2.0", "name": "龙虾持久化记忆体", "version": "2.0", "file": "子Agent/龙虾Agent/skills/龙虾记忆体_v2.0.py"},
+      {"skill_id": "龙虾进化蓝图_v2.0", "name": "龙虾自进化蓝图引擎", "version": "2.0", "file": "子Agent/龙虾Agent/skills/龙虾进化蓝图_v2.0.py"},
+      {"skill_id": "龙虾神经网络_v2.0", "name": "龙虾神经网络内核", "version": "2.0", "file": "子Agent/龙虾Agent/skills/龙虾神经网络_v2.0.py"},
+      {"skill_id": "龙虾观测平台_v2.0", "name": "龙虾全局观测平台", "version": "2.0", "file": "子Agent/龙虾Agent/skills/龙虾观测平台_v2.0.py"},
+      {"skill_id": "龙虾调度引擎_v2.0", "name": "龙虾子Agent调度引擎", "version": "2.0", "file": "子Agent/龙虾Agent/skills/龙虾调度引擎_v2.0.py"},
+      {"skill_id": "龙虾安全防护_v2.0", "name": "龙虾安全防护系统", "version": "2.0", "file": "子Agent/龙虾Agent/skills/龙虾安全防护_v2.0.py"},
+      {"skill_id": "龙虾表情识别_v1.0", "name": "龙虾表情识别引擎", "version": "1.0", "file": "子Agent/龙虾Agent/skills/龙虾表情识别_v1.0.py"},
+      {"skill_id": "龙虾多模态_v1.0", "name": "龙虾多模态处理引擎", "version": "1.0", "file": "子Agent/龙虾Agent/skills/龙虾多模态_v1.0.py"}
+    ]
+  },
+  "coverage": {
+    "中文全场景推理": "95%",
+    "可视化工作流": "90%",
+    "技能自动萃取": "85%",
+    "全域集成编排": "90%",
+    "Obsidian联动": "80%",
+    "桌面控制联动": "70%",
+    "Claude推理架构": "95%",
+    "Hermes调度体系": "60%",
+    "Codex五层": "55%",
+    "GenericAgent自进化": "75%"
+  },
+  "next_iteration": "R14",
+  "next_priorities": [
+    "Claude推理引擎v2.1：接入真实LLM推理",
+    "可视化工作流v2.1：WebSocket实时推送",
+    "技能自动萃取v1.1：LLM优化技能描述",
+    "Hermes调度体系独立实现",
+    "Codex五层深度融合"
+  ]
+}

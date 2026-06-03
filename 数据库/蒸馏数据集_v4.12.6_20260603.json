@@ -1,0 +1,75 @@
+{
+  "dataset_name": "LOBSTER-BLACK-HORSE-v4_蒸馏数据集",
+  "version": "4.12.6",
+  "generated": "2026-06-03 12:00:00",
+  "source_files": [
+    "Binance-合约交易历史记录-202605302235(UTC+8).csv",
+    "Binance-合约订单历史记录-202605302236(UTC+8).csv",
+    "LOBSTER-BLACK-HORSE-v4.json (v4.12.6)",
+    "LOBSTER-BLACK-HORSE-v4.md"
+  ],
+  "data_summary": {
+    "total_trades": 12885,
+    "time_range": "2025-08-22 ~ 2026-05-31",
+    "net_pnl_usdt": 740.6332,
+    "gross_profit": 8495.7663,
+    "gross_loss": -7465.8804,
+    "total_fees": 289.2527,
+    "win_rate_pct": 70.31,
+    "buy_trades": 7262,
+    "sell_trades": 5623,
+    "buy_pnl": -16.864,
+    "sell_pnl": 1046.7499
+  },
+  "trading_psychology_profile": {
+    "strength_patterns": {
+      "sell_direction_mastery": "SELL方向盈利+1046.75 USDT，占净盈利141%，是核心盈利方向",
+      "breakout_capture_ability": "MYXUSDT(小币种突破)实现+508.25 USDT，展现动量突破捕捉能力",
+      "mainstream_coin_control": "BNBUSDT盈利+408.75 USDT，在主流币上具备稳定盈利模式",
+      "technical_discipline": "胜率70.31%表明入场条件筛选有效",
+      "pyramid_entry_benefit": "多笔获利交易呈现阶梯式加仓特征，金字塔加仓模块有效"
+    },
+    "weakness_patterns": {
+      "buy_direction_deficit": "BUY方向净亏损-16.86 USDT，存在追高/抄底行为模式",
+      "btc_overconfidence": "BTCUSDT亏损-173.90 USDT（最差品种），在BTC上过度交易或判断失误",
+      "large_loss_events": "13笔单笔亏损>50 USDT，最大单笔-171.99 USDT，尾部风险突出",
+      "overtrading_tendency": "RIVERUSDT 1505笔、PIPPINUSDT 1478笔，部分品种存在高频过度交易",
+      "liquidation_event": "LABUSDT发生爆仓清算（订单类型LIQUIDATION），风控机制曾失效",
+      "concentration_risk": "TAUSDT 78笔亏损-59.75、HEMIUSDT 92笔亏损-74.27、BEATUSDT 322笔亏损-85.67",
+      "late_night_trading": "凌晨0-3时仍活跃交易（约1200笔），可能影响判断质量"
+    }
+  },
+  "strategy_distillation": {
+    "profitable_rules": [
+      "动量突破卖出：在MYXUSDT等小币上捕捉放量突破卖出机会，赢率高",
+      "主流币波段操作：BNBUSDT的低买高卖节奏控制良好",
+      "多因子评分入场：A级信号过滤使胜率维持70%+",
+      "ATR动态止损：保护了大部分盈利不被回吐"
+    ],
+    "loss_causing_behaviors": [
+      "BTC方向性押注：单品种亏损占净亏损23.5%，需限制BTC仓位",
+      "山寨币持仓过久：TAUSDT/HEMIUSDT/BEATUSDT持续亏损表明持仓周期问题",
+      "爆仓后未按恢复规则执行：LABUSDT爆仓后恢复期规则未严格执行",
+      "倒金字塔加仓疑点：部分大亏记录显示亏损状态下可能仍有加仓行为"
+    ],
+    "noise_vs_signal": {
+      "validated_signals": [
+        "SELL方向动量突破",
+        "主流币回调买入",
+        "成交量确认突破"
+      ],
+      "noise_to_remove": [
+        "BTC短期方向判断",
+        "凌晨时段交易决策",
+        "山寨币追高买入"
+      ]
+    }
+  },
+  "current_strategy_state": {
+    "circuit_breakers_active": "7.0/7.0 全量激活",
+    "cooldown_days": 60,
+    "position_status": "全账户零开仓",
+    "fear_greed_index": 23,
+    "war_level": 2
+  }
+}

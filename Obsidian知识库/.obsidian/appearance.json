@@ -1,0 +1,15 @@
+{
+  "accentColor": "#7f6df2",
+  "cssTheme": "",
+  "baseFontSize": 16,
+  "baseFontSizeAction": true,
+  "enabledCssSnippets": [],
+  "theme": "obsidian",
+  "translucency": false,
+  "nativeMenus": true,
+  "showViewHeader": true,
+  "interfaceFontFamily": "Microsoft YaHei",
+  "textFontFamily": "Microsoft YaHei",
+  "monospaceFontFamily": "Consolas, 'Courier New', monospace",
+  "showRibbon": true
+}

@@ -1,0 +1,39 @@
+﻿============================================
+AI分身全量同步日志
+时间: 2026-05-31 21:06:12
+============================================
+
+【仓库信息】
+远端仓库: https://github.com/lobster-ai/lobster-ai-avatar
+本地分支: main
+最新提交: 93a6949
+
+【本地文件统计】
+文件总数: 435
+子目录数: 82
+
+【关键文件 SHA256 校验】
+SOUL.md (Hermes): 27ACBA13BAFC54F5...
+SOUL.md (豆包): 27ACBA13BAFC54F5...
+SOUL.md (OpenClaw龙虾): 663BA8BE99E353A8...
+USER.md (Hermes): 85E213BC3B257962...
+USER.md (豆包): 85E213BC3B257962...
+USER.md (OpenClaw龙虾): 63BFB32C06DE2C8A...
+AGENTS.md (Hermes): 038A3A7C0F74FAF6...
+AGENTS.md (豆包): 038A3A7C0F74FAF6...
+AGENTS.md (OpenClaw龙虾): 52CEE96C4C20E048...
+交易心理画像.md: 94BFB7907E6D473A...
+
+【同步结果】
+状态: ❌ 失败
+原因: GitHub 远端不可达 - Failed to connect to github.com port 443 (网络连接超时)
+本地仓库状态: 干净 (与上一次同步 2026-05-31 21:01:05 一致)
+待同步文件数: 0 (无新增变更)
+
+【故障排查建议】
+1. 检查网络连接是否正常
+2. 确认 github.com 是否可访问
+3. 检查防火墙/代理设置
+4. 验证 GitHub Token 是否有效
+
+============================================

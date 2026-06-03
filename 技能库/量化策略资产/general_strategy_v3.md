@@ -1,0 +1,105 @@
+# general_strategy_v3.json
+
+> 原始文件: `general_strategy_v3.json`  |  类型: `.json`  |  自动转换
+
+```json
+---
+file_type: 策略文档
+created: 2026-05-31
+tags: [量化交易, DOGE, 通用策略]
+aliases: ['通用策略v3']
+related: [[[general_strategy.json]], [[black_horse_strategy_v3.json]]]
+---
+
+{
+  "strategy_name": "龙虾通用趋势策略 v1.0 (Lobster General Trend Strategy)",
+  "version": "3.0.0",
+  "type": "trend_following",
+  "market": "CRYPTO",
+  "symbols": ["*"],
+  "timeframes": ["1D"],
+  "description": "面向常规行情的稳健趋势跟踪策略，以均线排列为核心信号，金字塔式加仓，ATR动态止损。适用于趋势明确的任何加密资产，不依赖事件催化剂。",
+  "entry_conditions": {
+    "trend_confirmation": {
+      "ma_alignment": "MA20 > MA50 > MA200",
+      "price_position": "price > MA20",
+      "description": "确认中长期上升趋势"
+    },
+    "entry_timing": {
+      "rsi_range": {"min": 50, "max": 65, "description": "回调至合理区间"},
+      "price_zone": "回调至MA20附近",
+      "description": "趋势中的回调入场"
+    },
+    "volume_confirmation": {
+      "rule": "VOL_RATIO > 1.3",
+      "description": "放量确认趋势延续"
+    },
+    "overbought_filter": {
+      "rule": "RSI <= 80",
+      "description": "排除超买追高风险"
+    }
+  },
+  "position_management": {
+    "initial_entry": {"ratio": 0.25, "description": "趋势确认后初始建仓25%"},
+    "pyramid_add": {
+      "trigger": "趋势确认后每突破ATR * 2",
+      "size": {"ratio": 0.10, "description": "每次加仓10%"},
+      "max_additions": 3,
+      "max_total": {"ratio": 0.55, "description": "最大总仓位55%"}
+    }
+  },
+  "risk_management": {
+    "stop_loss": {
+      "method": "entry_price - ATR * 2",
+      "type": "hard_stop",
+      "description": "基于波动率的动态止损"
+    },
+    "max_position_risk": {
+      "ratio": 0.03,
+      "description": "单笔交易最大亏损不超过总资金的3%"
+    },
+    "correlation_check": {
+      "rule": "同板块持仓 ≤ 总仓位50%",
+      "description": "防止单一板块集中度风险"
+    },
+    "position_sizing": {
+      "max_single_symbol": 0.55,
+      "max_correlation_group": 0.50
+    }
+  },
+  "exit_rules": {
+    "trend_end": {
+      "condition": "price < MA50",
+      "action": "全平",
+      "description": "中期趋势逆转信号"
+    },
+    "overbought_exit": {
+      "condition": "RSI > 85 AND MACD_bearish_divergence",
+      "action": "全平",
+      "description": "超买 + 顶背离，强烈见顶信号"
+    },
+    "trailing_stop": {
+      "method": "MA20跟踪止损",
+      "action": "动态",
+      "description": "保护已有利润"
+    }
+  },
+  "indicators": {
+    "ma_periods": [20, 50, 200],
+    "rsi_period": 14,
+    "atr_period": 14,
+    "atr_multiplier": 2,
+    "vol_ratio_base": 1.3,
+    "macd": {"fast": 12, "slow": 26, "signal": 9}
+  },
+  "notes": [
+    "本策略为通用趋势跟踪框架，适用于任何趋势明确的加密资产，不限于Meme币",
+    "金字塔加仓严格遵循'盈利加仓'原则：仅在已有仓位盈利且趋势确认延续时才加仓",
+    "ATR×2止损提供了基于当前波动率的动态保护，避免固定百分比止损在低波动时过宽或高波动时过窄",
+    "板块集中度限制(≤50%)要求用户至少持有2个不相关板块的仓位",
+    "RSI>85+MACD顶背离是强退出信号，优先级高于趋势跟踪止损",
+    "策略不依赖任何外部数据源（社交媒体/新闻），完全基于价格和成交量数据，可复现性强"
+  ]
+}
+
+```

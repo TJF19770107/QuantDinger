@@ -1,0 +1,68 @@
+{
+  "version": "v4.12-PROPOSAL",
+  "base": "v4.11.0 PERSONALIZED",
+  "update_time": "2026-06-02T07:15:00+08:00",
+  "iteration": "R41",
+  "engines": ["女娲.SKILL", "马斯克.SKILL"],
+  "data_source": {
+    "trades": "Binance-合约交易历史记录-202605302235(UTC+8).csv",
+    "orders": "Binance-合约订单历史记录-202605302236(UTC+8).csv",
+    "strategy": "LOBSTER-BLACK-HORSE-v4",
+    "total_trades": 12885,
+    "total_pairs": 126,
+    "net_pnl": 740.63
+  },
+  "personality_profile": {
+    "trader_profile": {
+      "impulse_control": 3,
+      "position_patience": 4,
+      "direction_bias": "SELL(+1046.75) > BUY(-16.86)",
+      "profit_mindset": 5,
+      "loss_tolerance": 2,
+      "emotion_threshold": 3,
+      "night_quality": 1,
+      "best_hours": "18:00-20:00"
+    },
+    "key_findings": {
+      "over_trading": "日均51笔，60%零利润无效交易",
+      "pnl_ratio": "0.48:1 (平均盈利$2.19 vs 平均亏损$4.57)",
+      "fee_erosion": "21.9%利润被手续费吞噬",
+      "worst_hours": ["23:00(-302.62)", "04:00(-224.49)", "10:00(-102.07)"],
+      "best_pairs": ["MYXUSDT(+487.30)", "BNBUSDT(+344.70)", "PUMPBTCUSDT(+209.92)"],
+      "worst_pairs": ["BTCUSDT(-192.04)", "BEATUSDT(-88.78)", "HEMIUSDT(-75.12)"]
+    }
+  },
+  "new_protocols": {
+    "P08_IRON_SIX": {
+      "C01_HARD_STOP": {"limit": 10.00, "currency": "USDT", "penalty": "7d_pair_ban"},
+      "C02_NIGHT_BAN": {"window": "23:00-06:00", "timezone": "UTC+8", "penalty": "24h_freeze"},
+      "C03_PAIR_CAP": {"max_pairs": 5, "whitelist": ["MYXUSDT","BNBUSDT","PUMPBTCUSDT","LABUSDT","COAIUSDT"]},
+      "C04_DAILY_CAP": {"max_trades": 30, "penalty": "next_day_half"},
+      "C05_DAILY_LOSS_CAP": {"max_loss": 50.00, "penalty": "3d_cooldown"},
+      "C06_LIQUIDATION_COOLDOWN": {"hours": 72, "current_until": "2026-06-03T03:05:00+08:00"}
+    },
+    "P09_GOLDEN_HOURS": {
+      "active": "18:00-20:00 UTC+8",
+      "only_trade_in_window": true,
+      "off_hours_penalty": "next_day_window_halved"
+    }
+  },
+  "pair_strategies": {
+    "BNBUSDT": {"direction": "SELL", "stop": 10.0, "tp_ladder": [5,8], "position_pct": 12, "leverage": 1},
+    "MYXUSDT": {"direction": "SELL", "stop": 10.0, "tp_ladder": [3,6,9], "position_pct": 15, "leverage": 1},
+    "PUMPBTCUSDT": {"direction": "SELL", "stop": 5.0, "tp_ladder": [2,4], "position_pct": 10, "leverage": 1},
+    "LABUSDT": {"status": "FROZEN", "until": "2026-06-09", "direction": "SELL", "stop": 10.0},
+    "COAIUSDT": {"direction": "SELL", "stop": 10.0, "tp_ladder": [5], "position_pct": 10, "leverage": 1}
+  },
+  "market_conditions": {
+    "fear_greed_index": 9,
+    "btc_price": 71500,
+    "etf_outflow_24h": 544.94,
+    "war_level": 3.5,
+    "wti_change_pct": 6.16,
+    "brent_change_pct": 6.70,
+    "strategy_sold_btc": true,
+    "all_meltdowns_active": true
+  },
+  "musk_verdict": "盈亏比0.48数学不可持续。5币对/30笔/10美元硬止损/只做空/仅18-20点→去掉90%交易，质量提升5倍。白痴指数：去掉不产生价值的环节。"
+}

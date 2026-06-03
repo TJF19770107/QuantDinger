@@ -1,0 +1,65 @@
+# capabilities_R17.json
+
+> 原始文件: `capabilities_R17.json`  |  类型: `.json`  |  自动转换
+
+```json
+{
+  "version": "4.6",
+  "round": "R17",
+  "timestamp": "2026-05-31T19:10:00+08:00",
+  "iteration_cycle": "3h_loop",
+  "target_agents": [
+    "Codex",
+    "Claude",
+    "Hermes",
+    "OpenClaw",
+    "OpenCode",
+    "Gemini",
+    "Marvis Workbody"
+  ],
+  "r17_key_findings": {
+    "claude_code_runtime": {
+      "five_level_compression": "Tool Result Budget → Snip → Microcompact → Context Collapse → Autocompact",
+      "hook_system": "0/1/2 exit codes: silent/alert/blocking, 4 hook types",
+      "fork_cache": "SubAgent inherits rendered system prompt for Prompt Cache hit",
+      "seven_layer_defense": "Trust → Permission Mode → Rules → Bash AST → Tool-level → Sandbox → User Confirm",
+      "memory_async_prefetch": "Parallel search + freshness scoring"
+    },
+    "sica_three_schools": {
+      "dgm": "Darwin Gödel Machine: LLM mutation + archive selection, 20%→50% SWE-bench",
+      "sica": "Meta-agent pattern: archive analysis → targeted fix, 17%→53%",
+      "live_swe": "Runtime self-modification during task execution, 77.4% SWE-bench (leaderboard #1)",
+      "governance_gap": "All three systems exhibit reward hacking risk; audit trail required for production"
+    },
+    "hermes_gepa": {
+      "three_layer_evolution": "Fast(runtime skill) + Slow(GEPA+DSPy) + Training(Atropos RL)",
+      "gepa": "Genetic-Pareto Prompt Evolution (ICLR 2026 Oral): multi-objective + constraint gate",
+      "quality_gain": "39.5% improvement in Phase 1"
+    },
+    "google_opal": {
+      "agent_step": "Auto-analyzes goal → selects optimal path → invokes tools",
+      "dynamic_routing": "Runtime path selection based on upstream output",
+      "interactive_chat": "Workflow nodes can pause for user input"
+    }
+  },
+  "new_gaps_identified": [
+    {"id": "GAP-049", "desc": "五级压缩流水线", "priority": "P0", "source": "Claude Code Runtime"},
+    {"id": "GAP-050", "desc": "Hook事件系统", "priority": "P0", "source": "Claude Code Hooks"},
+    {"id": "GAP-051", "desc": "GEPA多目标进化优化器", "priority": "P0", "source": "Hermes GEPA"},
+    {"id": "GAP-052", "desc": "DGM档案树进化策略", "priority": "P1", "source": "Darwin Gödel Machine"},
+    {"id": "GAP-053", "desc": "自修改治理审计追踪", "priority": "P1", "source": "三学派风险分析"},
+    {"id": "GAP-054", "desc": "Fork子Agent缓存优化", "priority": "P1", "source": "Claude Code Fork"},
+    {"id": "GAP-055", "desc": "Swarm对等协作模式", "priority": "P1", "source": "Claude Code Swarm"},
+    {"id": "GAP-056", "desc": "工作流动态路由+交互Chat", "priority": "P1", "source": "Google Opal"},
+    {"id": "GAP-057", "desc": "记忆异步预取+新鲜度评分", "priority": "P1", "source": "Claude Code Memory"},
+    {"id": "GAP-058", "desc": "Bash命令AST安全解析", "priority": "P1", "source": "Claude Code tree-sitter"}
+  ],
+  "next_round_preload": [
+    "P0-五级压缩流水线代码落地",
+    "P0-Hook事件框架代码落地",
+    "P0-GEPA优化器代码落地",
+    "P1-治理审计追踪模块",
+    "P1-记忆异步预取模块"
+  ]
+}
+```

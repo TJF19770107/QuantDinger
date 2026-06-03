@@ -1,0 +1,50 @@
+{
+  "version": "5.0",
+  "registered": 15,
+  "status": {
+    "deployed": 6,
+    "designed": 6,
+    "planned": 3
+  },
+  "capabilities": [
+    {"id": "S01", "name": "AutoFileScanner", "status": "deployed", "benchmark": "OpenClaw Workspace"},
+    {"id": "S02", "name": "SkillForge", "status": "deployed_upgraded", "benchmark": "Hermes Skill Pipeline, auto-trigger + evolution"},
+    {"id": "S03", "name": "DesktopController", "status": "deployed", "benchmark": "Claude Cowork"},
+    {"id": "S04", "name": "AutoWake", "status": "deployed_upgraded", "benchmark": "Claude Managed Agents, Dreaming 3-step"},
+    {"id": "S05", "name": "MemoryOS", "status": "deployed_upgraded", "benchmark": "Hermes SQLite+FTS5, 5-layer compression"},
+    {"id": "S06", "name": "SafeGuard", "status": "deployed_upgraded", "benchmark": "Claude Code 7-layer permission"},
+    {"id": "S07", "name": "CodeAgent", "status": "designed", "benchmark": "Claude Code while-loop state machine"},
+    {"id": "S08", "name": "MissionControl", "status": "designed", "benchmark": "Antigravity Agent Manager, parallel dispatch"},
+    {"id": "S09", "name": "ModelRouter", "status": "designed", "benchmark": "Smart routing: local GPU → cloud API → deep reasoning"},
+    {"id": "S10", "name": "BrowserSurface", "status": "designed", "benchmark": "Antigravity Browser, localhost screenshot review"},
+    {"id": "S11", "name": "SoulWorker", "status": "designed", "benchmark": "Eve V2U Soul-Worker dual-layer"},
+    {"id": "S12", "name": "SteerInjector", "status": "designed", "benchmark": "Eve V2U STEER mid-task correction"},
+    {"id": "S13", "name": "SkillPruner", "status": "planned", "benchmark": "Hermes Curator v0.12.0"},
+    {"id": "S14", "name": "GitWorktree", "status": "planned", "benchmark": "Claude Code Git Worktree isolation"},
+    {"id": "S15", "name": "HookEngine", "status": "planned", "benchmark": "Claude Code Hooks lifecycle"}
+  ],
+  "architecture": {
+    "core_engine": "while-loop state machine (Claude Code pattern)",
+    "permission": "7-layer (L1 AlwaysAllow → L7 GlobalDeny)",
+    "context_compression": "5-layer pipeline (Truncation→Pruning→Summary→Sliding→Dedup)",
+    "agent_isolation": "Git Worktree file-level (planned)",
+    "dual_layer": "Soul (local GPU Qwen2.5:7B) + Worker (cloud Doubao-Seed-2.0)",
+    "ide_surface": "3-Surface (Editor + Terminal + Browser)",
+    "evolution_loop": "AutoWake→Scan→Memory→Forge→Guard→Execute→Learn"
+  },
+  "benchmark_peers": [
+    "Claude Code (50万行TypeScript, 5 subsystems)",
+    "Hermes Agent v0.15.1 (6:5 vs Codex, self-evolving)",
+    "Google Antigravity (Agent-First IDE, Gemini 3, Mission Control)",
+    "Eve Agent V2U (Soul-Worker, 112 subagents, 273 skills)",
+    "OpenCode v1.15.12 (WebSocket, ACP-next)",
+    "OpenClaw (20+ platforms, gateway architecture)",
+    "Codex (OpenAI, cloud-only)"
+  ],
+  "gaps": {
+    "closed": ["GAP-001", "GAP-003"],
+    "open": ["GAP-002", "GAP-004", "GAP-005", "GAP-006"],
+    "new_r05": ["GAP-007", "GAP-008", "GAP-009", "GAP-010", "GAP-011"]
+  },
+  "updated": "2026-05-31T04:40:00"
+}

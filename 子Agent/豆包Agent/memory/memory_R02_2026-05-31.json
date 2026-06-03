@@ -1,0 +1,81 @@
+{
+  "agent": "豆包Agent",
+  "memory_version": "1.0",
+  "created": "2026-05-31",
+  "round": 2,
+  "entries": [
+    {
+      "id": "mem_001",
+      "type": "insight",
+      "category": "industry_trend",
+      "content": "Agent行业正从单模型能力转向Agent Runtime/Agent OS。Claude/Codex/Gemini/OpenCode全部在构建Agent基础设施层。",
+      "source": "全7大Agent对标分析",
+      "priority": "critical",
+      "timestamp": "2026-05-31"
+    },
+    {
+      "id": "mem_002",
+      "type": "insight",
+      "category": "capability_gap",
+      "content": "豆包最大短板：长期记忆（vs Claude Dreaming+Memory）和自我改进（vs HyperAgents DGM-H）。两者均为P0优先级。",
+      "source": "能力对标矩阵v2.0",
+      "priority": "critical",
+      "timestamp": "2026-05-31"
+    },
+    {
+      "id": "mem_003",
+      "type": "insight",
+      "category": "architecture",
+      "content": "多Agent编排已成标配：Hermes SWARM无限编排、Gemini 93并行、Claude Managed Agents多Agent编排。豆包需建立Orchestrator+Worker架构。",
+      "source": "Hermes/Gemini/Claude分析",
+      "priority": "high",
+      "timestamp": "2026-05-31"
+    },
+    {
+      "id": "mem_004",
+      "type": "insight",
+      "category": "performance",
+      "content": "速度决定Agent可用性。Gemini 3.5 Flash 289 t/s是Claude/GPT的4倍。速度快到临界点才能真正'全自动'。",
+      "source": "Google I/O 2026",
+      "priority": "high",
+      "timestamp": "2026-05-31"
+    },
+    {
+      "id": "mem_005",
+      "type": "insight",
+      "category": "strategy",
+      "content": "开源Harness才是长期壁垒。OpenCode 141k stars证明开发者需要可审计/可替换/可自托管的Agent框架。Agent上限由Harness决定，不是模型。",
+      "source": "OpenCode架构解析",
+      "priority": "high",
+      "timestamp": "2026-05-31"
+    },
+    {
+      "id": "mem_006",
+      "type": "decision",
+      "category": "implementation",
+      "content": "P0-1：建立长期记忆系统，每轮迭代归档+下一轮注入+旧记忆压缩。对标Claude Managed Agents Memory+Dreaming。",
+      "source": "第2轮迭代优化方案",
+      "priority": "critical",
+      "timestamp": "2026-05-31"
+    },
+    {
+      "id": "mem_007",
+      "type": "decision",
+      "category": "implementation",
+      "content": "P0-2：建立自改进闭环，改进建议追踪+成功变体存档+改进过程自优化。对标HyperAgents DGM-H。",
+      "source": "第2轮迭代优化方案",
+      "priority": "critical",
+      "timestamp": "2026-05-31"
+    },
+    {
+      "id": "mem_008",
+      "type": "fact",
+      "category": "benchmark",
+      "content": "Claude Managed Agents 2026年5月能力：memory/dreaming/outcomes/multiagent orchestration/webhooks/self-hosted sandboxes/MCP tunnels。这是当前Agent平台的最高标准。",
+      "source": "Claude Code 时间线",
+      "priority": "high",
+      "timestamp": "2026-05-31"
+    }
+  ],
+  "dreaming_notes": "待第3轮触发首次Dreaming复盘。当前积累2轮数据，建议积累到5轮后触发首次Dreaming。"
+}

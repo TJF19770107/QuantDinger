@@ -1,0 +1,487 @@
+{
+  "version": "3.0",
+  "skill_name": "AI分身蒸馏_R26",
+  "skill_id": "#83",
+  "generated": "2026-06-01",
+  "description": "AI分身全自动六步蒸馏流程的MCP工具定义集，含蒸馏专用工具、质量门控校验、状态锁管理。R26新增Goal模式持久化执行和执行可验证性。",
+
+  "quality_gates": {
+    "G1": { "name": "实事求是", "check": "verify_output_traceability", "action_on_fail": "mark_step_failed_retry" },
+    "G2": { "name": "MD5去重", "check": "md5_dedup_check", "action_on_fail": "skip_and_log" },
+    "G3": { "name": "路径合规", "check": "output_path_validation", "action_on_fail": "auto_correct_and_alert" },
+    "G4": { "name": "对标校验", "check": "benchmark_matrix_validation", "action_on_fail": "degrade_to_info_only" },
+    "G5": { "name": "全局一致性", "check": "cross_file_consistency_verification", "action_on_fail": "flag_conflicts_defer" }
+  },
+
+  "tools": [
+    {
+      "name": "distill_personality",
+      "description": "步骤1：分析自己 — 基于角色总说明书/SOUL/USER/AGENTS及历史迭代记录生成用户人格画像",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "config_paths": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "核心配置文件的绝对路径列表：角色总说明书/SOUL/USER/AGENTS",
+            "example": [
+              "E:\\龙虾AI主控中心\\我的AI分身\\角色总说明书\\角色总说明书.md",
+              "E:\\龙虾AI主控中心\\我的AI分身\\角色总说明书\\SOUL.md",
+              "E:\\龙虾AI主控中心\\我的AI分身\\角色总说明书\\USER.md",
+              "E:\\龙虾AI主控中心\\我的AI分身\\角色总说明书\\AGENTS.md"
+            ]
+          },
+          "round_number": {
+            "type": "string",
+            "description": "蒸馏轮次编号",
+            "example": "R26"
+          },
+          "previous_portrait": {
+            "type": "string",
+            "description": "上轮用户人格画像文件路径（可选，用于对比）",
+            "default": ""
+          },
+          "output_path": {
+            "type": "string",
+            "description": "产出文件目标路径",
+            "example": "E:\\龙虾AI主控中心\\我的AI分身\\知识库\\用户人格画像_20260601_R26.md"
+          }
+        },
+        "required": ["config_paths", "round_number", "output_path"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "file_path": { "type": "string", "description": "生成的人格画像文件路径" },
+          "file_size_bytes": { "type": "integer" },
+          "quality_gate": { "type": "string", "enum": ["G1", "G1+G4"] },
+          "sections_count": { "type": "integer", "description": "文档章节数" },
+          "new_findings": { "type": "array", "items": { "type": "string" }, "description": "本轮新发现摘要列表" }
+        }
+      },
+      "constraints": {
+        "requires_lock": true,
+        "max_retries": 3,
+        "timeout_seconds": 300,
+        "permission_level": "auto"
+      }
+    },
+    {
+      "name": "distill_plan",
+      "description": "步骤2：制定计划 — 对齐双轨工作流，生成R26进化规划",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "portrait_path": {
+            "type": "string",
+            "description": "步骤1产出的人格画像文件路径"
+          },
+          "config_paths": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "角色总说明书/当前SOUL/USER/AGENTS路径"
+          },
+          "round_number": {
+            "type": "string",
+            "example": "R26"
+          },
+          "benchmark_target": {
+            "type": "object",
+            "description": "对标矩阵目标设定",
+            "properties": {
+              "current_version": { "type": "string", "example": "v3.18" },
+              "current_score": { "type": "number", "example": 98.3 },
+              "target_score": { "type": "number", "example": 98.6 },
+              "target_dimensions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "dimension": { "type": "string" },
+                    "current": { "type": "number" },
+                    "target": { "type": "number" }
+                  }
+                }
+              }
+            }
+          },
+          "candidate_protocols": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "候选技能协议编号列表",
+            "example": ["#88", "#89", "#90"]
+          },
+          "output_path": { "type": "string" }
+        },
+        "required": ["portrait_path", "config_paths", "round_number", "output_path"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "file_path": { "type": "string" },
+          "sections_count": { "type": "integer" },
+          "short_term_goals": { "type": "array", "items": { "type": "string" } },
+          "mid_term_goals": { "type": "array", "items": { "type": "string" } },
+          "quality_gate": { "type": "string", "enum": ["G1", "G4"] }
+        }
+      },
+      "constraints": {
+        "requires_lock": true,
+        "max_retries": 3,
+        "timeout_seconds": 300,
+        "permission_level": "auto"
+      }
+    },
+    {
+      "name": "distill_convert_files",
+      "description": "步骤3：文件转换 — 扫描全目录非MD文件，转换为MD格式并MD5去重",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "root_path": {
+            "type": "string",
+            "description": "扫描根目录",
+            "example": "E:\\龙虾AI主控中心\\我的AI分身\\"
+          },
+          "target_formats": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "需要转换的源文件格式列表",
+            "example": ["pdf", "docx", "pptx", "txt", "json", "csv", "html"]
+          },
+          "exclude_patterns": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "排除模式",
+            "example": ["*.pyc", "*.db", "*.gitkeep", ".git/*"]
+          },
+          "output_log_path": { "type": "string" },
+          "round_number": { "type": "string" }
+        },
+        "required": ["root_path", "output_log_path", "round_number"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "log_path": { "type": "string" },
+          "total_scanned": { "type": "integer" },
+          "converted_count": { "type": "integer" },
+          "skipped_count": { "type": "integer" },
+          "failed_count": { "type": "integer" },
+          "quality_gate": { "type": "string", "enum": ["G2", "G3"] }
+        }
+      },
+      "constraints": {
+        "requires_lock": true,
+        "max_retries": 2,
+        "timeout_seconds": 600,
+        "permission_level": "confirm_for_large_batch",
+        "agent": "OpenClaw龙虾Agent"
+      }
+    },
+    {
+      "name": "distill_knowledge_base",
+      "description": "步骤4：构建知识库 — 遍历全目录文件统计+提取概念词条+生成知识图谱索引",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "root_path": {
+            "type": "string",
+            "example": "E:\\龙虾AI主控中心\\我的AI分身\\"
+          },
+          "previous_index": {
+            "type": "string",
+            "description": "上轮知识库索引文件路径（用于增量对比）"
+          },
+          "min_concept_count": {
+            "type": "integer",
+            "description": "最少提取概念词条数",
+            "default": 10
+          },
+          "output_path": { "type": "string" },
+          "round_number": { "type": "string" }
+        },
+        "required": ["root_path", "output_path", "round_number"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "file_path": { "type": "string" },
+          "total_files": { "type": "integer" },
+          "file_type_distribution": { "type": "object" },
+          "concept_count": { "type": "integer" },
+          "new_concepts": { "type": "array", "items": { "type": "string" } },
+          "knowledge_domains": { "type": "array", "items": { "type": "object" } },
+          "quality_gate": { "type": "string", "enum": ["G2", "G5"] }
+        }
+      },
+      "constraints": {
+        "requires_lock": true,
+        "max_retries": 2,
+        "timeout_seconds": 300,
+        "permission_level": "auto"
+      }
+    },
+    {
+      "name": "distill_create_self_skill",
+      "description": "步骤5：创建self-skill — 基于步骤1-4产出和参考版本，生成技能定义三件套",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "portrait_path": { "type": "string", "description": "步骤1产出路径" },
+          "plan_path": { "type": "string", "description": "步骤2产出路径" },
+          "index_path": { "type": "string", "description": "步骤4产出路径" },
+          "previous_skill_path": {
+            "type": "string",
+            "description": "上轮self-skill文件路径（作为模板参考）"
+          },
+          "previous_mcp_path": {
+            "type": "string",
+            "description": "上轮mcp-tools文件路径"
+          },
+          "previous_capabilities_path": {
+            "type": "string",
+            "description": "上轮agent-capabilities文件路径"
+          },
+          "round_number": { "type": "string" },
+          "new_protocols": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "本轮新增/升级的技能协议编号",
+            "example": ["#88", "#90"]
+          },
+          "output_dir": {
+            "type": "string",
+            "example": "E:\\龙虾AI主控中心\\我的AI分身\\技能库\\"
+          }
+        },
+        "required": ["portrait_path", "plan_path", "index_path", "previous_skill_path", "previous_mcp_path", "previous_capabilities_path", "round_number", "output_dir"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "skill_file": { "type": "string", "description": "self-skill .md文件路径" },
+          "mcp_file": { "type": "string", "description": "mcp-tools .json文件路径" },
+          "capabilities_file": { "type": "string", "description": "agent-capabilities .md文件路径" },
+          "quality_gate": { "type": "string", "enum": ["G4", "G5"] }
+        }
+      },
+      "constraints": {
+        "requires_lock": true,
+        "max_retries": 3,
+        "timeout_seconds": 480,
+        "permission_level": "auto"
+      }
+    },
+    {
+      "name": "distill_update_core_config",
+      "description": "步骤6：更新核心配置 — SOUL/USER/AGENTS版本升级 + 角色总说明书更新",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "soul_path": { "type": "string", "description": "SOUL.md当前路径" },
+          "user_path": { "type": "string", "description": "USER.md当前路径" },
+          "agents_path": { "type": "string", "description": "AGENTS.md当前路径" },
+          "master_doc_path": { "type": "string", "description": "角色总说明书当前路径" },
+          "soul_new_version": { "type": "string", "example": "v2.2" },
+          "user_new_version": { "type": "string" },
+          "agents_new_version": { "type": "string" },
+          "master_doc_new_version": { "type": "string", "example": "v1.9" },
+          "plan_path": { "type": "string", "description": "步骤2进化规划路径（提取升级内容）" },
+          "portrait_path": { "type": "string", "description": "步骤1人格画像路径" },
+          "round_number": { "type": "string" },
+          "r26_intelligence_summary": {
+            "type": "object",
+            "description": "R26情报摘要（角色总说明书新章节内容）",
+            "properties": {
+              "total_intel": { "type": "integer" },
+              "top_priority": { "type": "integer" },
+              "key_findings": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "required": ["soul_path", "user_path", "agents_path", "master_doc_path", "round_number"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "soul_new_path": { "type": "string" },
+          "user_new_path": { "type": "string" },
+          "agents_new_path": { "type": "string" },
+          "master_doc_new_path": { "type": "string" },
+          "version_changes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "file": { "type": "string" },
+                "old_version": { "type": "string" },
+                "new_version": { "type": "string" },
+                "key_changes": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          },
+          "quality_gate": { "type": "string", "enum": ["G1", "G5"] }
+        }
+      },
+      "constraints": {
+        "requires_lock": true,
+        "max_retries": 2,
+        "timeout_seconds": 300,
+        "permission_level": "confirm",
+        "agent": "Hermes Agent"
+      }
+    },
+    {
+      "name": "distill_sync_sub_agents",
+      "description": "全域同步 — 将核心配置三元组同步到豆包Agent/Hermes Agent/OpenClaw的config目录",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "soul_path": { "type": "string", "description": "最新SOUL.md路径" },
+          "user_path": { "type": "string", "description": "最新USER.md路径" },
+          "agents_path": { "type": "string", "description": "最新AGENTS.md路径" },
+          "target_agents": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "agent_name": { "type": "string", "enum": ["豆包Agent", "Hermes Agent", "OpenClaw龙虾Agent"] },
+                "config_dir": { "type": "string" }
+              }
+            }
+          },
+          "verify_keywords": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "抽查验证关键词列表（确认同步完整性）",
+            "example": ["不盲信", "执行可验证性", "Goal模式持久化"]
+          },
+          "round_number": { "type": "string" }
+        },
+        "required": ["soul_path", "user_path", "agents_path", "target_agents", "round_number"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "sync_log_path": { "type": "string" },
+          "synced_agents": { "type": "array", "items": { "type": "string" } },
+          "md5_checksums": { "type": "object", "description": "各副本MD5哈希" },
+          "spot_check_passed": { "type": "boolean", "description": "抽查验证是否通过" },
+          "quality_gate": { "type": "string", "enum": ["G3", "G5"] }
+        }
+      },
+      "constraints": {
+        "requires_lock": true,
+        "max_retries": 2,
+        "timeout_seconds": 120,
+        "permission_level": "auto",
+        "agent": "Hermes Agent"
+      }
+    },
+    {
+      "name": "distill_r26_goal_mode_execute",
+      "description": "R26新增 — Goal模式持久化执行：心跳检测+退出拦截+幻觉拦截+重试预算。在六步全流程中持续监控执行状态。",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "steps": {
+            "type": "array",
+            "items": { "type": "integer", "minimum": 1, "maximum": 6 },
+            "description": "待执行的步骤编号列表"
+          },
+          "heartbeat_interval_seconds": { "type": "integer", "default": 15 },
+          "max_retry_budget": { "type": "integer", "default": 3, "description": "每步骤最大重试次数" },
+          "verify_output_real_check": { "type": "boolean", "default": true, "description": "是否执行IO级产出验证（非缓存）" },
+          "log_path": { "type": "string", "description": "执行日志输出路径" }
+        },
+        "required": ["steps", "log_path"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "completed_steps": { "type": "array", "items": { "type": "integer" } },
+          "failed_steps": { "type": "array", "items": { "type": "integer" } },
+          "degraded_steps": { "type": "array", "items": { "type": "integer" } },
+          "heartbeat_log": { "type": "array", "items": { "type": "object" } },
+          "execution_time_seconds": { "type": "number" },
+          "goal_mode_verdict": { "type": "string", "enum": ["all_green", "partial_degrade", "critical_failure"] }
+        }
+      },
+      "constraints": {
+        "requires_lock": true,
+        "max_retries": 3,
+        "timeout_seconds": 1800,
+        "permission_level": "auto",
+        "r26_only": true
+      }
+    }
+  ],
+
+  "state_lock": {
+    "lock_file": ".distillation_lock",
+    "lock_path": "E:\\龙虾AI主控中心\\我的AI分身\\定时任务\\.distillation_lock",
+    "timeout_seconds": 1800,
+    "heartbeat_interval_seconds": 15,
+    "auto_release_on_timeout": true,
+    "force_unlock_command": "Remove-Item .distillation_lock"
+  },
+
+  "benchmark_matrix_target": {
+    "current": {
+      "version": "v3.18",
+      "dimensions": 27,
+      "score": 98.3,
+      "perfect_scores": 4
+    },
+    "r26_target": {
+      "version": "v3.19",
+      "dimensions": 27,
+      "target_score": 98.6,
+      "p0_dimensions": [
+        { "name": "Skills生态丰富度", "from": 98, "to": 99, "driver": "agent-skills 47.3K★标准对齐 + #84协议升级" },
+        { "name": "Harness Engineering", "from": 97, "to": 98, "driver": "Goal模式持久化执行 + 执行可验证性" }
+      ],
+      "p1_dimensions": [
+        { "name": "多Agent协作", "from": 98, "to": 98.5, "driver": "Marvis六Agent协作协议框架" },
+        { "name": "数字分身精度", "from": 96, "to": 96.5, "driver": "第15轮蒸馏闭环积累" }
+      ]
+    }
+  },
+
+  "protocol_inventory": {
+    "established": 87,
+    "r26_formalized": ["#88 Goal模式Agent持久化执行", "#90 AI视频创作商业闭环分析"],
+    "r27_candidates": ["#89 Dynamic Workflows多Agent并行验证"],
+    "total_after_r26": 89
+  },
+
+  "agent_versions": {
+    "豆包Agent": "v10.3_R26",
+    "Hermes Agent": "v3.8_R26",
+    "OpenClaw龙虾Agent": "v3.8_R26"
+  },
+
+  "r26_goal_mode_features": {
+    "heartbeat_detection": {
+      "source": "Claude Code Stop Hook",
+      "interval_seconds": 15,
+      "action_on_miss": "auto_release_lock + alert"
+    },
+    "exit_interception": {
+      "source": "Codex goal模式",
+      "check_method": "verify_output_file_exists_on_disk",
+      "prevent_premature_exit": true
+    },
+    "hallucination_interception": {
+      "source": "Hermes五层防烂尾",
+      "gate": "G1",
+      "method": "IO-level_disk_verification_not_cache"
+    },
+    "retry_budget": {
+      "max_per_step": 3,
+      "backoff_strategy": "incremental_5s",
+      "on_budget_exhausted": "degrade_step + log"
+    }
+  }
+}

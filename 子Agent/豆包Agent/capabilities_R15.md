@@ -1,0 +1,89 @@
+# capabilities_R15.json
+
+> 原始文件: `capabilities_R15.json`  |  类型: `.json`  |  自动转换
+
+```json
+{
+  "version": "v15.0",
+  "date": "2026-05-31T15:45:00",
+  "total": 40,
+  "new_in_r15": [],
+  "r15_changes": {
+    "GAP-001": "DESIGNED: Harness工程飞轮 v0.1 - 三层评估模型(L1规则/L2轻量LLM/L3全量LLM)",
+    "GAP-005": "DESIGNED: MemoryOS向量化检索 - Mem0 v3.0 混合检索(语义+BM25+实体)",
+    "GAP-045": "DESIGNED: 多模型协作 - 三级路由架构(Pipeline/Routing/Auxiliary/Distillation/Fusion)",
+    "GAP-046": "DESIGNED: 时间知识图谱 - Zep三层图架构(情节子图→语义实体子图→社区子图)"
+  },
+  "capabilities": {
+    "perception_layer": {
+      "#1 目录递归扫描": {"status": "STABLE", "version": "v2.0"},
+      "#2 内容解析引擎": {"status": "STABLE", "version": "v2.0"},
+      "#37 增量索引引擎": {"status": "ACTIVE", "version": "v1.0"},
+      "#38 AI文件标注": {"status": "ACTIVE", "version": "v1.0"}
+    },
+    "generation_layer": {
+      "#3 自动技能生成": {"status": "ACTIVE", "version": "v4.0"},
+      "#4 Skill Card标准": {"status": "STABLE", "version": "v2.0"},
+      "#39 技能失败分析器": {"status": "ACTIVE", "version": "v1.0"},
+      "#5 技能去重合并": {"status": "ACTIVE", "version": "v2.0"}
+    },
+    "operation_layer": {
+      "#6 Windows桌面控制": {"status": "ACTIVE", "version": "v3.0"},
+      "#7 应用管理": {"status": "STABLE", "version": "v2.0"},
+      "#8 进程管理": {"status": "STABLE", "version": "v2.0"},
+      "#9 多模型协作": {"status": "DESIGNED", "version": "v1.0", "r15_note": "三级路由架构方案完成"}
+    },
+    "drive_layer": {
+      "#10 定时自主唤醒": {"status": "ACTIVE", "version": "v3.0"},
+      "#11 优先级矩阵": {"status": "STABLE", "version": "v2.0"},
+      "#12 任务队列": {"status": "STABLE", "version": "v2.0"},
+      "#13 多Agent协调": {"status": "ACTIVE", "version": "v2.0"}
+    },
+    "memory_layer": {
+      "#14 短期记忆": {"status": "STABLE", "version": "v2.0"},
+      "#15 长期记忆": {"status": "ACTIVE", "version": "v3.0"},
+      "#16 情景记忆": {"status": "STABLE", "version": "v2.0"},
+      "#40 时间知识图谱": {"status": "DESIGNED", "version": "v1.0", "r15_note": "Zep三层图架构方案完成"},
+      "#17 向量检索": {"status": "DESIGNED", "version": "v1.0", "r15_note": "Mem0 v3.0混合检索方案完成"}
+    },
+    "safety_layer": {
+      "#18 事前审查": {"status": "STABLE", "version": "v3.0"},
+      "#19 事中监控": {"status": "STABLE", "version": "v3.0"},
+      "#20 事后恢复": {"status": "ACTIVE", "version": "v4.0"},
+      "#21 State Rollback": {"status": "ACTIVE", "version": "v1.0"},
+      "#22 脑虫防御": {"status": "STABLE", "version": "v2.0"}
+    },
+    "reasoning_layer": {
+      "#23 Claude推理引擎": {"status": "ACTIVE", "version": "v2.0"},
+      "#24 多模型热切换": {"status": "STABLE", "version": "v1.0"},
+      "#25 Plan Mode": {"status": "STABLE", "version": "v1.0"},
+      "#41 Harness工程飞轮": {"status": "DESIGNED", "version": "v0.1", "r15_note": "L1/L2/L3三层评估模型方案完成"}
+    },
+    "orchestration_layer": {
+      "#26 可视化工作流": {"status": "ACTIVE", "version": "v2.0"},
+      "#27 技能自动萃取": {"status": "ACTIVE", "version": "v1.0"},
+      "#28 全域集成编排": {"status": "ACTIVE", "version": "v1.0"}
+    },
+    "coordination_layer": {
+      "#29 自进化协调器": {"status": "ACTIVE", "version": "v1.0"},
+      "#30 端云路由引擎": {"status": "STABLE", "version": "v1.0"},
+      "#31 专家门徒调度": {"status": "STABLE", "version": "v1.0"},
+      "#32 检查点管理": {"status": "ACTIVE", "version": "v2.0"}
+    },
+    "extended": {
+      "#33 3D可视化": {"status": "DESIGNED", "version": "v1.0"},
+      "#34 AI on UI": {"status": "DESIGNED", "version": "v1.0"},
+      "#35 Llama推理": {"status": "DESIGNED", "version": "v1.0"},
+      "#36 沙箱虚拟桌面": {"status": "DESIGNED", "version": "v1.0"}
+    }
+  },
+  "distribution": {
+    "STABLE": 9,
+    "ACTIVE": 16,
+    "COMPLETED": 7,
+    "DESIGNED": 8,
+    "PLANNED": 0,
+    "CLOSED": 0
+  }
+}
+```

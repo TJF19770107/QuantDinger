@@ -1,0 +1,216 @@
+# LOBSTER-BLACK-HORSE-v4_backup.json
+
+> 原始文件: `LOBSTER-BLACK-HORSE-v4_backup.json`  |  类型: `.json`  |  自动转换
+
+```json
+{
+  "strategy_name": "LOBSTER-BLACK-HORSE-v4",
+  "version": "4.0",
+  "created": "2026-05-31",
+  "updated": "2026-05-31T23:53:48+08:00",
+  "status": "active",
+  "last_iteration_report": "币安龙头黑马预测报告_20260531_2353.md",
+  "type": "breakout_momentum",
+  "market": "perpetual_contract",
+  "description": "龙虾黑马策略 v4 — 突破型动量策略，捕捉价格突破关键阻力/支撑后的持续性动量行情，结合多因子融合信号与严格风控体系。",
+  "design_philosophy": {
+    "core_idea": "Breakout confirmation with volume validation and multi-factor scoring",
+    "signal_priority": "Only trade A-grade composite signals",
+    "no_trade_principle": "宁可踏空不可爆仓"
+  },
+  "core_indicators": [
+    "EMA",
+    "Volume_Profile",
+    "RSI",
+    "MACD",
+    "Bollinger_Bands"
+  ],
+  "entry_rules": {
+    "primary_breakout": {
+      "condition": "价格突破布林带上轨（做多）/ 下轨（做空）",
+      "confirmation": "成交量 > 20周期均量的 1.5 倍",
+      "filter": "突破K线收盘价必须在布林带外侧",
+      "volume_threshold_multiplier": 1.3,
+      "entry_retracement_ratio": 0.382
+    },
+    "multi_factor_score": {
+      "factors": {
+        "ema_trend": "EMA20 > EMA50（做多）/ EMA20 < EMA50（做空）",
+        "rsi_filter": "RSI(14) 30-75 之间，避免极端超买超卖区",
+        "macd_histogram": "MACD 柱状图与价格方向同向且加速",
+        "volume_breakout": "当前成交量 > 过去20周期均值 + 1.5标准差"
+      },
+      "minimum_score": "4因子中至少3项达标方可入场",
+      "etf_catalyst_weight": 0.3,
+      "market_sentiment_filter": "恐惧贪婪指数 < 30时半仓，> 70时减仓；ETF催化标的（etf_exemption_flag=true）在恐惧区间可豁免半仓"
+    },
+    "signal_grade": {
+      "A_grade": "主突破条件 + 4因子全达标 → 标准仓位",
+      "B_grade": "主突破条件 + 3因子达标 → 半仓",
+      "C_grade": "主突破条件 + 2因子或以下 → 不入场"
+    }
+  },
+  "exit_rules": {
+    "stop_loss": {
+      "type": "动态ATR止损",
+      "atr_multiplier": 1.8,
+      "atr_period": 14,
+      "max_loss_pct": 0.02,
+      "description": "止损价 = 入场价 - (ATR(14) × multiplier)，ETF催化标的1.8，山寨币维持2.0（差异化风控）；同时确保单笔亏损 ≤ 账户净值 2%"
+    },
+    "take_profit": {
+      "type": "追踪止盈 + 固定目标",
+      "trailing_pct": 0.05,
+      "target_1": {
+        "pct": 0.03,
+        "close_ratio": 0.5
+      },
+      "target_2": {
+        "pct": 0.06,
+        "close_ratio": 0.5
+      },
+      "description": "盈利达3%时平仓50%，剩余仓位启用4%追踪止盈"
+    },
+    "time_exit": {
+      "max_holding_days": 7,
+      "description": "持仓超过7天强制平仓"
+    },
+    "reverse_signal_exit": {
+      "description": "多因子评分降至1分或以下时强制平仓，不等待止损触发"
+    }
+  },
+  "risk_management": {
+    "max_position_risk": 0.02,
+    "max_portfolio_risk": 0.06,
+    "max_drawdown": 0.15,
+    "leverage": {
+      "default": 3,
+      "max": 5,
+      "max_leverage_condition": "信号强度A级且市场波动率处于30日低位；ETF催化A级信号可至4x"
+    },
+    "daily_loss_limit": 0.05,
+    "circuit_breaker": "当日亏损达5%时停止交易，次日恢复",
+    "etf_exemption": {
+      "enabled": true,
+      "condition": "标的具备ETF/机构催化因素时，恐惧贪婪指数低于sentiment_exemption_threshold仍可豁免半仓限制",
+      "sentiment_exemption_threshold": 35
+    }
+  },
+  "position_sizing": {
+    "method": "风险平价仓位",
+    "formula": "仓位大小 = (账户净值 × 单笔风险比例) / (入场价与止损价之差)",
+    "max_position_pct": 0.25,
+    "min_position_notional": 100,
+    "capital_allocation": {
+      "breakout_strategy": 0.7,
+      "scalp_strategy": 0.2,
+      "reserve": 0.1
+    }
+  },
+  "backtest_parameters": {
+    "start_date": "2025-01-01",
+    "end_date": "2026-05-31",
+    "initial_capital": 10000,
+    "commission_rate": 0.0004,
+    "slippage": 0.0001,
+    "funding_rate_daily": 0.0001,
+    "data_frequency": "1h",
+    "benchmark": "BTC/USDT buy-and-hold",
+    "metrics_required": [
+      "total_return",
+      "sharpe_ratio",
+      "max_drawdown",
+      "win_rate",
+      "profit_factor",
+      "calmar_ratio",
+      "sortino_ratio"
+    ]
+  },
+  "iteration_log": [
+    {
+      "date": "2026-05-31T14:00:00+08:00",
+      "report": "币安龙头黑马预测报告_20260531_1400.md",
+      "changes": [
+        "volume_threshold_multiplier: 1.0 → 1.5（过滤震荡市假突破）",
+        "rsi_upper: 70 → 75（强势突破容错）",
+        "bollinger_std: 2.0 → 2.2（低波动环境灵敏度提升）",
+        "新增 entry_retracement_ratio: 0.382（斐波那契回调入场点）",
+        "新增 etf_catalyst_weight: 0.25（ETF利好因子权重）",
+        "新增 market_sentiment_filter（恐惧贪婪指数仓位调节）"
+      ],
+      "triggers": [
+        "BNB杯柄突破实战验证",
+        "市场恐惧指数40处于历史低胜率区间"
+      ],
+      "verified": false
+    },
+    {
+      "date": "2026-05-31T23:00:00+08:00",
+      "report": "币安龙头黑马预测报告_20260531_2300.md",
+      "changes": [
+        "volume_threshold_multiplier: 1.5 → 1.3（BNB成交量环境活跃度上升）",
+        "trailing_pct: 5% → 4%（基于交易心理画像盈亏比失衡数据）",
+        "atr_multiplier: 2.0 → 1.8（止损收紧10%改善盈亏比）",
+        "market_sentiment_lower: 30 → 35（提高半仓触发阈值）",
+        "etf_catalyst_weight: 0.25 → 0.30（Nano Labs机构买入信号增强）"
+      ],
+      "triggers": [
+        "BNB多头排列+机构买入",
+        "CAKE通缩22月+BSC基金会买入",
+        "恐惧贪婪68接近减仓线",
+        "交易心理画像盈亏比0.57硬约束"
+      ],
+      "verified": false
+    },
+    {
+      "date": "2026-05-31T23:53:48+08:00",
+      "report": "币安龙头黑马预测报告_20260531_2353.md",
+      "changes": [
+        "atr_multiplier: 1.8→动态调整：BNB等ETF催化标的1.8，山寨币维持2.0（差异化风控）",
+        "market_sentiment_lower: 35→30（恐惧贪婪27仍触发半仓，但ETF催化标的允许豁免）",
+        "新增 etf_exemption_flag: true（ETF/机构催化标的在恐惧区间可豁免半仓限制）",
+        "bollinger_period待优化：BNB突破后布林带需重校准",
+        "max_position_pct: 0.25→保持，但A级信号ETF催化标的允许至30%",
+        "leverage.default: 3→BNB ETF催化标的可至4x（A级信号+波动率低位）"
+      ],
+      "triggers": [
+        "BNB ETF上线+12%暴涨突破740",
+        "恐惧贪婪27半仓触发",
+        "CAKE通缩32月+基金会买入"
+      ],
+      "verified": false
+    }
+  ],
+  "parameters_to_optimize": [
+    "ema_fast_period",
+    "ema_slow_period",
+    "rsi_period",
+    "rsi_upper",
+    "rsi_lower",
+    "atr_multiplier",
+    "trailing_pct",
+    "bollinger_period",
+    "bollinger_std",
+    "volume_threshold_multiplier",
+    "entry_retracement_ratio",
+    "etf_catalyst_weight",
+    "market_sentiment_upper",
+    "market_sentiment_lower",
+    "etf_exemption_flag",
+    "sentiment_exemption_threshold"
+  ],
+  "current_optimized_values": {
+    "rsi_upper": 75,
+    "bollinger_std": 2.2,
+    "volume_threshold_multiplier": 1.3,
+    "entry_retracement_ratio": 0.382,
+    "etf_catalyst_weight": 0.3,
+    "market_sentiment_upper": 70,
+    "market_sentiment_lower": 30,
+    "etf_exemption_flag": true,
+    "sentiment_exemption_threshold": 35,
+    "atr_multiplier_etf": 1.8,
+    "atr_multiplier_altcoin": 2.0
+  }
+}
+```

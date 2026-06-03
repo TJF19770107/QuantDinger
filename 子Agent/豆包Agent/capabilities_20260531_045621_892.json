@@ -1,0 +1,25 @@
+{
+  "version": "v6.0-R08",
+  "architecture": "v5.0 融合层（意识层+心智层+基底层）",
+  "registered": 18,
+  "generation": 8,
+  "deployed": ["S01_AutoFileScanner_v2.0", "S02_SkillForge_v2.0", "S03_DesktopController_v1.0", "S04_AutoWake_v2.0", "S05_MemoryOS_v2.0", "S06_SafeGuard_v2.0"],
+  "upgraded_this_round": ["S01 v1→v2", "S02 v1→v2", "S04 v1→v2", "S05 v1→v2", "S06 v1→v2"],
+  "designed": ["S13_GoalTracking_v1.0", "S14_Dreaming_v1.0", "S15_SkillCard_v1.0", "GAP-001_Harness", "GAP-002_AgentComms"],
+  "planned": ["GAP-004_SkillCard标准化", "GAP-005_向量化记忆"],
+  "layers": {
+    "conscious": {"name": "意识层", "capabilities": ["S04_AutoWake_v2.0", "S13_GoalTracking_v1.0_new", "S14_Dreaming_v1.0_designed"], "benchmarks": ["Hermes cron-ticker+goal", "Claude Dreaming", "Codex wakeup"]},
+    "cognitive": {"name": "心智层", "capabilities": ["S01_AutoFileScanner_v2.0", "S02_SkillForge_v2.0", "S03_DesktopController_v1.0", "S06_SafeGuard_v2.0"], "benchmarks": ["Hermes Reflective Phase+Curator", "NVIDIA Verified Skills", "OpenClaw Computer Use", "Self-Healing Agents"]},
+    "foundation": {"name": "基底层", "capabilities": ["S05_MemoryOS_v2.0"], "benchmarks": ["OpenClaw 4层+SQLite-vec", "Hermes FTS5", "Mem0 跨会话"]}
+  },
+  "skill_versions": {
+    "S01_AutoFileScanner": {"version": "2.0", "key_change": "增量扫描+向量索引", "file": "AutoFileScanner_v2.0.md"},
+    "S02_SkillForge": {"version": "2.0", "key_change": "7维Rubric+agentskill.io+Curator模式", "file": "SkillForge_v2.0.md"},
+    "S03_DesktopController": {"version": "1.0", "key_change": "稳定版本", "file": "DesktopController_v1.0.md"},
+    "S04_AutoWake": {"version": "2.0", "key_change": "新增/goal+intent_change触发器+Dreaming设计", "file": "AutoWake_v2.0.md"},
+    "S05_MemoryOS": {"version": "2.0", "key_change": "4维建模+向量检索+混合搜索+动态TTL", "file": "MemoryOS_v2.0.md"},
+    "S06_SafeGuard": {"version": "2.0", "key_change": "快照版本链+三策略自愈+Curator安全检查", "file": "SafeGuard_v2.0.md"}
+  },
+  "evolution_events": 8,
+  "updated": "2026-05-31T08:00:00"
+}

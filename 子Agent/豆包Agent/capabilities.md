@@ -1,0 +1,59 @@
+# capabilities.json
+
+> 原始文件: `capabilities.json`  |  类型: `.json`  |  自动转换
+
+```json
+{
+  "version": "v7.0-R∞",
+  "registered": 32,
+  "generation": 7,
+  "capabilities": [
+    "C01 | 本地文件自主读取 | ✅ 已验证 | AutoFileScanner v1.0",
+    "C02 | 自主技能生成 | ✅ 升级至v4.0 | SkillForge v4.0 (融合MUSE+SkillOpt)",
+    "C03 | 桌面程序控制 | ✅ 已验证 | DesktopController v2.0",
+    "C04 | 自主唤醒与执行 | ✅ 已验证 | AutoWake v2.0",
+    "C05 | 记忆自动加载 | ✅ 升级至v3.0 | MemoryOS v3.0 (融合AI六操作)",
+    "C06 | 自我修正回滚 | ✅ 升级至v4.0 | SafeGuard v4.0 (五层纵深+ANNEAL)",
+    "C07 | 多Agent协调 | ✅ 已验证 | AutoWake任务队列 + PES拆分",
+    "C08 | 安全审查Agent | ✅ 已验证 | SafeGuard五层纵深",
+    "C09 | 技术情报汇总 | ✅ 完成 | 8大系统深度分析",
+    "C10 | 技能库同步清单 | ✅ 完成 | 持续同步",
+    "C11 | 本地执行Agent | ✅ 已验证 | DesktopController+AutoFileScanner",
+    "C12 | 架构设计 | ✅ 完成 | 六层协同架构v7.0",
+    "C13 | 能力对标矩阵 | ✅ 完成 | 13维度差距分析",
+    "C14 | 自进化Agent | ✅ 升级 | EVOL五模块闭环",
+    "C15 | 记忆系统Agent | ✅ 升级至v3.0 | MemoryOS三层+六操作",
+    "C16 | 主方案生成 | ✅ 完成 | 七维升级架构",
+    "C17 | 全网技术扫描 | ✅ 完成 | 8大系统深度分析",
+    "C18 | 持久目标引擎 | 📋 已设计 | GoalStore+ProgressTracker+StallDetector",
+    "C19 | 任务看板系统 | 📋 已设计 | SQLite+AtomicClaim+Watchdog+CircuitBreaker",
+    "C20 | 检查点快照系统 | 📋 已设计 | SnapshotEngine+CrashRecovery+Rollback",
+    "C21 | Agent通信协议 | 📋 已设计 | MessageBus+CapabilityDiscovery+Heartbeat",
+    "C22 | 代码智能感知 | 📋 已设计 | LSPLoader+SymbolIndex+DiagnosticCollector",
+    "C23 | Meta自进化引擎 | 📋 已设计 | MetaEvaluator+PatchGenerator+ArchiveManager",
+    "C24 | 40维能力热力图 | ✅ 完成 | 7大系统×40维度",
+    "C25 | GEP基因组协议 | 📋 已设计 | 基因+胶囊+SHA-256不可变日志",
+    "C26 | IDE集成入口 | 📋 已设计 | CLI+TUI+VS Code插件",
+    "C27 | 豆包ACP v1.0 | 📋 已设计 | 标准化Agent间通信协议",
+    "C28 | MUSE五阶段技能生命周期 | 📋 已设计 | 创建→记忆→管理→评估→优化",
+    "C29 | 文本空间技能优化 | 📋 已设计 | SkillOpt梯度优化+文本向量化",
+    "C30 | 源码级自进化 | 📋 已设计 | MOSS代码层核心逻辑修改",
+    "C31 | 符号补丁永久修复 | 📋 已设计 | ANNEAL PKG+零复发追踪",
+    "C32 | 沙箱验证协议 | 📋 已设计 | SafeEval Protocol v1.0"
+  ],
+  "genes": [
+    "GENE_TASK_PERSISTENCE",
+    "GENE_CHECKPOINT_SNAPSHOT",
+    "GENE_ACP_PROTOCOL",
+    "GENE_LSP_LOADER",
+    "GENE_GOAL_ENGINE",
+    "GENE_META_EVALUATOR",
+    "GENE_MUSE_LIFECYCLE",
+    "GENE_SKILLOPT_GRADIENT",
+    "GENE_ANNEAL_PATCH",
+    "GENE_EVOL_LAYER"
+  ],
+  "evolution_events": 7,
+  "updated": "2026-05-31T22:40:00"
+}
+```

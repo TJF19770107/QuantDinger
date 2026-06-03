@@ -1,0 +1,69 @@
+# dataview-config.css
+
+> 原始文件: `dataview-config.css`  |  类型: `.css`  |  自动转换
+
+```css
+/* ============================================================
+ * Dataview 样式配置 — Obsidian Snippet
+ * 用途：自定义 Dataview 查询结果的显示样式
+ * 版本：v1.0
+ * 创建日期：2026-05-31
+ * ============================================================ */
+
+/* 通用表格样式 */
+.dataview.table-view-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1em 0;
+}
+
+.dataview.table-view-table th {
+    background-color: var(--background-secondary);
+    font-weight: 600;
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 2px solid var(--background-modifier-border);
+}
+
+.dataview.table-view-table td {
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.dataview.table-view-table tr:hover {
+    background-color: var(--background-secondary);
+}
+
+/* 列表样式 */
+.dataview.list-view-ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.dataview.list-view-ul li {
+    padding: 4px 0;
+    border-bottom: 1px solid var(--background-modifier-border-hover);
+}
+
+/* 结果计数样式 */
+.dataview.result-count {
+    font-size: 0.85em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+/* 任务列表样式 */
+.dataview.task-list-item {
+    list-style: none;
+}
+
+/* 错误信息样式 */
+.dataview-error {
+    color: var(--text-error);
+    padding: 8px;
+    border: 1px solid var(--text-error);
+    border-radius: 4px;
+    background-color: var(--background-secondary);
+}
+
+```

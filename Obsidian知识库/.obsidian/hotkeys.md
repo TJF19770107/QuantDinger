@@ -1,0 +1,69 @@
+# hotkeys.json
+
+> 原始文件: `hotkeys.json`  |  类型: `.json`  |  自动转换
+
+```json
+{
+  "command-palette:open": [
+    {
+      "modifiers": ["Mod"],
+      "key": "P"
+    }
+  ],
+  "quick-switcher:open": [
+    {
+      "modifiers": ["Mod"],
+      "key": "O"
+    }
+  ],
+  "global-search:open": [
+    {
+      "modifiers": ["Mod", "Shift"],
+      "key": "F"
+    }
+  ],
+  "editor:toggle-bold": [
+    {
+      "modifiers": ["Mod"],
+      "key": "B"
+    }
+  ],
+  "editor:toggle-italics": [
+    {
+      "modifiers": ["Mod"],
+      "key": "I"
+    }
+  ],
+  "editor:insert-link": [
+    {
+      "modifiers": ["Mod"],
+      "key": "K"
+    }
+  ],
+  "editor:save-file": [
+    {
+      "modifiers": ["Mod"],
+      "key": "S"
+    }
+  ],
+  "workspace:close": [
+    {
+      "modifiers": ["Mod"],
+      "key": "W"
+    }
+  ],
+  "editor:undo": [
+    {
+      "modifiers": ["Mod"],
+      "key": "Z"
+    }
+  ],
+  "editor:redo": [
+    {
+      "modifiers": ["Mod", "Shift"],
+      "key": "Z"
+    }
+  ]
+}
+
+```
