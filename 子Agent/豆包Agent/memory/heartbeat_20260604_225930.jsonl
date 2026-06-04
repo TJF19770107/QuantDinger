@@ -1,0 +1,6 @@
+{"timestamp": "2026-06-04T22:59:36.846537", "type": "connectivity_check", "status": "ok", "latency_ms": 1746.58, "http_status": 403}
+{"timestamp": "2026-06-04T22:59:37.511782", "type": "heartbeat", "status": "fail", "latency_ms": 664.69, "http_status": null, "heartbeat_seq": 1}
+{"timestamp": "2026-06-04T22:59:39.961026", "type": "heartbeat", "status": "fail", "latency_ms": 947.29, "http_status": null, "heartbeat_seq": 2}
+{"timestamp": "2026-06-04T22:59:42.233077", "type": "heartbeat", "status": "fail", "latency_ms": 769.87, "http_status": null, "heartbeat_seq": 3}
+{"timestamp": "2026-06-04T22:59:42.234064", "type": "termination", "status": "early", "reason": "3 次连续链路异常，提前终止", "total_heartbeats": 3}
+{"timestamp": "2026-06-04T22:59:42.234064", "type": "termination", "status": "early", "total_heartbeats": 3, "duration_s": 5.39}

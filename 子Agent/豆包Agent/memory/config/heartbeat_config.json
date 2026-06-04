@@ -1,0 +1,24 @@
+{
+  "task_name": "豆包-Marvis问询心跳安全轮询任务",
+  "version": "1.0.0",
+  "created": "2026-06-03",
+  "domain": "https://doubao.tjf19770107.cn",
+  "heartbeat": {
+    "trigger_interval_minutes": 30,
+    "max_runtime_seconds": 300,
+    "poll_interval_seconds": 1.5,
+    "request_timeout_ms": 300,
+    "max_consecutive_errors": 3,
+    "empty_response_policy": "no_token_charge"
+  },
+  "resource_limits": {
+    "cpu_max_percent": 0.5,
+    "memory_max_mb": 15
+  },
+  "storage": {
+    "log_path": "E:\\龙虾AI主控中心\\我的AI分身\\子Agent\\豆包Agent\\memory\\heartbeat_logs",
+    "conversation_path": "E:\\龙虾AI主控中心\\我的AI分身\\子Agent\\豆包Agent\\memory\\conversations"
+  },
+  "skill_protocol_path": "E:\\龙虾AI主控中心\\我的AI分身\\技能库",
+  "status": "active"
+}
