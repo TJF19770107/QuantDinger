@@ -11,4 +11,16 @@ Thumbs.db
 temp/
 logs/
 backup/
+*_backup*/
+*_backup_*/
+*.zip
+*.7z
+*.rar
+*.tar.gz
+*.onnx
+*.gguf
+*.bin
+*.safetensors
+*.pth
+*.ckpt
 知识库/马士兵教育LLM大模型场景题20250811/电子书/
