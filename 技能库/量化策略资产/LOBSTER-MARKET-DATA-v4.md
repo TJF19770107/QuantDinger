@@ -1,6 +1,8 @@
 # LOBSTER-MARKET-DATA-v4.json
 
-> 原始文件: `LOBSTER-MARKET-DATA-v4.json`  |  类型: `.json`  |  自动转换
+> ⚠️ **数据过期标注 [GAP-003]**: 行情快照日期为2026-05-31，当前已过7天。BTC/ETH/BNB等核心标的价格可能已发生显著变化，建议执行 `LOBSTER-MARKET-DATA-v5` 重新拉取CoinGecko/Binance最新行情。
+
+原始格式: JSON
 
 ```json
 {

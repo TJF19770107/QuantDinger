@@ -1,6 +1,6 @@
 # session_manager_v1.py
 
-> 原始文件: `session_manager_v1.py`  |  类型: `.py`  |  自动转换
+原始格式: Python
 
 ```python
 """

@@ -1,6 +1,6 @@
 # kanban_task_board.py
 
-> 原始文件: `kanban_task_board.py`  |  类型: `.py`  |  自动转换
+原始格式: Python
 
 ```python
 """

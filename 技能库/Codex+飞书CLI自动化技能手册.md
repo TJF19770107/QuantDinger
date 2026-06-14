@@ -1,314 +1,392 @@
-# Codex + 飞书 CLI 自动化技能手册 v1.2
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: cf54d54c59baa0ada35a5ecb7c73a584_1608abaf67ba11f1a0095254002afed2
+    ReservedCode1: 01D89qZwX5PeCXmsvi36WwRTHTpJBNP+/pMO0Ekmocfqxb+7v7jgnKcLWyHtuQwwMo8iPNGs061X3x1oSdbLGPYEA/uVHrPaGx0DLvmbN6I1TylETJ5KiNYCJYAJorHI6aN929b31DUUQbvsUrf7yJ5i/2QEZOgRsfG/mbHykmr9MtWLLBJ3F4GqzbQ=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: cf54d54c59baa0ada35a5ecb7c73a584_1608abaf67ba11f1a0095254002afed2
+    ReservedCode2: 01D89qZwX5PeCXmsvi36WwRTHTpJBNP+/pMO0Ekmocfqxb+7v7jgnKcLWyHtuQwwMo8iPNGs061X3x1oSdbLGPYEA/uVHrPaGx0DLvmbN6I1TylETJ5KiNYCJYAJorHI6aN929b31DUUQbvsUrf7yJ5i/2QEZOgRsfG/mbHykmr9MtWLLBJ3F4GqzbQ=
+---
 
-> **版本**：v1.2（R28迭代 · 2026-06-01）
-> **来源**：公众号「我姚学AI」《如何通过 Codex 对话接入飞书完整版来了！》
-> **作者**：姚路行
-> **生效范围**：全域 / 永久 / 永恒
-> **关联模板**：龙虾全域官方模板-最终版.md v3.20
+# Codex + 飞书CLI 自动化技能手册 v2.1
+
+> 基于龙虾全域官方模板 v3.89 · R90 全域迭代
+> 协议编号：#201（v2.1）| 关联协议：#186/#188/#204/#206/#212/#215/#226
+> 技能标识：`lark-cli-automation` | 安全等级：🟡 中风险
+> 来源：公众号「我姚学AI」+ codexguide.ai + 飞书官方文档 + GitHub开源社区
+> 更新日期：2026-06-14
 
 ---
 
-## 一、概述
+## 一、技能概述
 
-Codex 通过飞书 CLI 可以接入飞书全生态能力，实现：创建/更新文档、读写 Base、查日历、发消息、管任务、邮箱、知识库、会议纪要等。本文档提供标准化接入流程与自动化场景 SOP。
+将飞书全系办公能力（14业务域、200+命令、19 Agent Skills）纳入龙虾全域Agent可调用工具链，实现「自然语言 → Agent调度 → CLI命令 → 飞书API」零代码自动化闭环。
+
+### 核心能力矩阵
+
+| 维度 | 说明 |
+|------|------|
+| 覆盖业务域 | 即时通讯、云文档、多维表格(Base)、日历、邮箱、任务、会议、知识库、通讯录、云盘、电子表格、妙记、审批、OKR |
+| Agent Skills | 19项（按业务域划分，每域1-2个Skills） |
+| 命令体系 | 三层架构：快捷命令→ API命令→ 原始API命令 |
+| 输出格式 | JSON / Pretty / Table / NDJSON / CSV 五种 |
+| Codex权限模式 | suggest / auto-edit / full-auto / yolo 四种 |
 
 ---
 
-## 二、接入四步流程（保姆级）
+## 二、四步接入SOP
 
-### 第 1 步：安装飞书 CLI
+### 第一步：安装Codex CLI
 
-在 Codex 对话中直接描述需求，Codex 自动生成安装命令：
+```bash
+# 方式一：npm全局安装（推荐）
+npm install -g @openai/codex
 
+# 方式二：pip安装
+pip install openai-codex
+
+# 方式三：Homebrew（macOS）
+brew install openai/codex/codex
+
+# 验证安装
+codex --version
 ```
-用户 → Codex：「帮我安装飞书 CLI」
-Codex → 自动执行 npm/brew 安装命令
-```
 
-**预计耗时**：4～5分钟
+### 第二步：安装飞书CLI
 
-**安装完成后验证**：
-```
+```bash
+# 全局安装飞书CLI
+npm install -g @larksuite/cli
+
+# 安装Agent Skills
+npx skills add larksuite/cli -y -g
+
+# 验证安装
 lark-cli --version
+lark-cli skills list
 ```
 
-### 第 2 步：配置飞书应用
+### 第三步：配置飞书应用
 
-让 Codex 输出配置链接，在浏览器中完成应用创建：
+1. 登录[飞书开放平台](https://open.feishu.cn)，创建企业自建应用
+2. 获取 App ID 和 App Secret
+3. 配置应用权限范围（按需勾选14个业务域权限）
 
-```
-用户 → Codex：「帮我初始化飞书 CLI 配置，输出浏览器可访问的配置链接」
-```
+### 第四步：OAuth授权
 
-操作流程：
-1. 打开 Codex 输出的配置链接
-2. 按页面提示创建飞书应用（或绑定已有应用）
-3. 获取 **App ID** 和 **App Secret**
-4. 将凭据交回 Codex 完成配置
-
-**关键配置项**：
-| 参数 | 说明 | 获取方式 |
-|------|------|---------|
-| App ID | 飞书应用唯一标识 | 飞书开放平台 → 应用详情 |
-| App Secret | 飞书应用密钥 | 飞书开放平台 → 应用详情 → 凭证与基础信息 |
-
-### 第 3 步：登录授权
-
-完成用户 OAuth 授权：
-
-```
-用户 → Codex：「帮我完成飞书用户授权，输出浏览器可访问的授权链接」
-```
-
-操作流程：
-1. 打开 Codex 输出的授权链接
-2. 浏览器中确认授权
-3. 授权完成，飞书 CLI 与 Codex 链路打通
-
-**权限范围建议**（按需勾选）：
-- 日历读写
-- 文档创建与编辑
-- Base 读写
-- 消息发送
-- 通讯录读取
-
-### 第 4 步：验证接入
-
-执行低风险验证命令，确认链路通畅：
-
-```
-用户 → Codex：「在飞书日历中创建一个下周一 8:00 的事件，标题为"测试接入"」
-```
-
-验证标准：
-- 日历中能看到该事件 → 权限和链路正常
-- 出现权限错误 → 回到第 3 步，检查应用权限配置
-- 出现网络错误 → 检查 CLI 版本和网络连通性
-
----
-
-## 三、飞书 CLI 核心命令体系
-
-### 3.1 命令总览（11 大业务域）
-
-| 业务域 | CLI 前缀 | 核心能力 |
-|--------|---------|---------|
-| 即时通讯 | `lark-cli im` | 发消息、搜群、管理成员、消息总结 |
-| 云文档 | `lark-cli docs` | 创建/读取/更新文档、Markdown 双向转换 |
-| 日历 | `lark-cli calendar` | 查日程、建事件、查忙闲、邀请参会 |
-| 邮件 | `lark-cli mail` | 收发邮件、管理草稿 |
-| 电子表格 | `lark-cli sheets` | 读写单元格、批量追加 |
-| 多维表格 | `lark-cli base` | 增删改查、聚合分析、仪表盘 |
-| 任务 | `lark-cli task` | 创建/完成/分配任务 |
-| 知识库 | `lark-cli wiki` | 浏览节点、创建文档 |
-| 通讯录 | `lark-cli contact` | 搜同事、查部门 |
-| 会议纪要 | `lark-cli vc` | 妙记摘要、待办、逐字稿 |
-| 搜索 | `lark-cli search` | 跨业务域搜索 |
-
-### 3.2 常用命令示例
-
-#### 文档操作
 ```bash
-# 创建飞书文档
-lark-cli docs +create --title "周报-2026年第22周" --content "# 本周工作总结\n..."
+# 设备流授权（推荐）
+lark-cli auth login --recommend
 
-# 读取飞书文档
-lark-cli docs +view --doc-id <文档ID>
+# 或手动配置凭证
+lark-cli config set app-id <YOUR_APP_ID>
+lark-cli config set app-secret <YOUR_APP_SECRET>
 
-# 更新飞书文档
-lark-cli docs +update --doc-id <文档ID> --content "更新后的内容"
+# 验证授权状态
+lark-cli auth whoami
 ```
 
-#### Base 多维表格操作
+---
+
+## 三、两种身份模式
+
+| 模式 | 说明 | 适用场景 | OAuth方式 |
+|------|------|---------|----------|
+| 应用身份（create_application） | 以应用自身身份调用API | 批量操作、系统集成、定时任务 | 应用凭证 |
+| 用户身份（request_user） | 以授权用户身份调用API | 个人助理、消息发送、日程管理 | 用户OAuth授权 |
+
+---
+
+## 四、Codex四种权限模式
+
+| 模式 | 风险等级 | 说明 | 适用场景 |
+|------|---------|------|---------|
+| suggest | 🟢 低 | 仅建议，不执行任何操作 | 初学者、代码审查 |
+| auto-edit | 🟡 中 | 自动编辑文件，需确认危险操作 | 日常开发 |
+| full-auto | 🟡 中 | 全自动执行，跳过非危险确认 | 自动化任务 |
+| yolo | 🔴 高 | 绕过所有确认和沙箱，直接执行 | 仅限完全信任的沙箱环境 |
+
+### Codex CI非交互模式参数
+
 ```bash
-# 创建记录
-lark-cli base record-create --app-token <Base Token> --table-id <表ID> --fields '{"名称":"项目A","状态":"进行中"}'
-
-# 查询记录
-lark-cli base record-list --app-token <Base Token> --table-id <表ID> --filter "状态=进行中"
-
-# 更新记录
-lark-cli base record-update --app-token <Base Token> --table-id <表ID> --record-id <记录ID> --fields '{"状态":"已完成"}'
-```
-
-#### 日历操作
-```bash
-# 创建日程
-lark-cli calendar event-create --summary "项目评审" --start "2026-06-01T14:00:00+08:00" --end "2026-06-01T15:00:00+08:00"
-
-# 查忙闲
-lark-cli calendar freebusy --start "2026-06-01T09:00:00+08:00" --end "2026-06-01T18:00:00+08:00"
-```
-
-#### 消息发送
-```bash
-# 发送文本消息
-lark-cli im +messages-send --receive-id <群ID/用户ID> --content "自动化通知：任务已完成"
-
-# 发送富文本卡片消息
-lark-cli im +messages-send --receive-id <群ID> --msg-type interactive --card '{"header":{"title":"日报汇总"},"elements":[{"tag":"markdown","content":"## 今日完成\n- 任务1\n- 任务2"}]}'
-```
-
-#### 会议纪要
-```bash
-# 获取妙记摘要
-lark-cli vc +minutes-summary --meeting-id <会议ID>
-
-# 获取会议待办
-lark-cli vc +minutes-todo --meeting-id <会议ID>
+codex exec "任务描述" \
+  --json \                    # JSON格式输出
+  --output-schema schema.json \  # 输出结构验证
+  --resume --last \           # 恢复上次会话
+  --model gpt-5 \             # 指定模型
+  --permission-mode full-auto  # 权限模式
 ```
 
 ---
 
-## 四、权限配置指南
+## 五、14业务域命令速查表
 
-### 4.1 最小权限原则
+### 5.1 即时通讯（lark-im）
 
-| 场景 | 所需权限 | 权限范围 |
-|------|---------|---------|
-| 自动发通知 | 消息发送 | `im:message:send` |
-| 生成日报 | 文档创建、消息发送 | `doc:create` + `im:message:send` |
-| 数据报表 | Base 读写 | `base:read` + `base:write` |
-| 智能日程 | 日历读写、忙闲查询 | `calendar:read` + `calendar:write` |
-| 会议助理 | 会议信息、妙记 | `vc:read` + `minutes:read` |
+| 命令 | 功能 | 示例 |
+|------|------|------|
+| `im chat-search` | 搜索群组 | `lark-cli im chat-search --query "项目群"` |
+| `im messages-send` | 发送消息 | `lark-cli im messages-send --chat-id xxx --content "你好"` |
+| `im messages-list` | 获取消息列表 | `lark-cli im messages-list --chat-id xxx --limit 50` |
+| `im messages-search` | 搜索消息 | `lark-cli im messages-search --query "周报"` |
+| `im chat-members` | 群成员管理 | `lark-cli im chat-members --chat-id xxx` |
 
-### 4.2 权限申请流程
+### 5.2 云文档（lark-doc）
 
+| 命令 | 功能 | 示例 |
+|------|------|------|
+| `docs create` | 创建文档 | `lark-cli docs create --title "周报" --content report.md` |
+| `docs get` | 获取文档内容 | `lark-cli docs get --doc-token xxx` |
+| `docs update` | 更新文档 | `lark-cli docs update --doc-token xxx --content new.md` |
+| `docs list` | 列出文档 | `lark-cli docs list --folder-token xxx` |
+
+### 5.3 多维表格（lark-base）
+
+| 命令 | 功能 | 示例 |
+|------|------|------|
+| `base query` | 查询记录 | `lark-cli base query --app-token xxx --table-id xxx` |
+| `base record-create` | 新增记录 | `lark-cli base record-create --app-token xxx --table-id xxx --data records.json` |
+| `base record-update` | 更新记录 | `lark-cli base record-update --app-token xxx --table-id xxx --record-id xxx` |
+| `base table-list` | 列出数据表 | `lark-cli base table-list --app-token xxx` |
+
+### 5.4 日历（lark-calendar）
+
+| 命令 | 功能 | 示例 |
+|------|------|------|
+| `calendar agenda` | 查询日程 | `lark-cli calendar agenda --start-date 2026-06-14` |
+| `calendar create` | 创建日程 | `lark-cli calendar create --summary "评审会" --start-time "..."` |
+| `calendar freebusy` | 查询忙闲 | `lark-cli calendar freebusy --user-id xxx` |
+| `calendar suggestion` | 空闲时段推荐 | `lark-cli calendar suggestion --user-ids id1,id2 --duration 60` |
+
+### 5.5 任务（lark-task）
+
+| 命令 | 功能 | 示例 |
+|------|------|------|
+| `task create` | 创建任务 | `lark-cli task create --summary "完成报告" --due-date 2026-06-20` |
+| `task get-my-tasks` | 获取我的任务 | `lark-cli task get-my-tasks --status pending` |
+| `task update` | 更新任务 | `lark-cli task update --task-id xxx --status completed` |
+
+### 5.6 邮件（lark-mail）
+
+| 命令 | 功能 | 示例 |
+|------|------|------|
+| `mail messages-list` | 邮件列表 | `lark-cli mail messages-list --folder INBOX --unread` |
+| `mail send` | 发送邮件 | `lark-cli mail send --to user@feishu.cn --subject "主题"` |
+| `mail triage` | 邮件分类 | `lark-cli mail triage --folder INBOX` |
+
+### 5.7 知识库（lark-wiki）
+
+| 命令 | 功能 | 示例 |
+|------|------|------|
+| `wiki create-node` | 创建节点 | `lark-cli wiki create-node --space-id xxx --title "知识条目"` |
+| `wiki get-node` | 获取节点内容 | `lark-cli wiki get-node --node-token xxx` |
+| `wiki search` | 搜索知识库 | `lark-cli wiki search --query "技术方案"` |
+
+### 5.8 会议/妙记（lark-vc / lark-minutes）
+
+| 命令 | 功能 | 示例 |
+|------|------|------|
+| `vc search` | 搜索会议 | `lark-cli vc search --query "周会"` |
+| `vc minutes-get` | 获取纪要 | `lark-cli vc minutes-get --meeting-id xxx` |
+| `minutes transcript` | 获取逐字稿 | `lark-cli minutes transcript --meeting-id xxx` |
+
+### 5.9 云盘（lark-drive）
+
+| 命令 | 功能 | 示例 |
+|------|------|------|
+| `drive list` | 列出文件 | `lark-cli drive list --folder-token xxx` |
+| `drive upload` | 上传文件 | `lark-cli drive upload --file report.pdf --folder xxx` |
+| `drive download` | 下载文件 | `lark-cli drive download --file-token xxx` |
+
+### 5.10 审批（lark-approval）
+
+| 命令 | 功能 | 示例 |
+|------|------|------|
+| `approval create` | 创建审批 | `lark-cli approval create --approval-code xxx --data approval.json` |
+| `approval search` | 搜索审批 | `lark-cli approval search --status pending` |
+| `approval approve` | 审批通过 | `lark-cli approval approve --instance-id xxx` |
+
+### 5.11 辅助命令
+
+| 命令 | 功能 |
+|------|------|
+| `lark-cli doctor` | 诊断工具，检查配置完整性 |
+| `lark-cli dry-run` | 干运行模式，预览不执行 |
+| `lark-cli schema` | 查看API Schema |
+| `lark-cli auth whoami` | 查看当前授权身份 |
+| `lark-cli auth logout` | 退出授权 |
+
+---
+
+## 六、三重桥接方案对比
+
+| 方案 | 安装方式 | 核心能力 | 安全等级 | 适用场景 |
+|------|---------|---------|---------|---------|
+| cc-connect | `npm install -g cc-connect` | WebSocket长连接，5分钟配置，4种权限模式 | 🟡 中 | 个人/小团队快速接入 |
+| lark-coding-agent-bridge | `npx -y lark-channel-bridge@latest start` | 飞书卡片交互、富文本回复、多session管理 | 🟡 中 | 移动端对话、团队协作 |
+| feishu-codex-bridge | `git clone → npm install` | 流式卡片展示、多项目独立管理、三级安全模式 | 🔴 高(danger模式) | 多项目管理、进度可视化 |
+
+---
+
+## 七、9域权限Scope清单
+
+| 业务域 | 权限Scope | 用途 |
+|--------|----------|------|
+| 即时通讯 | `im:message` `im:chat` | 消息收发、群组管理 |
+| 云文档 | `doc:document` `docx:document` | 文档读写 |
+| 多维表格 | `bitable:app` | Base数据操作 |
+| 日历 | `calendar:calendar` `calendar:event` | 日程管理 |
+| 任务 | `task:task` | 任务增删改查 |
+| 邮件 | `mail:mail` | 邮件收发 |
+| 知识库 | `wiki:wiki` | 知识库编辑 |
+| 会议 | `vc:meeting` `vc:minutes` | 会议纪要 |
+| 审批 | `approval:approval` | 审批流操作 |
+
+---
+
+## 八、7项实战SOP模板
+
+### SOP-1：每日站会纪要自动化
 ```
-飞书开放平台 → 我的应用 → [选择应用] → 权限管理 → 添加权限 → 提交审核 → 管理员通过 → 生效
+触发：定时任务 → lark-cli calendar agenda 获取今日日程
+     → lark-cli im messages-send 发送站会提醒
+     → lark-cli vc minutes-get 获取昨日纪要
+     → AI提炼待办 → lark-cli task create 创建待办任务
+     → lark-cli docs update 更新站会文档
+```
+
+### SOP-2：周报自动生成
+```
+触发：每周五17:00 → lark-cli task get-my-tasks 拉取本周任务
+     → lark-cli calendar agenda 拉取本周会议
+     → AI汇总生成周报Markdown
+     → lark-cli docs create --title "周报_2026-W24" --content weekly.md
+     → lark-cli im messages-send 发送周报链接
+```
+
+### SOP-3：项目进度同步
+```
+触发：Git commit → Codex提取commit message
+     → lark-cli task update 更新对应任务状态
+     → lark-cli im messages-send 发送进度通知
+     → lark-cli base record-update 更新项目Base看板
+```
+
+### SOP-4：会议纪要全流程
+```
+触发：会议结束 → lark-cli vc minutes-get 获取纪要
+     → lark-cli minutes transcript 获取逐字稿
+     → AI提炼：摘要+待办+决策+风险
+     → lark-cli docs create 创建纪要文档
+     → lark-cli task create 分配待办任务
+     → lark-cli im messages-send 通知参会人
+```
+
+### SOP-5：Base批量数据导入
+```
+触发：用户提供CSV/JSON/Excel
+     → AI解析数据+字段映射
+     → lark-cli base table-list 确认目标表
+     → lark-cli base record-create --data records.json 批量写入
+     → lark-cli im messages-send 导入完成通知
+```
+
+### SOP-6：邮件智能分类与回复
+```
+触发：定时/手动 → lark-cli mail messages-list --unread
+     → AI分类：紧急/重要/普通/垃圾
+     → 紧急邮件 → AI草拟回复 → 人工确认 → lark-cli mail send
+     → 普通邮件 → lark-cli task create 标记待处理
+```
+
+### SOP-7：知识库自动归档
+```
+触发：群聊消息含链接/代码/方案 → AI识别知识价值
+     → lark-cli wiki search 检查是否已有
+     → lark-cli wiki create-node 创建新条目
+     → AI提炼结构化摘要
+     → lark-cli im messages-send 归档完成通知
 ```
 
 ---
 
-## 五、5 大自动化场景 SOP
+## 九、6类常见错误排查
 
-### 场景 1：AI 调研 → 飞书文档
+| 错误码 | 错误描述 | 原因 | 解决方案 |
+|--------|---------|------|---------|
+| 99991663 | App not enabled | 应用未启用 | 飞书开放平台启用应用 |
+| 99991664 | Invalid tenant access token | 令牌过期 | `lark-cli auth login --recommend` |
+| 99991665 | No permission | 权限不足 | 检查权限scope配置 |
+| 99991666 | Resource not found | 资源不存在 | 检查token/id是否正确 |
+| — | npm安装失败 | 网络问题 | 使用国内镜像 `--registry https://registry.npmmirror.com` |
+| — | 二维码授权超时 | 超时未扫码 | 重新执行`lark-cli auth login` |
 
-```
-触发：用户指定调研主题
-流程：
-  1. Codex 执行 web_search / 浏览器检索
-  2. LLM 提炼关键信息 → 生成 Markdown 结构
-  3. lark-cli docs +create 创建飞书文档
-  4. 返回文档链接
-适用：竞品分析、技术调研、行业报告
-```
+### 重试策略（指数退避）
 
-### 场景 2：批量数据 → 飞书 Base
-
-```
-触发：CSV/JSON/Excel 数据文件
-流程：
-  1. 解析数据文件结构
-  2. 映射到 Base 字段
-  3. 批量 lark-cli base record-create
-  4. 返回表格链接
-适用：客户名单导入、票据整理、项目跟踪
-```
-
-### 场景 3：群消息智能总结
-
-```
-触发：指定群聊 + 时间范围
-流程：
-  1. lark-cli im +messages-history 获取消息
-  2. LLM 提炼主题/结论/待办
-  3. 生成总结 → 发送回群 / 创建文档
-适用：长群聊总结、会议回顾、信息归档
-```
-
-### 场景 4：日程智能管理
-
-```
-触发：指定参会者 + 时间范围
-流程：
-  1. lark-cli calendar freebusy 查忙闲
-  2. 找到共同空闲时段
-  3. lark-cli calendar event-create 创建日程
-  4. 发送日历邀请
-适用：多方会议排期、面试安排、项目里程碑
-```
-
-### 场景 5：运营素材批量生成
-
-```
-触发：选题表（飞书Base）
-流程：
-  1. lark-cli base record-list 读取选题
-  2. LLM 批量生成文案
-  3. 回写飞书 Base 表格
-  4. 可选：对接 Canva API 导出图片
-适用：公众号排期、社媒运营、电商详情页
+```python
+# 伪代码：飞书CLI调用重试策略
+max_retries = 3
+base_delay = 1  # 秒
+for attempt in range(max_retries):
+    try:
+        result = lark_cli_execute(command)
+        break
+    except RateLimitError:
+        delay = base_delay * (2 ** attempt)
+        sleep(delay)
+    except AuthError:
+        lark_cli_auth_refresh()
 ```
 
 ---
 
-## 六、错误处理与故障排查
+## 十、8项安全实践
 
-| 错误类型 | 原因 | 解决方案 |
-|---------|------|---------|
-| `unauthorized` | App Secret 过期或错误 | 重新生成 App Secret 并更新配置 |
-| `permission denied` | 应用未申请对应权限 | 开放平台添加权限 → 管理员审核 |
-| `rate limit` | API 调用频率超限 | 降低调用频率，增加间隔 |
-| `token expired` | 授权 Token 过期 | 重新执行登录授权流程 |
-| `network error` | CLI 网络不通 | 检查代理/防火墙，确认飞书 API 可达 |
-| `invalid params` | 参数格式不正确 | 检查参数 JSON 格式和必填字段 |
-
----
-
-## 七、Codex 对话模板
-
-### 模板 1：日常总结
-```
-「帮我总结今天飞书群 [群名] 里的讨论要点，创建为飞书文档并发送到群里」
-```
-
-### 模板 2：数据报表
-```
-「读取 [Base表URL] 中本周数据，生成分析报告，创建为飞书文档并发送给 [同事名]」
-```
-
-### 模板 3：智能排期
-```
-「帮我找一个下周三 [同事A] 和 [同事B] 都有空的时间，创建 1 小时的项目评审会议」
-```
+| 序号 | 安全实践 | 说明 |
+|------|---------|------|
+| 1 | 权限最小化 | 仅申请任务所需的scope，不申请多余权限 |
+| 2 | dry-run先行 | 所有写操作先用`lark-cli dry-run`预览 |
+| 3 | 测试企业隔离 | 先在测试企业验证，再上线生产 |
+| 4 | 令牌定期检查 | `lark-cli auth whoami` 确认令牌有效 |
+| 5 | 明文防护 | 禁止在日志/聊天中输出App Secret |
+| 6 | 输入防注入 | 用户输入需经参数化处理，禁止拼接到CLI命令 |
+| 7 | 输出净化 | CLI输出中的敏感信息（手机号/邮箱）需脱敏 |
+| 8 | OS原生密钥链 | 使用系统密钥链存储凭证，不写入配置文件 |
 
 ---
 
-## 八、安全注意事项
+## 十一、龙虾模板协议对齐
 
-- App Secret 不得明文存储在公开仓库
-- 生产环境建议使用飞书应用商店发布的应用
-- 定期轮换 App Secret
-- 遵循「最小权限原则」配置应用权限
-- 敏感操作（删除文档、踢出群成员）需二次确认
-- 自动化脚本需加入人工审核节点
-
----
-
-## 九、R28 新增：Codex Triggers + 飞书自动化增强
-
-### 9.1 Codex Triggers 事件驱动
-
-```
-GitHub Issue → Codex Triggers → 自动分析 → 开PR修复 → 飞书通知
-```
-
-### 9.2 飞书 CLI 与 Codex Mobile 联动
-
-```
-Codex Mobile（锁屏Mac）→ Appshots 截图注入 → AI分析 → 飞书消息推送
-```
-
-### 9.3 Codex Developer OS 集成模式
-
-```
-Claude.md 持久上下文 → Skills模块 → Subagents → 飞书 CLI 插件 → 全链路自动化
-```
+| 模板协议 | 协议名称 | 关联说明 |
+|---------|---------|---------|
+| #186 | Agent Team 协作架构 | 多Agent通过飞书消息/文档协作 |
+| #188 | MXC 操作系统级沙箱 | CLI操作隔离在沙箱内执行 |
+| #204 | Codex+飞书日历与会议管理 | 日历/会议域自动化 |
+| #206 | Codex-飞书桥接 cc-connect | WebSocket桥接方案 |
+| #212 | 公众号文章深度学习迭代 v2.0 | 知识提炼方法 |
+| #215 | SkillForge 领域自演化 | 技能持续进化机制 |
+| #226 | 记忆三范式融合检索 | 技能知识持久化 |
 
 ---
 
-> **版本**：v1.2
-> **最后更新**：2026-06-01 R28
-> **来源文章**：https://mp.weixin.qq.com/s/lp1fV7O1flKzV1AgeMBQ3A
-> **关联模板**：龙虾全域官方模板-最终版.md v3.20
+## 十二、社区资源索引
+
+| 资源 | 地址 |
+|------|------|
+| 飞书CLI官方仓库 | https://github.com/larksuite/cli |
+| 飞书开放平台 | https://open.feishu.cn |
+| Codex CLI官方文档 | https://codexguide.ai |
+| feishu-cli.com | https://feishu-cli.com |
+| feishucli.net | https://feishucli.net |
+| cc-connect桥接 | https://github.com/chenhg5/cc-connect |
+| lark-coding-agent-bridge | https://github.com/zarazhangrui/lark-coding-agent-bridge |
+| 公众号原文 | https://mp.weixin.qq.com/s/lp1fV7O1flKzV1AgeMBQ3A |
+
+---
+
+> 版本：v2.1 | 协议编号：#201 | 字节数：14828
+> 基于龙虾全域官方模板 v3.89 · R90 全域迭代
+> 最后更新：2026-06-14 14:24 CST
+> *（内容由龙虾AI主控中心自动生成，仅供Agent内部技能调度参考）*
+*（内容由AI生成，仅供参考）*

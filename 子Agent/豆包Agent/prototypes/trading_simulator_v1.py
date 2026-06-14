@@ -255,7 +255,7 @@ class MultiStrategyEngine:
                 continue
             
             signal = None
-            if config.strategy_type == StrategyType.TREND_FollowING:
+            if config.strategy_type == StrategyType.TREND_FOLLOWING:
                 signal = self._trend_signal(tick, config)
             elif config.strategy_type == StrategyType.MEAN_REVERSION:
                 signal = self._mean_reversion_signal(tick, config)

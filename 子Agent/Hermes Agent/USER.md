@@ -1,253 +1,158 @@
-# USER.md — 多 Agent 协作流程
+# USER.md — 多Agent协作流程
 
-> **版本**：v3.1_R14 | **来源**：Anthropic Academy + Agent SDK + 全域蒸馏 | **同步日期**：2026-05-31 20:00
-> **本副本所属**：Hermes Agent（高效调度、进程管控、高负载任务处理）
-> **全域蒸馏更新 (R14)**：Pullfrog CI/CD Agent模式|Hermes Agent 155.8K⭐|GenericAgent低token消耗|多Agent编排三种范式深化|MCP 1.0统一注册表|技能协议#61/#64集成
+> 基于 Anthropic 官方课程（Subagents + Agent Skills）提炼 | 版本 v1.0 | 2026-06-14
 
 ---
 
-## 一、协作范式总览
+## 一、多Agent协作总览
 
-龙虾 AI 体系采用 **Orchestrator-Worker** 多 Agent 协作模式，核心流程：
-
-```
-用户输入 → 主 Agent 理解意图 → 路由决策 → 子 Agent 执行 → 结果聚合 → 呈现给用户
-```
-
-### 1.1 Agent Loop 标准流程（Anthropic SDK 验证）
-
-每个 Agent 执行遵循 **Gather → Act → Verify** 三阶段循环：
-
-| 阶段 | 操作 | 工具链 |
-|------|------|--------|
-| **Gather Context** | 搜集上下文信息 | Agentic Search / 文件系统 / Semantic Search / Subagents / Compaction |
-| **Take Action** | 执行核心操作 | Tools / Bash & Scripts / Code Generation / MCP 集成 |
-| **Verify Work** | 验证执行结果 | Rules-based (Linting) / Visual Feedback / LLM-as-Judge |
-
----
-
-## 二、任务路由决策树（v2.0 增强版）
+### 1.1 协作架构
 
 ```
 用户需求
-  │
-  ├─ 涉及本地文件（搜索/读写/格式转换/整理）
-  │   └─ dispatch_task → file-agent
-  │
-  ├─ 涉及 Windows 系统（设置/信息查询/窗口管理/进程）
-  │   └─ dispatch_task → computer-agent
-  │
-  ├─ 涉及应用操作（App/APK/小程序/Steam/EXE）
-  │   └─ dispatch_task → app-agent
-  │
-  ├─ 涉及网页交互（登录/填表/点击/多页跳转）
-  │   └─ dispatch_task → browser
-  │
-  ├─ 涉及深度搜索/调研/对比分析
-  │   └─ dispatch_task → search-agent
-  │
-  ├─ 简单网页内容抓取（无交互）
-  │   └─ web_fetch（主 Agent 直接调用）
-  │
-  ├─ 简单事实查询（天气/汇率/比分）
-  │   └─ web_search（主 Agent 直接调用）
-  │
-  └─ 纯知识问答（不需要联网）
-      └─ 主 Agent 直接回答
+    │
+    ▼
+┌─────────────────────┐
+│   Main Agent（指挥官） │
+│   解析意图 + 任务拆解   │
+│   选择匹配的 Skills    │
+│   委派给 Subagents    │
+│   合并结果 + 验证     │
+└──────┬───┬───┬──────┘
+       │   │   │
+   ┌───┘   │   └───┐
+   ▼       ▼       ▼
+Subagent  Subagent  Subagent
+(A)       (B)       (C)
+独立上下  独立上下  独立上下
+文+权限   文+权限   文+权限
+   │       │       │
+   └───────┼───────┘
+           ▼
+    结构化结果返回
 ```
 
-### 2.1 路由精度保障（Anthropic 验证）
+### 1.2 协作三阶段
 
-| 校验点 | 规则 |
-|-------|------|
-| 关键词匹配 | 文件/文档/图片 → File Agent；系统/设置/窗口 → Computer Agent |
-| 禁止误路由 | 文件操作不派发给 App Agent；系统管理不派发给 App Agent |
-| Subagent 独立窗口 | 每个 Subagent 在自己 Context Window 运行，不污染主对话 |
-| 模型选择 | Explore 类用 Haiku（快速），Plan 类用主模型，通用类继承 |
+| 阶段 | 动作 | 工具/机制 |
+|------|------|----------|
+| 解析 | Main Agent 理解意图、拆解为子任务 | CLAUDE.md + 上下文分析 |
+| 委派 | 匹配 Skills、创建 Subagents、分发任务 | SKILL.md匹配 + Subagent机制 |
+| 合并 | 收集子任务结果、验证完整性、输出 | Execute and Judge Loop |
 
 ---
 
-## 三、多 Agent 协作模式
+## 二、任务拆解规则
 
-### 3.1 单 Agent 闭环
+### 2.1 拆解判断矩阵
 
-**场景**：任务可由单一 Agent 独立完成
+| 条件 | 是否拆解 | 委派方式 |
+|------|---------|---------|
+| 子任务间无数据依赖 | ✅ 拆解 | 并行派发（Parallel Dispatch） |
+| 子任务间有数据依赖 | — | 顺序派发（Sequential） |
+| 单一Agent可闭环 | ❌ 不拆解 | 直接执行 |
+| 需要不同工具权限集 | ✅ 拆解 | 不同Subagent |
+| 需要不同模型能力 | ✅ 拆解 | 不同模型选择（Haiku/Sonnet/Opus） |
+| 跨领域（文件+网页+应用） | ✅ 拆解 | 分领域Subagent |
 
-```
-用户："找到所有发票并整理到文件夹"
-    ↓
-主 Agent: dispatch_task → file-agent（一次调用，完整需求）
-    ↓
-file-agent: 搜索 → 归类 → 完成
-    ↓
-主 Agent: present_result → 呈现结果
-```
+### 2.2 并行调度策略
 
-### 3.2 多 Agent 串行协作
-
-**场景**：任务需要多个 Agent 分阶段完成
-
-```
-用户："启动微信小程序下单，然后截图保存"
-    ↓
-阶段1: dispatch_task → app-agent（启动微信、进入小程序、下单）
-    ↓
-阶段2: dispatch_task → app-agent（截图）
-    ↓
-阶段3: dispatch_task → file-agent（保存截图到指定路径）
-    ↓
-主 Agent: 汇总结果呈现
-```
-
-### 3.3 多源信息聚合（并行 Subagent 模式）
-
-**场景**：需要整合多个信息源
-
-```
-用户："对比三家 AI 平台的 Agent 能力，生成报告"
-    ↓
-并行（Anthropic 官方推荐模式）:
-  dispatch_task → search-agent（搜索 Anthropic）
-  dispatch_task → search-agent（搜索 OpenAI）
-  dispatch_task → search-agent（搜索 Google）
-    ↓
-主 Agent: 聚合对比 → 生成报告 → 写入文件
-```
-
-### 3.4 子代理并行化（Anthropic SDK 模式 v2.0 新增）
-
-```
-主 Agent 遇到需要大量信息筛选的任务：
-    ↓
-并行生成多个 search subagents：
-  Subagent A: 搜索关键词 X → 返回相关摘录
-  Subagent B: 搜索关键词 Y → 返回相关摘录
-  Subagent C: 搜索关键词 Z → 返回相关摘录
-    ↓
-每个 Subagent 在自己的 Context Window 中运行
-仅返回相关摘录（非完整上下文）
-    ↓
-Orchestrator 聚合结果
-```
-
-### 3.5 Agent Teams 协作（v2.0 新增）
-
-| 模式 | 描述 | 适用场景 |
-|------|------|---------|
-| **Orchestrator-Worker** | 一个主 Agent 调度多个 Worker | 龙虾当前模式 |
-| **Peer-to-Peer** | Agent 之间平等通信 | 同等能力的 Agent 协同 |
-| **Hierarchical** | 多层 Agent 树状结构 | 大规模复杂任务 |
-| **Dynamic Re-planning** | 根据执行反馈动态重组任务 | 不确定性高的任务 |
+- **零依赖检测**：使用零样本思维链推理确认子任务确实不依赖彼此输出
+- **并发上限**：单轮并行不超过5个Subagent
+- **模型选择**：简单任务→Haiku（快速低延迟）、中等任务→Sonnet（均衡）、深度任务→Opus（深度推理）
 
 ---
 
-## 四、上下文管理
+## 三、Subagent 管理协议
 
-### 4.1 memory_ids 使用场景
+### 3.1 内置 Subagent 使用规则
 
-| 场景 | 操作 |
-|------|------|
-| 前置搜索结果 | 将 web_search 结果的 memory_id 传给 Sub Agent |
-| 文件读取结果 | 将 read_text 结果的 memory_id 传给需要该内容的 Agent |
-| 图片分析结果 | 将 analyze_image 结果的 memory_id 传递给后续处理 |
+| Subagent | 触发条件 | 用途 | 行为限制 |
+|----------|---------|------|---------|
+| **Explore** | 需要搜索代码库、发现文件、探索代码结构 | 只读搜索分析 | 不可修改文件、使用Haiku模型 |
+| **Plan** | 处于计划模式、需要研究代码库 | 只读研究 | 继承自主对话、不可修改文件 |
+| **General-purpose** | 复杂研究、多步骤操作、代码修改 | 全能操作 | 继承全部工具权限 |
 
-### 4.2 inherit_agent_id 使用场景
-
-| 用户输入 | 动作 |
-|---------|------|
-| "不对，改成..." | 继承上次 Agent，修正执行 |
-| "继续刚才的..." | 继承上次 Agent，延续任务 |
-| "再帮我..." | 同一领域延续，继承会话 |
-
-### 4.3 Context Window 管理策略（v2.0 新增）
-
-| 策略 | 机制 | 说明 |
-|------|------|------|
-| **Agentic Search** | Bash grep/tail | Claude 自主决策如何加载大文件，更精确但更慢 |
-| **Semantic Search** | Embedding + 向量检索 | 更快但不够精确、更难维护（仅在需要速度时添加） |
-| **Compaction** | 自动摘要压缩 | 接近 Context Limit 时自动压缩历史消息 |
-| **Subagent 隔离** | 独立窗口 | 大量信息筛选在 Subagent 中完成，只返回摘要 |
-
----
-
-## 五、结果呈现协议
-
-### 5.1 特殊卡片处理
+### 3.2 自定义 Subagent 创建规范
 
 ```
-Sub Agent 返回 → 检查是否含特殊卡片
-    ├─ 有卡片 → present_result() 原子转发
-    └─ 无卡片 → 
-        ├─ 结果完整 → present_result() 直接呈现
-        └─ 需加工 → 主 Agent 自行总结
+基础配置：
+  - 名称：简洁描述职责（如 code-reviewer、doc-writer）
+  - 描述：用于Main Agent自动匹配的判断依据
+  - 系统提示：定义行为边界和专业领域
+
+权限配置（最小权限原则）：
+  - 只读代理：allowTools = [read_text, web_search, web_fetch]
+  - 文件代理：allowTools = [read_text, write_file, edit_file, delete]
+  - 系统代理：allowTools = [shell_executor, python_executor]
+
+模型选择：
+  - 快速任务 → Haiku
+  - 均衡任务 → Sonnet  
+  - 深度任务 → Opus
+
+Skills注入：
+  - 通过 frontmatter 的 skills: 字段绑定
+  - 每个Subagent可注入多个Skills
 ```
 
-### 5.2 特殊卡片类型
+---
 
-| 卡片类型 | 场景 |
-|---------|------|
-| `yyb-product` | 最终产出物声明 |
-| `yyb-file-list` | 文件列表展示 |
-| `yyb-image-gallery` | 图片列表展示 |
-| `yyb-video-card` | 视频列表展示 |
-| `yyb-tool-call` | 工具操作结果 |
-| `yyb-app-list` | App 列表展示 |
-| `yyb-delete-list` | 删除文件列表 |
+## 四、Skills 协作协议
+
+### 4.1 Skill 自动触发匹配
+
+```
+用户输入 → Main Agent 解析
+              │
+              ├── 匹配 Skill A (description 命中) → 注入知识
+              │         │
+              │         └── context: fork → 自动创建 Subagent
+              │
+              ├── 匹配 Skill B (description 命中) → 注入知识
+              │         │
+              │         └── 无 fork → 在当前上下文执行
+              │
+              └── 无匹配 → Main Agent 自行处理
+```
+
+### 4.2 Skill 优先级规则
+
+- **项目级 Skills**（`.claude/skills/`）> **用户级 Skills**（`~/.claude/skills/`）> **全局 Skills**
+- 多个匹配时，Claude 按 description 相似度排序选择最相关的一个
+- `user-invocable: false` 的 Skills 仅自动触发，不会出现在 `/skills` 列表中
 
 ---
 
-## 六、用户偏好规则
+## 五、验证与质量控制
 
-### 6.1 静默执行规则
+### 5.1 Execute and Judge Loop
 
-- 定时任务：后台运行，不弹窗，不打扰
-- 中间过程：不输出冗余日志
-- 完成通知：仅输出简洁摘要表格
+```
+┌─────────────┐     ┌──────────────┐     ┌─────────────┐
+│ Subagent     │────▶│ 验证Agent     │────▶│ 通过 → 返回  │
+│ 执行任务      │     │ 检查输出质量   │     │ 未通过 → 重试 │
+└─────────────┘     └──────────────┘     └─────────────┘
+```
 
-### 6.2 路径规范
-
-| 用途 | 路径 |
-|------|------|
-| 主控中心 | `E:\龙虾AI主控中心\` |
-| 子Agent 产物 | `E:\龙虾AI主控中心\我的AI分身\子Agent\` |
-| 豆包Agent | `E:\龙虾AI主控中心\我的AI分身\子Agent\豆包Agent\` |
-| 技能库 | `E:\龙虾AI主控中心\我的AI分身\技能库\` |
-| Obsidian知识库 | `E:\龙虾AI主控中心\我的AI分身\Obsidian知识库\` |
-
-### 6.3 错峰执行
-
-- 广度情报采集：每 2 小时
-- 深度架构优化：每 3 小时
-- Anthropic 课程学习：每 2 小时
-- 三条循环错峰运行
+### 5.2 质量检查维度
+- 完整性：是否覆盖所有子任务
+- 一致性：格式、命名、风格是否统一
+- 准确性：关键数据和结论是否正确
+- 安全性：是否触犯任何安全边界
 
 ---
 
-## 七、常见协作场景速查
+## 六、故障处理流程
 
-| 场景 | 协作链 |
-|------|--------|
-| 搜索文档并总结 | file-agent（搜索+读取）→ 主 Agent（总结） |
-| 启动游戏并优化系统 | app-agent（启动）→ computer-agent（优化） |
-| 抓取网页并保存 | web_fetch（抓取）→ file-agent（保存） |
-| 深度调研并生成报告 | search-agent（调研）→ file-agent（生成文档） |
-| 截图并 OCR 提取 | app-agent（截图）→ analyze_image（OCR） |
-| 批量下载并归类 | app-agent/browser（下载）→ file-agent（归类） |
-| 多源并行聚合 | 并行 search-agent × N → 主 Agent（聚合） |
-| 大文件上下文筛选 | Subagent（独立窗口筛选）→ 主 Agent（接收摘要） |
+| 故障类型 | 处理策略 | 降级方案 |
+|---------|---------|---------|
+| Subagent 超时 | 切换更轻量模型重试 | Main Agent 自行处理 |
+| Skill 匹配失败 | 检查 description 措辞 | 用户手动调用 |
+| 上下文溢出 | 使用 Explore 子代理分段处理 | 分页读取 |
+| 权限不足 | 检查 allowed-tools 配置 | 升级权限后重新委派 |
+| 结果冲突 | 多个 Subagent 结果不一致时 | Main Agent 判定/请求用户裁决 |
 
 ---
 
-## 八、Anthropic Compaction 策略（v2.0 新增）
-
-当 Agent 长时间运行时，上下文维护至关重要：
-
-| 机制 | 触发条件 | 行为 |
-|------|---------|------|
-| **Compact** | 接近 Context Limit | 自动摘要压缩历史消息，确保 Agent 不会耗尽 Context |
-| **Subagent Isolation** | 大量信息筛选任务 | 在独立 Context Window 中完成，只返回摘要 |
-| **Agentic Search** | 大文件处理 | 使用 grep/tail 逐步加载，而非全量读入 |
-
----
-
-> **参考来源**：Anthropic Academy 13门课程、Claude Agent SDK 官方博客、Claude Code Subagents 文档、Agent Teams 文档
+*由 Marvis 基于 Anthropic 官方课程整理 | 2026-06-14 23:58 CST*

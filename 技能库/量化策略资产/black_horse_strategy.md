@@ -1,6 +1,6 @@
 # black_horse_strategy.json
 
-> 原始文件: `black_horse_strategy.json`  |  类型: `.json`  |  自动转换
+原始格式: JSON
 
 ```json
 ---

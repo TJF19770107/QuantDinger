@@ -1,6 +1,17 @@
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: cf54d54c59baa0ada35a5ecb7c73a584_fded353d67ac11f1a0095254002afed2
+    ReservedCode1: nJ1P3aCw4GrGewYPK8l+Gx8rA10PgAlnYmE1qjWTSfRTie9aYAMa9t/m6IRvUjhGHiZov9ciEA4Y0k9KdXSrxmpC8AC3EafBuicYuSbuPzW4CIqXjBTTzUEwmPcvvcAaU3Xlj09CU1MspZ/GO/PjCp66sW2uU9PMbla2U+sUW5bwjq15DpmxiZiM8FE=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: cf54d54c59baa0ada35a5ecb7c73a584_fded353d67ac11f1a0095254002afed2
+    ReservedCode2: nJ1P3aCw4GrGewYPK8l+Gx8rA10PgAlnYmE1qjWTSfRTie9aYAMa9t/m6IRvUjhGHiZov9ciEA4Y0k9KdXSrxmpC8AC3EafBuicYuSbuPzW4CIqXjBTTzUEwmPcvvcAaU3Xlj09CU1MspZ/GO/PjCp66sW2uU9PMbla2U+sUW5bwjq15DpmxiZiM8FE=
+---
+
 # USER.md — 多 Agent 协作流程
 
-> **版本**：v1.0
+> **版本**：v1.1(R80迭代)
 > **来源**：Anthropic Academy 官方课程提炼
 > **更新日期**：2026-05-31
 > **适用范围**：龙虾 AI 体系用户配置
@@ -96,6 +107,85 @@ file-agent: 搜索 → 归类 → 完成
 主 Agent: 聚合对比 → 生成报告 → 写入文件
 ```
 
+### 3.4 Agent SDK 编排者-工作者三步法（Anthropic Academy R79注入）
+
+```
+Step 1: 任务分析
+    Orchestrator 评估任务复杂度 → 判断是否需拆解
+    产物：任务复杂度判断 + 子目标列表
+
+Step 2: 子目标分配
+    为每个子目标创建 Worker Subagent
+    传入：task + output_schema + allowed_tools
+    原则：一个 Subagent 只做一类事
+
+Step 3: 结果聚合
+    收集所有 Subagent 返回 → 验证结构化输出 → 合并报告
+    失败处理：单个失败不影响整体，标记 + 降级
+```
+
+### 3.5 Dynamic Workflows 六模式
+
+| 模式 | 描述 | 龙虾适用场景 | 示例 |
+|------|------|-------------|------|
+| **Chain** | 线性链式执行 | 串行多步骤任务 | file-agent → computer-agent |
+| **Parallel** | 并行执行 | 多源信息聚合 | 同时搜索多个平台 |
+| **Router** | 条件路由 | 意图分发 | 路由决策树判断目标 Agent |
+| **Handoff** | Agent 间传递控制权 | 跨域任务交接 | app-agent → browser-agent |
+| **Map-Reduce** | 分发-汇聚 | 批量处理 | 多文件并发处理 |
+| **Human-in-the-Loop** | 人工审批节点 | 高风险决策 | ask_user 确认卡片 |
+
+### 3.6 上下文隔离机制详解
+
+```
+Subagent 执行模型（与主对话隔离）：
+┌────────────────────────────────────┐
+│  主对话 Context Window（干净）      │
+│  ├── Subagent 启动 Prompt          │
+│  └── Subagent 结果摘要（返回）      │
+│  （中间过程全部不可见）              │
+└──────────────┬─────────────────────┘
+               │ 仅传递：task + schema
+               ▼
+┌────────────────────────────────────┐
+│  Subagent Context Window（独立）    │
+│  ├── 完整执行过程                   │
+│  ├── 工具调用链路                   │
+│  └── 中间推理步骤                   │
+└────────────────────────────────────┘
+```
+
+> **核心原则**：Subagent 的中间推理和工具调用不污染主对话。仅 Prompt 和结果摘要进入主上下文。
+
+### 3.7 Managed Agents 平台设计原则
+
+| 原则 | 说明 | 龙虾实现状态 |
+|------|------|-------------|
+| **隔离性** | 每个 Agent 独立上下文，不相互污染 | ✅ 通过 dispatch_task 实现 |
+| **可观测性** | 执行链路可追踪、可审计 | ✅ memory_ids 记录执行过程 |
+| **可恢复性** | 失败后可从中断点恢复 | ⚠️ 部分实现（inherit_agent_id） |
+| **权限最小化** | Agent 仅拥有完成任务的必要权限 | ✅ 安全分级约束 |
+| **标准化接口** | 统一的 task XML 输入 / 结构化输出 | ✅ overall_goal + current_task |
+
+### 3.8 Claude Cowork：Dispatch 与 Computer Use
+
+#### Dispatch（远程任务分配）
+```
+手机端 → 发送自然语言指令 → 桌面 Claude Cowork 接收 → 自主执行 → 返回结果
+```
+- 无需在电脑前，通过手机远程触发桌面 Agent
+- 适合长时间运行的任务（如批量文件处理、数据清洗）
+
+#### Computer Use（桌面自主控制）
+```
+Claude 桌面端 → 直接操控鼠标/键盘 → 打开应用/点击/输入 → 完成多步骤任务
+```
+- 无需编写自动化脚本
+- 像人类一样操作系统 GUI
+- 适用于需要跨应用操作的场景（如：打开 Excel + 截图 + 粘贴到飞书）
+
+> **龙虾体系借鉴**：Computer Use 能力由 Computer Agent 承载，Dispatch 概念可用于 Hermes 远程调度子 Agent。
+
 ---
 
 ## 四、上下文管理
@@ -185,3 +275,25 @@ Sub Agent 返回 → 检查是否含特殊卡片
 ---
 
 > **参考来源**：Anthropic Academy - Introduction to Subagents, Claude Code in Action, Introduction to Claude Cowork
+*（内容由AI生成，仅供参考）*
+
+
+---
+
+## Anthropic官方课程R80同步：多Agent协作流程
+
+### Dynamic Workflows 使用场景
+1. 代码库级漏洞扫描
+2. 大规模文件迁移（500+文件）
+3. 交叉验证研究
+4. 复杂规划
+
+### 升级路径
+单一子任务(<10min)→Subagents / 多代理协作+监督→Agent Teams / 大规模编排→Dynamic Workflows
+
+### Claude Code 最佳实践
+- /config 启用 Dynamic Workflows
+- /deep-research 运行内置研究工作流
+- JS脚本描述编排逻辑，存入项目仓库
+
+> 同步自：Anthropic官方课程 R80 | 2026-06-14

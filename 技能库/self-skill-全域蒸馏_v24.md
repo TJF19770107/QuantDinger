@@ -1,6 +1,6 @@
-# Self-Skill：全域蒸馏 v24
+# Self-Skill：全域蒸馏 v25
 ## 技能名称：lobster-global-distillation
-## 版本：v24 | 更新：2026-05-31
+## 版本：v25 | 更新：2026-06-07
 ## 所属：龙虾AI主控中心 → AI分身 → 技能库
 
 ---
@@ -87,7 +87,8 @@ RULE_FILE = "{ROOT_PATH}\角色总说明书\角色总说明书.md"
 | v1 | 2026 Q1 | 初始版本 |
 | v20 | 2026-05 | 平台扩展至16个 |
 | v24 | 2026-05-31 | 新增AI社交/Agent趋势纳入 |
+| v25 | 2026-06-07 | R56全域蒸馏完成/SkillOpt+superpowers双范式吸收/微信Agent生态纳入/端侧AI硬件预研 |
 
 ---
 
-生成路径：E:\龙虾AI主控中心\我的AI分身\技能库\self-skill-全域蒸馏_v24.md
+生成路径：E:\龙虾AI主控中心\我的AI分身\技能库\self-skill-全域蒸馏_v25.md

@@ -1,6 +1,6 @@
 # LOBSTER-BLACK-HORSE-v4.json
 
-> 原始文件: `LOBSTER-BLACK-HORSE-v4.json`  |  类型: `.json`  |  自动转换
+原始格式: JSON
 
 ```json
 {

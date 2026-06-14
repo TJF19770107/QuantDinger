@@ -1,6 +1,6 @@
 # safe_guard.py
 
-> 原始文件: `safe_guard.py`  |  类型: `.py`  |  自动转换
+原始格式: Python
 
 ```python
 """

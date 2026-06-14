@@ -1,6 +1,6 @@
 # integration_orchestrator_v1.0.py
 
-> 原始文件: `integration_orchestrator_v1.0.py`  |  类型: `.py`  |  自动转换
+原始格式: Python
 
 ```python
 """

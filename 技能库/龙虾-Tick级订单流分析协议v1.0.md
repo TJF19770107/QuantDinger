@@ -1,3 +1,14 @@
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: cf54d54c59baa0ada35a5ecb7c73a584_b7fd8906608011f1aa435254002afed2
+    ReservedCode1: r2x586L6lwM4Nwlpqoi6afBy/QjF+rDbGqePT/g1M7COh/A43S6FCPB5rMihhi2YmSyNqg0e/LJUJUtVSe/FXb0tyyqPZR9cSc3bRIj0RpyaFpxLMFDjsTOGhrnjml4VPZq5VBtn/vjkK7hY6hcRpqt8gUU6k61H3WjBUlLXfmSowUht13/NDQJPq/Y=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: cf54d54c59baa0ada35a5ecb7c73a584_b7fd8906608011f1aa435254002afed2
+    ReservedCode2: r2x586L6lwM4Nwlpqoi6afBy/QjF+rDbGqePT/g1M7COh/A43S6FCPB5rMihhi2YmSyNqg0e/LJUJUtVSe/FXb0tyyqPZR9cSc3bRIj0RpyaFpxLMFDjsTOGhrnjml4VPZq5VBtn/vjkK7hY6hcRpqt8gUU6k61H3WjBUlLXfmSowUht13/NDQJPq/Y=
+---
+
 # Tick级订单流分析协议 v1.0
 
 > **协议编号**：85
@@ -428,3 +439,4 @@ class TickFuseBreaker:
 > **创建时间**：2026-06-01 17:20  
 > **情报条目**：#261 L2 Tick数据标准与订单流分析
 > **下一版本**：v1.1（R27实现Tick数据接入后）
+*（内容由AI生成，仅供参考）*

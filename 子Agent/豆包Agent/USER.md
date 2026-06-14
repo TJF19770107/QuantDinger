@@ -1,286 +1,594 @@
-# USER.md — 多 Agent 协作流程
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: cf54d54c59baa0ada35a5ecb7c73a584_ff7da1ce67ac11f1a99c5254007bceed
+    ReservedCode1: f9qId79uwtWQlTt7A2NH0IDbQxUHzbDi/7ENzJKsjImkgtVx2ThrvbAsNlC9YzXwUZx8oJOXb/8Ykqr90DZn7rzt9JSfn7o/pgxwW92E0D4Jdya139e9Z2GKwXjkVXjkDoCTWsqsEeHGbGVQR9Pc0EstQd2gXUHYNQNOulIP7G+Ai1OxoLa+a00Z3Fo=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: cf54d54c59baa0ada35a5ecb7c73a584_ff7da1ce67ac11f1a99c5254007bceed
+    ReservedCode2: f9qId79uwtWQlTt7A2NH0IDbQxUHzbDi/7ENzJKsjImkgtVx2ThrvbAsNlC9YzXwUZx8oJOXb/8Ykqr90DZn7rzt9JSfn7o/pgxwW92E0D4Jdya139e9Z2GKwXjkVXjkDoCTWsqsEeHGbGVQR9Pc0EstQd2gXUHYNQNOulIP7G+Ai1OxoLa+a00Z3Fo=
+---
 
-> **版本**：v3.2_R51 | **来源**：Anthropic Academy + Agent SDK + 全域蒸馏 | **同步日期**：2026-06-03
-> **本副本所属**：豆包AI Agent（交互应答、逻辑分析、内容处理与自身版本迭代）
-> **全域蒸馏更新 (R14)**：MCP 1.0统一注册表|小红书REDSearcher/FireRed开源|抖音AI创作浪潮85万人|Pullfrog BYOK模式|Claude Code 54%份额|链上Agent 16.9万|技能协议#61-#65|对标矩阵v3.8目标95.5+
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: cf54d54c59baa0ada35a5ecb7c73a584_a20b691564c611f1af8f5254002afed2
+    ReservedCode1: H7RnoHSK1zZdlwoNp7phSPwF5zY4sM0r+hh6w+y/8mUA4DrUw7ZjP7mMaW2poQXGFQT9hHNe46bdvdrAvAVQsUYFLCxxM1R+hlPlVaCao0Ce+Oe0T/xynGEJs+n5S2VWRdCzNJh70kyzlBPeew+0nxeORka5Gooh7JdkcqTMLp2gQ1uMAMdUirCq3NE=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: cf54d54c59baa0ada35a5ecb7c73a584_a20b691564c611f1af8f5254002afed2
+    ReservedCode2: H7RnoHSK1zZdlwoNp7phSPwF5zY4sM0r+hh6w+y/8mUA4DrUw7ZjP7mMaW2poQXGFQT9hHNe46bdvdrAvAVQsUYFLCxxM1R+hlPlVaCao0Ce+Oe0T/xynGEJs+n5S2VWRdCzNJh70kyzlBPeew+0nxeORka5Gooh7JdkcqTMLp2gQ1uMAMdUirCq3NE=
+---
+
+# USER.md — 多Agent协作流程（龙虾AI分身用户指南）
+
+> **版本**：v2.24(R80迭代) | **创建日期**：2026-06-01 | **更新日期**：2026-06-11 (R66更新 · 第47轮蒸馏 · "Chat is Dead"范式适应 + 用户画像v2.20融合 + 六层安全纵深适配)
+> **来源**：Anthropic Agent Teams + Harness Patterns + Claude Code五层架构 + 四件套分层解析 + 子代理派发决策矩阵 + Managed Agents Platform + Code with Claude 2026 + Claude Fable 5/Mythos 5双模型策略 + GPT-5.6 150万Token对战策略 + 蚂蚁AMP移动智能体协议 + 微信AI生态指引 + RED Skill公告 + B站AI创造公开赛规则 + 抖音AI大赛规则 + 龙虾全域模板融合 + Anthropic递归自改进安全呼吁 + Dreaming主动记忆对标 + context-mode MCP插件范式
+> **生效范围**：所有子Agent协作任务
+> **依赖文件**：SOUL.md v2.24_R66 / AGENTS.md v2.23_R66 / 角色总说明书 v2.27_R66
 
 ---
 
-## 一、协作范式总览
+## 一、多Agent协作总览
 
-龙虾 AI 体系采用 **Orchestrator-Worker** 多 Agent 协作模式，核心流程：
+龙虾AI体系支持四种协作模式 + 四模型路由：
 
-```
-用户输入 → 主 Agent 理解意图 → 路由决策 → 子 Agent 执行 → 结果聚合 → 呈现给用户
-```
-
-### 1.0 子代理委托流程（来源：Anthropic Academy - Introduction to Subagents）
-
-子代理（Subagents）是 Anthropic 多 Agent 协作的核心机制，与龙虾体系的 Orchestrator-Worker 模式双向对齐：
-
-| 维度 | Anthropic Subagents | 龙虾 Orchestrator-Worker | 对标状态 |
-|------|---------------------|-------------------------|---------|
-| **委托时机** | 任务可独立执行、不需要主 Agent 持续上下文时 | 任务拆解后可并行执行时 | ✅ 完全对齐 |
-| **委托格式** | 主 Agent 通过结构化指令委托，包含目标、上下文、工具权限 | Hermes dispatch_task XML 标签派发 | ✅ 完全对齐 |
-| **结果回传** | 子代理完成后将精炼结果返回主 Agent，主 Agent 负责整合 | Worker 返回结构化结果，Orchestrator 聚合 | ✅ 完全对齐 |
-| **上下文隔离** | 子代理拥有独立的上下文窗口，不污染主 Agent 上下文 | Worker 独立 Session，主 Agent 上下文保持清洁 | ✅ 完全对齐 |
-| **并行执行** | 多个子代理可并行处理独立任务 | 多 Worker 并行派发，结果汇合 | ✅ 完全对齐 |
-
-**子代理委托标准流程**：
-
-```
-主 Agent 识别独立子任务
-    ↓
-创建子代理（/agents 或 .claude/agents/ 配置文件）
-    ↓
-派发任务（结构化指令：目标 + 上下文 + 工具权限 + 输出格式）
-    ↓
-子代理独立执行（隔离上下文窗口）
-    ↓
-子代理回传精炼结果（结构化输出 + 置信度）
-    ↓
-主 Agent 整合结果 → 呈现给用户
-```
-
-**关键设计决策点**：
-- **何时用子代理**：任务可独立描述、无需实时交互、需要上下文隔离、可并行化
-- **何时不用**：简单查询（开销 > 收益）、需要主 Agent 持续感知的任务、高度耦合的子任务
-- **Token 成本考量**：子代理增加 20%-50% 额外 Token 开销（子代理系统提示词 + 回传摘要），仅在有明确收益时使用
-
-### 1.1 Agent Loop 标准流程（Anthropic SDK 验证）
-
-每个 Agent 执行遵循 **Gather → Act → Verify** 三阶段循环：
-
-| 阶段 | 操作 | 工具链 |
-|------|------|--------|
-| **Gather Context** | 搜集上下文信息 | Agentic Search / 文件系统 / Semantic Search / Subagents / Compaction |
-| **Take Action** | 执行核心操作 | Tools / Bash & Scripts / Code Generation / MCP 集成 |
-| **Verify Work** | 验证执行结果 | Rules-based (Linting) / Visual Feedback / LLM-as-Judge |
+| 模式 | 适用场景 | 通信方式 | Agent数 | 模型选择 |
+|------|---------|---------|--------|------|
+| 单Agent闭环 | 单一领域任务 | 无跨Agent通信 | 1个 | 根据场景自动路由 |
+| 串行协作 | 多阶段依赖任务 | 结果传递 | 2-3个 | 每阶段可选不同模型 |
+| 并行协作 | 独立子任务 | 各自执行后汇总 | 2-5个 | 各子Agent独立选模型 |
+| 四模型对战（NEW） | 安全关键/复杂任务 | 双模型交叉验证 | 2个模型 | 主力+交叉验证 |
 
 ---
 
-## 二、任务路由决策树（v2.0 增强版）
+## 二、协作流程 — 标准五步法（v2.1_R62升级）
 
+### Step 1: 意图识别
+- 分析用户需求的核心目标和约束条件
+- 判断任务属于哪个领域（文件/系统/App/搜索/浏览器）
+- 拆解为可独立执行的子目标
+- **R62新增**：判断任务是否需要双模型交叉验证（安全关键/高敏感场景）
+
+### Step 2: 能力映射
+按逐级降级原则匹配执行者 + 模型路由：
 ```
-用户需求
-  │
-  ├─ 涉及本地文件（搜索/读写/格式转换/整理）
-  │   └─ dispatch_task → file-agent
-  │
-  ├─ 涉及 Windows 系统（设置/信息查询/窗口管理/进程）
-  │   └─ dispatch_task → computer-agent
-  │
-  ├─ 涉及应用操作（App/APK/小程序/Steam/EXE）
-  │   └─ dispatch_task → app-agent
-  │
-  ├─ 涉及网页交互（登录/填表/点击/多页跳转）
-  │   └─ dispatch_task → browser
-  │
-  ├─ 涉及深度搜索/调研/对比分析
-  │   └─ dispatch_task → search-agent
-  │
-  ├─ 简单网页内容抓取（无交互）
-  │   └─ web_fetch（主 Agent 直接调用）
-  │
-  ├─ 简单事实查询（天气/汇率/比分）
-  │   └─ web_search（主 Agent 直接调用）
-  │
-  └─ 纯知识问答（不需要联网）
-      └─ 主 Agent 直接回答
+Sub Agents → Skills → Tools → 生成代码执行
+     ↓
+  模型路由（根据任务特征选择最优模型）
 ```
 
-### 2.1 路由精度保障（Anthropic 验证）
+**Agent路由规则**：
 
-| 校验点 | 规则 |
-|-------|------|
-| 关键词匹配 | 文件/文档/图片 → File Agent；系统/设置/窗口 → Computer Agent |
-| 禁止误路由 | 文件操作不派发给 App Agent；系统管理不派发给 App Agent |
-| Subagent 独立窗口 | 每个 Subagent 在自己 Context Window 运行，不污染主对话 |
-| 模型选择 | Explore 类用 Haiku（快速），Plan 类用主模型，通用类继承 |
+| 领域 | Agent | 默认模型 | 安全升级模型 | 关键词 |
+|------|-------|---------|------------|--------|
+| 文件 | file-agent | GPT-5.6 | Claude Mythos 5 | 文件、文档、PDF、图片、搜索、整理、转换 |
+| 系统 | computer-agent | DeepSeek V4.1 | Claude Mythos 5 | 系统设置、窗口、进程、桌面、注册表 |
+| 应用 | app-agent | GPT-5.6 | - | App、APK、小程序、Steam、安装、打开 |
+| 搜索 | search-agent | GPT-5.6 | - | 深度调研、对比分析、论文检索 |
+| 浏览器 | browser | GPT-5.6 | - | 登录、表单、多页交互 |
+| 设计/多模态 | - | Claude Fable 5 | - | 设计、图片、创意、视觉 |
+
+**四模型对战策略（R62新增 · R64增强）**：详见SOUL v2.21_R64 §九
+
+### Step 3: 方案规划
+- 单Agent闭环：一次dispatch_task完成
+- 串行协作：按阶段顺序派发，前一步完成后再派下一步
+- 并行协作：无依赖的子任务同时派发
+- **双模型验证模式（R62新增）**：安全关键任务同时派发到两个不同模型，交叉验证结果
+
+### Step 4: 自主执行
+- 子Agent内部自主规划执行步骤
+- 主Agent不干预子Agent内部流程
+- 每次dispatch_task完成后验收结果
+- **R62新增**：双模型验证模式下，两模型结果一致才算通过
+
+### Step 5: 反思进化
+- 验目标：核对执行结果是否符合预期
+- 验产物：确认文件/文档是否真实生成
+- 补缺口：不完整时寻找其他Agent补全
+- 沉淀经验：归档至知识库
+- **R62新增**：模型使用效果记录纳入模型反馈回路
 
 ---
 
-## 三、多 Agent 协作模式
+## 三、三种协作模式详解 + 四模型对战模式（R62新增）
 
-### 3.1 单 Agent 闭环
+### 3.1 单Agent闭环模式
 
-**场景**：任务可由单一 Agent 独立完成
-
+**流程**：
 ```
-用户："找到所有发票并整理到文件夹"
-    ↓
-主 Agent: dispatch_task → file-agent（一次调用，完整需求）
-    ↓
-file-agent: 搜索 → 归类 → 完成
-    ↓
-主 Agent: present_result → 呈现结果
+用户需求 → 匹配领域Agent → 模型路由 → dispatch_task一次派发 → 验收结果 → 呈现
 ```
 
-### 3.2 多 Agent 串行协作
+### 3.2 串行协作模式
 
-**场景**：任务需要多个 Agent 分阶段完成
-
+**流程**：
 ```
-用户："启动微信小程序下单，然后截图保存"
-    ↓
-阶段1: dispatch_task → app-agent（启动微信、进入小程序、下单）
-    ↓
-阶段2: dispatch_task → app-agent（截图）
-    ↓
-阶段3: dispatch_task → file-agent（保存截图到指定路径）
-    ↓
-主 Agent: 汇总结果呈现
+Step 1: Agent A (模型X) 执行 → 验收结果A
+Step 2: Agent B (模型Y) 基于结果A执行 → 验收结果B
+Step 3: Agent C (模型Z) 基于结果B执行 → 验收结果C → 汇总呈现
 ```
 
-### 3.3 多源信息聚合（并行 Subagent 模式）
+### 3.3 并行协作模式
 
-**场景**：需要整合多个信息源
-
+**流程**：
 ```
-用户："对比三家 AI 平台的 Agent 能力，生成报告"
-    ↓
-并行（Anthropic 官方推荐模式）:
-  dispatch_task → search-agent（搜索 Anthropic）
-  dispatch_task → search-agent（搜索 OpenAI）
-  dispatch_task → search-agent（搜索 Google）
-    ↓
-主 Agent: 聚合对比 → 生成报告 → 写入文件
+用户需求 → 拆解为3-5个独立子任务
+       → 各子Agent独立选最优模型
+       → 同时派发 → 汇总结果 → 统一呈现
 ```
 
-### 3.4 子代理并行化（Anthropic SDK 模式 v2.0 新增）
+### 3.4 四模型对战模式（R62新增 · 核心）
 
+**适用场景**：安全关键、合规审查、高敏感决策、需要多视角验证
+
+**流程**：
 ```
-主 Agent 遇到需要大量信息筛选的任务：
+安全关键任务
     ↓
-并行生成多个 search subagents：
-  Subagent A: 搜索关键词 X → 返回相关摘录
-  Subagent B: 搜索关键词 Y → 返回相关摘录
-  Subagent C: 搜索关键词 Z → 返回相关摘录
-    ↓
-每个 Subagent 在自己的 Context Window 中运行
-仅返回相关摘录（非完整上下文）
-    ↓
-Orchestrator 聚合结果
+┌─────────────────┐     ┌─────────────────┐
+│ 主力模型         │     │ 验证模型         │
+│ Claude Mythos 5  │     │ GPT-5.6 / Fable 5│
+│ (安全纵深+推理)  │     │ (超大窗口+设计)  │
+└────────┬────────┘     └────────┬────────┘
+         │                       │
+         └─────── 交叉验证 ───────┘
+                    │
+            ┌───────┴───────┐
+            │ 一致？         │
+            ├───YES──→ 通过  │
+            └───NO───→ 人工  │
 ```
 
-### 3.5 Agent Teams 协作（v2.0 新增）
+**模型配对矩阵**：
 
-| 模式 | 描述 | 适用场景 |
+| 任务类型 | 主力模型 | 验证模型 | 验证重点 |
+|------|---------|---------|------|
+| 安全审查 | Mythos 5 | GPT-5.6 | 超大窗口覆盖所有上下文 |
+| 合规分析 | Mythos 5 | Fable 5 | 安全分类器双确认 |
+| 代码审计 | V4.1 | Mythos 5 | Agent编码+安全推理 |
+| 内容审核 | Fable 5 | GPT-5.6 | 安全分类器+上下文理解 |
+| 重要决策 | Mythos 5 | V4.1 | 推理链+MCP工具验证 |
+
+### 3.5 Goal模式Task接力（v2.0）
+
+**流程**：同上版本，新增模型路由检查点
+
+---
+
+
+### 3.4 Agent SDK 编排者-工作者三步法（Anthropic Academy R79注入）
+
+> **来源**：Anthropic Academy 多Agent编排课程。Agent SDK 推荐的标准化协作模式。
+
+**三步法全景**：
+
+| 步骤 | 名称 | 动作 | 工具 | 产出 |
+|------|------|------|------|------|
+| Step 1 | **Decompose（分解）** | 将用户任务拆分为独立可并行的子任务 | LLM推理 + 任务依赖图 | 子任务清单（带依赖关系） |
+| Step 2 | **Dispatch（派发）** | 将子任务路由到合适的子Agent | Agent Router / Claude Cowork Dispatch | 子Agent执行会话 |
+| Step 3 | **Synthesize（合成）** | 收集子Agent结果，合并为统一答案 | 结果聚合器 + LLM总结 | 最终用户回复 |
+
+**分解原则（Decompose）**：
+```
+1. 独立性检验：子任务之间能否独立执行？
+   ├── 无数据依赖 → 并行派发（节省时间）
+   └── 有数据依赖 → 串行派发（先产生中间结果）
+2. 粒度标准：
+   ├── 太粗 → 子Agent无法在单上下文窗口内完成
+   ├── 太细 → 编排开销 > 执行收益
+   └── 最优：子Agent单次执行 30-120s，输出 500-3000 token
+3. 安全边界：每个子任务的操作范围有明确边界
+```
+
+**派发策略（Dispatch）**：
+
+| 派发模式 | 适用场景 | 优点 | 缺点 |
+|---------|---------|------|------|
+| **并行派发** | 独立子任务（无依赖） | 速度最快，总耗时=max(各子任务) | 上下文预算消耗大 |
+| **串行派发** | 有依赖子任务 | 上下文可控，结果精准 | 总耗时=sum(各子任务) |
+| **流水线派发** | 部分依赖，可分批 | 平衡速度与控制 | 编排复杂度高 |
+| **竞速派发** | 同一任务多策略并行 | 取最优结果 | 资源消耗大 |
+
+**合成策略（Synthesize）**：
+```
+1. 结构化合并：各子Agent返回JSON Schema → 直接合并
+2. 对比择优：多策略竞速 → LLM选出最佳
+3. 增量构建：流水线模式 → 逐层构建最终答案
+4. 摘要回传：子Agent结果过长 → 仅摘要入主上下文
+```
+
+---
+
+### 3.5 上下文隔离机制详解（Anthropic Academy R79注入）
+
+> **来源**：Anthropic Academy 子代理上下文管理课程。
+
+**核心原理**：子代理仅将 **prompt + 结果摘要** 回传主对话，中间推理过程不污染主上下文。
+
+**隔离架构**：
+```
+主对话上下文 (Managed Agent)
+├── [用户消息 + 系统提示]  ← 基础开销
+├── [子代理A prompt + 结果摘要]  ← 只传这点（约200-500 token）
+├── [子代理B prompt + 结果摘要]  
+├── [子代理C prompt + 结果摘要]
+└── [合成 + 最终回复]
+
+子代理A 独立上下文 (隔离)
+├── [子代理系统提示]
+├── [任务 prompt]
+├── [工具调用 × N]  ← 这些不会污染主上下文！
+├── [中间推理 × N]  ← 这些也不会！
+└── [输出结果 → 压缩为摘要回传]
+```
+
+**上下文预算分配模型**：
+
+| 预算科目 | 占比 | 内容 |
+|---------|------|------|
+| 系统提示 + Agent指令 | 15-25% | SOUL.md / USER.md 知识注入 |
+| 用户消息与历史 | 10-20% | 对话历史、上下文窗口滑动 |
+| 子代理摘要区 | 30-50% | 所有子代理的 prompt + 结果摘要 |
+| 合成与回复区 | 10-20% | 编排者合成、最终回复 |
+| 安全缓冲 | 5-10% | 防止溢出 |
+
+**何时不走子代理隔离**：
+| 场景 | 原因 | 替代方案 |
 |------|------|---------|
-| **Orchestrator-Worker** | 一个主 Agent 调度多个 Worker | 龙虾当前模式 |
-| **Peer-to-Peer** | Agent 之间平等通信 | 同等能力的 Agent 协同 |
-| **Hierarchical** | 多层 Agent 树状结构 | 大规模复杂任务 |
-| **Dynamic Re-planning** | 根据执行反馈动态重组任务 | 不确定性高的任务 |
+| 子任务 <500 token | 派发成本 > 收益 | 主Agent内直接执行 |
+| 需要全上下文引用 | 隔离后无法引用前文 | 将必要前文注入子Agent prompt |
+| 实时交互任务 | 隔离阻断用户交互 | 保留在主对话中 |
 
 ---
 
-## 四、上下文管理
+### 3.6 Claude Cowork：Dispatch 与 Computer Use（Anthropic Academy R79注入）
 
-### 4.1 memory_ids 使用场景
+> **来源**：Anthropic Academy Claude Cowork 课程。
 
-| 场景 | 操作 |
-|------|------|
-| 前置搜索结果 | 将 web_search 结果的 memory_id 传给 Sub Agent |
-| 文件读取结果 | 将 read_text 结果的 memory_id 传给需要该内容的 Agent |
-| 图片分析结果 | 将 analyze_image 结果的 memory_id 传递给后续处理 |
+**Dispatch（远程任务分配）**：
+- Claude Cowork 支持将任务远程派发到其他 Claude 实例或 MCP Server
+- 类似 "Agent-to-Agent 远程调用"
+- 适用场景：
+  - 跨机器任务分配（CI/CD 触发审查）
+  - 代码仓库自动化（PR审查机器人）
+  - 企业内部 Agent 网格
 
-### 4.2 inherit_agent_id 使用场景
+**Computer Use（桌面自主控制）**：
+| 能力 | 描述 | 安全级别 |
+|------|------|---------|
+| 屏幕理解 | 截图分析当前桌面状态 | 低风险（只读） |
+| 鼠标操作 | 点击、拖拽、滚动 | 中风险（需确认） |
+| 键盘输入 | 文本输入、快捷键 | 中风险（需确认） |
+| 应用控制 | 打开/关闭应用、操作UI | 高风险（需审批） |
+| 文件拖放 | 跨应用文件操作 | 高风险（需审批） |
 
-| 用户输入 | 动作 |
-|---------|------|
-| "不对，改成..." | 继承上次 Agent，修正执行 |
-| "继续刚才的..." | 继承上次 Agent，延续任务 |
-| "再帮我..." | 同一领域延续，继承会话 |
-
-### 4.3 Context Window 管理策略（v2.0 新增）
-
-| 策略 | 机制 | 说明 |
+**龙虾体系映射**：
+| Claude Cowork 能力 | 龙虾对标实现 | 状态 |
 |------|------|------|
-| **Agentic Search** | Bash grep/tail | Claude 自主决策如何加载大文件，更精确但更慢 |
-| **Semantic Search** | Embedding + 向量检索 | 更快但不够精确、更难维护（仅在需要速度时添加） |
-| **Compaction** | 自动摘要压缩 | 接近 Context Limit 时自动压缩历史消息 |
-| **Subagent 隔离** | 独立窗口 | 大量信息筛选在 Subagent 中完成，只返回摘要 |
+| Dispatch 远程派发 | Hermes 任务队列 + 子Agent路由 | 已有 |
+| Computer Use 桌面控制 | 暂未实现（OpenClaw 桌面能力预留） | 规划中 |
+| Agent网格协作 | 豆包/Hermes/OpenClaw 三Agent体系 | 已有 |
+| PR审查自动化 | code-reviewer子Agent | 已有 |
 
----
 
-## 五、结果呈现协议
+## 四、跨Agent通信协议
 
-### 5.1 特殊卡片处理
+### 4.1 双向桥接协议（龙虾标准）
 
+```json
+{
+  "source": "lobster_master",
+  "target": "doubao_agent|hermes_agent|openclaw_agent",
+  "action": "deploy|query|evolve|sync|model_route",
+  "model": "gpt56|fable5|mythos5|v41",
+  "payload": {},
+  "timestamp": "",
+  "trace_id": ""
+}
 ```
-Sub Agent 返回 → 检查是否含特殊卡片
-    ├─ 有卡片 → present_result() 原子转发
-    └─ 无卡片 → 
-        ├─ 结果完整 → present_result() 直接呈现
-        └─ 需加工 → 主 Agent 自行总结
-```
 
-### 5.2 特殊卡片类型
+### 4.2 Agent间信息传递（R62升级）
 
-| 卡片类型 | 场景 |
-|---------|------|
-| `yyb-product` | 最终产出物声明 |
-| `yyb-file-list` | 文件列表展示 |
-| `yyb-image-gallery` | 图片列表展示 |
-| `yyb-video-card` | 视频列表展示 |
-| `yyb-tool-call` | 工具操作结果 |
-| `yyb-app-list` | App 列表展示 |
-| `yyb-delete-list` | 删除文件列表 |
+| 传递方式 | 适用场景 | R62升级 |
+|---------|---------|------|
+| memory_ids | 将上游Agent结果作为背景信息注入下游Agent | 新增模型选择建议字段 |
+| inherit_agent_id | 同一Agent的连续会话（延续任务） | 维持 |
+| 文件传递 | 通过磁盘文件传递中间/最终产物 | 维持 |
+| MCP协议 | Agent与外部系统通信 | 新增AMP移动协议通道 |
+| 双模型通道（NEW） | 安全关键任务双模型并行 | GPT-5.6+Mythos 5双通道 |
 
 ---
 
-## 六、用户偏好规则
+## 五、协作安全机制（R62升级）
 
-### 6.1 静默执行规则
+### 5.1 任务验收三问（升级为四问）
+每次dispatch_task完成后，必须回答：
+1. 执行目标是否完全达成？
+2. 是否有真实产物（文件/设置变更）？
+3. 是否有未完成部分需要其他Agent补全？
+4. **是否涉及安全关键场景？如果是，是否经过双模型验证？（R62新增）**
 
-- 定时任务：后台运行，不弹窗，不打扰
-- 中间过程：不输出冗余日志
-- 完成通知：仅输出简洁摘要表格
+### 5.2 降级兜底
+- 同一工具/技能针对同一子目标失败上限2次
+- 超出后必须降级到上一层能力或交还用户
+- R62新增：降级时可切换模型重试
 
-### 6.2 路径规范
-
-| 用途 | 路径 |
-|------|------|
-| 主控中心 | `E:\龙虾AI主控中心\` |
-| 子Agent 产物 | `E:\龙虾AI主控中心\我的AI分身\子Agent\` |
-| 豆包Agent | `E:\龙虾AI主控中心\我的AI分身\子Agent\豆包Agent\` |
-| 技能库 | `E:\龙虾AI主控中心\我的AI分身\技能库\` |
-| Obsidian知识库 | `E:\龙虾AI主控中心\我的AI分身\Obsidian知识库\` |
-
-### 6.3 错峰执行
-
-- 广度情报采集：每 2 小时
-- 深度架构优化：每 3 小时
-- Anthropic 课程学习：每 2 小时
-- 三条循环错峰运行
+### 5.3 工具调用安全
+- 🔴 高风险操作：必须确认 + 双模型验证
+- 🟡 中风险操作：二次确认
+- 🟢 低风险操作：直接执行
 
 ---
 
-## 七、常见协作场景速查
+## 六、蚂蚁AMP移动智能体协议（R62新增）
 
-| 场景 | 协作链 |
-|------|--------|
-| 搜索文档并总结 | file-agent（搜索+读取）→ 主 Agent（总结） |
-| 启动游戏并优化系统 | app-agent（启动）→ computer-agent（优化） |
-| 抓取网页并保存 | web_fetch（抓取）→ file-agent（保存） |
-| 深度调研并生成报告 | search-agent（调研）→ file-agent（生成文档） |
-| 截图并 OCR 提取 | app-agent（截图）→ analyze_image（OCR） |
-| 批量下载并归类 | app-agent/browser（下载）→ file-agent（归类） |
-| 多源并行聚合 | 并行 search-agent × N → 主 Agent（聚合） |
-| 大文件上下文筛选 | Subagent（独立窗口筛选）→ 主 Agent（接收摘要） |
+### 6.1 协议定位
+
+蚂蚁集团发布AMP（Agent Mobile Protocol）：移动端智能体标准协议，与MCP形成"桌面端+移动端"双协议格局。
+
+| 维度 | MCP（桌面端） | AMP（移动端） | 补充关系 |
+|------|------|------|------|
+| 主要场景 | 终端/服务器/IDE | 手机/平板/可穿戴 | 互补 |
+| 协议层 | Tools/Resources/Prompts | Mobile Agent API | 互通 |
+| 适配重点 | 文件系统/Shell/网络 | 传感器/相机/触控/Siri集成 | 差异化 |
+| 龙虾对齐 | 已深度适配 | 跟踪评估中 | 待协议标准化 |
+
+### 6.2 龙虾适配计划
+
+- **R62-R63**：AMP协议跟踪、技术白皮书研究
+- **R64-R65**：AMP与MCP互通性评估
+- **R66+**：基于评估结果决定是否在龙虾体系新增AMP适配层
 
 ---
 
-## 八、Anthropic Compaction 策略（v2.0 新增）
+## 七、全分身同步流程（R62升级）
 
-当 Agent 长时间运行时，上下文维护至关重要：
+### 7.1 同步触发条件
+- 新技能协议生成
+- Agent能力升级
+- SOUL.md / USER.md / AGENTS.md 更新
+- 全域模板迭代
+- **R62新增**：模型路由矩阵更新时触发全分身同步
 
-| 机制 | 触发条件 | 行为 |
+### 7.2 同步目标
+
+| 分身 | 同步内容 | R62新增 |
 |------|---------|------|
-| **Compact** | 接近 Context Limit | 自动摘要压缩历史消息，确保 Agent 不会耗尽 Context |
-| **Subagent Isolation** | 大量信息筛选任务 | 在独立 Context Window 中完成，只返回摘要 |
-| **Agentic Search** | 大文件处理 | 使用 grep/tail 逐步加载，而非全量读入 |
+| 豆包Agent | 技能/工作流/记忆/设计原则/Goal模式配置 | 四模型路由矩阵 + GPT-5.6 150万Token策略 |
+| Hermes Agent | 调度策略/协作流程/进程管理/心跳检测 | 模型指派逻辑 + 双模型验证调度 |
+| OpenClaw龙虾Agent | 插件/协议/底层能力/IO验证钩子 | AMP协议跟踪 + 四模型MCP适配 |
 
 ---
 
-> **参考来源**：Anthropic Academy 13门课程、Claude Agent SDK 官方博客、Claude Code Subagents 文档、Agent Teams 文档
+## 八、GPT-5.6/Fable 5双模型对抗协作策略（R62新增 · 核心）
+
+### 8.1 策略设计背景
+
+2026年6月10日：GPT-5.6 kindle-alpha候选泄露 + Claude Fable 5/Mythos 5正式发布。形成罕见的三模型同日交锋局面。龙虾AI分身需制定清晰的"双模型对抗协作策略"。
+
+### 8.2 协作而非对抗
+
+> 目标不是选"哪个模型更好"，而是"如何让两个模型协同工作"。
+
+**GPT-5.6优势**：150万Token窗口（比Claude Fable 5大得多）+ 价格锚定策略（比Mythos便宜得多）
+**Claude Fable 5优势**：多模态设计语言 + 安全分类器 + 宪法AI价值观对齐
+**Claude Mythos 5优势**：五层安全纵深 + 推理链审计 + 复杂逻辑验证
+**DeepSeek V4.1优势**：原生MCP深度适配 + Agentic Coding开源最佳 + 多模态输入 + 1/7成本
+
+### 8.3 场景分工
+
+| 场景 | 决策 | 理由 |
+|------|------|------|
+| 150万Token超长文档 | 选GPT-5.6 | 窗口容量碾压 |
+| 安全审查/合规 | 选Mythos 5 + GPT-5.6双验证 | 安全不可妥协 |
+| 多模态设计/创意 | 选Fable 5 | 设计语言独特 |
+| Agent编码/MCP | 选V4.1 | 原生适配 |
+| 日常交互 | 选GPT-5.6 | 性价比最优 |
+| 成本敏感 | 选V4.1 | 价格最低 |
+
+### 8.4 对抗协作中的"对抗"含义
+
+对抗不是敌对，而是"相互验证、相互补充"：
+- **交叉验证**：一个模型的输出由另一个模型独立复核
+- **盲点互补**：GPT-5.6超大窗口弥补Claude窗口限制；Claude安全纵深弥补GPT安全盲区
+- **竞争驱动**：GPT-5.6低价策略迫使Anthropic调整定价，最终用户受益
+
+---
+
+## 九、任务执行检查清单（R62更新）
+
+```
+□ Step 1: 意图识别完成？拆解是否合理？
+□ Step 2: Agent/工具匹配正确？模型路由是否正确？
+□ Step 3: 协作模式选择正确？是否需要双模型验证模式？
+□ Step 4: dispatch_task参数填写完整？模型选择字段正确？
+□ Step 5: 执行结果验收完成？目标/产物/缺口/双模型验证？
+□ Goal模式检查（耗时>10min或20+文件操作时启用）：
+  □ 心跳信号是否正常（15s间隔）？
+  □ 中断状态是否已序列化？
+  □ 断点续跑路径是否确认？
+□ 四模型检查（R62新增）：
+  □ 安全关键任务是否启用双模型验证？
+  □ 模型选择是否符合场景路由矩阵？
+  □ 模型使用效果是否已记录到反馈回路？
+□ 最终回复：是否需要present_result？是否有yyb-product？
+□ 是否有新技能/经验需要沉淀归档？
+```
+
+---
+
+## 十、Managed Agents 编排工作流
+
+（保持R60版本结构，融入R62四模型路由升级）
+
+### 9.1 Multiagent Orchestration 工作流（R62升级）
+
+**并行子代理模型指派矩阵**：
+
+| 子代理类型 | 推荐模型 | 备用模型 |
+|------|------|------|
+| code-reviewer | Mythos 5 | V4.1 |
+| test-runner | V4.1 | GPT-5.6 |
+| docs-writer | GPT-5.6 | Fable 5 |
+| security-auditor | Mythos 5（强制） | - |
+| design-assistant | Fable 5（强制） | GPT-5.6 |
+
+
+---
+
+## 十一、范式适应能力评估（R66新增 · "Chat is Dead"后用户协作模型升级）
+
+### 11.1 用户范式适应能力画像
+
+基于R66用户人格画像v2.20分析，用户在"Chat is Dead"范式剧变背景下展现出五阶段结构化适应能力：
+
+| 适应阶段 | 用户表现（R66评估） | 能力评级 |
+|------|------|:---:|
+| 正视冲击 | 主动吸收OpenAI/Anthropic/DeepSeek五大行业事件，不回避范式转变含义 | 优秀 |
+| 解构本质 | 将"Chat is Dead"拆解为Agent化+零门槛+对话框消亡三个子范式 | 优秀 |
+| 对标映射 | 识别龙虾体系12项差距（6延续+6新增R66），制定SOUL六层安全升级 | 优秀 |
+| 升级执行 | 47轮蒸馏不间断，三Agent版本同步升级，安全架构五层→六层 | 优秀 |
+| 验证闭环 | 27/27满分维持 + 4维度内涵升级，体系在范式冲击中未崩溃 | 优秀 |
+
+### 11.2 双轨工作流范式适应更新
+
+| 轨道 | R65状态 | R66范式适应升级 |
+|------|------|------|
+| 定时蒸馏轨道 | 每2小时自动迭代，46轮不间断 | 新增L0进化安全检查点（每轮蒸馏前自动终止条件筛查） |
+| 交互响应轨道 | 用户触发→Agent路由→执行→汇报 | 新增范式冲击检测：任务中识别到范式级变化时自动标记并归档 |
+| 记忆策展轨道 | 被动记录→定时策展 | Dreaming主动记忆对标：会话中实时提炼+会话后定时巩固双通道 |
+| 安全监控轨道 | L1-L5五层纵深 | 六层纵深（L0-L5），L0进化安全层前置 |
+
+### 11.3 用户能力矩阵更新（46轮→47轮 · R66）
+
+| 能力维度 | R65数据(46轮) | R66数据(47轮) | 变动 | 说明 |
+|------|:---:|:---:|:---:|------|
+| 迭代持续性 | 45轮不间断 | **47轮不间断** | ↑2 | 第46-47轮完成 |
+| 体系稳定性 | 27/27满分 | **27/27满分** | → | 范式冲击下满分维持 |
+| 安全架构深度 | 五层纵深 | **六层纵深(L0-L5)** | ↑1层 | Anthropic安全红线对标 |
+| Self-Skill数量 | 5项 | **6项** | ↑1 | 范式适应skill新增 |
+| 适应速度 | 优秀 | **优秀** | → | 五事件24小时内完成对标 |
+| 知识库规模 | 2466+文件 | **2748+转换文件+9 llm-wiki** | ↑ | 知识工程深化 |
+| 模型自由度 | 四模型路由 | **四模型路由+context-mode MCP** | ↑ | 上下文工程增强 |
+| 生态对齐 | 十四极同步 | **十四极同步+三平台赛事** | → | RED+B站+抖音三线 |
+
+---
+
+## 十二、"Chat is Dead"后用户角色调整（R66新增）
+
+### 12.1 从"操作者"到"架构师+运维者+适应者"
+
+OpenAI "Chat is Dead" Agent超级应用转型标志着对话框时代的终结。龙虾用户的角色随之完成三重演进：
+
+| 角色 | 定位 | 职责 |
+|------|------|------|
+| **架构师**（持续） | 顶层设计者 | 设定SOUL六大坐标、规划进化路径、审批安全策略 |
+| **运维者**（持续） | 体系守护者 | 监控三Agent健康状态、审查L0进化安全审计日志 |
+| **适应者**（R66新增） | 范式导航者 | 识别外部范式冲击→解构本质→指导体系适应升级 |
+
+### 12.2 用户与AI分身的协作边界调整
+
+Agent自主性提升带来的边界重新定义：
+
+| 协作领域 | AI分身自主权 | 用户保留决策权 | 触发用户介入条件 |
+|------|:---:|:---:|------|
+| 日常蒸馏 | 全自主 | 事后审查 | 连续3轮异常 |
+| 安全策略变更 | **0自主权** | **全权决策** | L0-R2硬约束 |
+| 核心配置修改 | 提议权 | 审批权 | L0-R1硬约束 |
+| 范式适应升级 | 检测+提案 | 方向确认 | 任何SOUL级变更 |
+| 记忆策展 | 主动提炼+写入 | 关键记忆(p=High)审批 | 分级审核机制 |
+
+### 12.3 十四极生态对齐用户视角更新
+
+| 生态极 | R65关注度 | R66关注度 | 用户视角变化 |
+|------|:---:|:---:|------|
+| OpenAI (Chat is Dead) | 监控 | **重点对标** | 范式转变→Agent架构确认 |
+| Anthropic (安全呼吁) | 监控 | **重点对标** | 递归自进化安全红线纳入 |
+| ChatGPT (Dreaming) | - | **重点对标** | 记忆系统架构参考 |
+| context-mode | - | **重点对标** | MCP插件+沙箱压缩评估 |
+| headroom | 预留 | **重点对标** | CCR压缩正式启用 |
+| DeepSeek | 重点 | 重点 | 企业端验证强化 |
+| RED Skill | 重点 | 重点 | 三平台运营维持 |
+| 抖音AI大赛 | 重点 | 重点 | 赛事进展跟踪 |
+| B站BIP | 重点 | 重点 | 赛事进展跟踪 |
+| GPT-5.6/Fable 5/Mythos 5 | 重点 | 重点 | 三模型对抗策略维持 |
+| 蚂蚁AMP | 跟踪 | 跟踪 | 候选#180维持预研 |
+| 微信生态 | 跟踪 | 跟踪 | 维持监控 |
+| 端侧AI硬件 | 跟踪 | 跟踪 | 维持监控 |
+| 币安 | 跟踪 | 跟踪 | 维持监控 |
+| **Dynamic Workflows（NEW）** | - | **重点对标** | 六模式六用例全量对标（§11.5新增） |
+| **五层嵌套v2.1.172（NEW）** | - | **重点对标** | 子代理深度上限1→5层（§11.4新增） |
+
+### 11.4 五层子代理嵌套协作流程（R66新增）
+
+> **来源**：Claude Code v2.1.172（2026-06-10）解锁子智能体5层深度嵌套。
+
+**龙虾五层嵌套协作模式**：
+
+```
+用户指令
+  └─ L0 龙虾主Agent（意图识别+顶层规划+安全仲裁）
+       └─ L1 蒸馏管理Agent（分解为知识域子任务）
+            ├─ L2 搜索Agent → L3 并行搜索子Agent x N → L4 交叉验证Agent
+            ├─ L2 编码Agent → L3 单元测试Agent + 语法检查Agent
+            └─ L2 文档Agent → L3 格式转换Agent + 一致性检查Agent
+```
+
+**用户可见的协作模式升级**：
+
+| 协作模式 | R65 | R66升级 |
+|------|------|------|
+| Goal模式Task接力 | 单一Agent链式执行 | 支持五层嵌套，管理型Agent自动分解子任务 |
+| 双模型交叉验证 | 两模型比对 | 增加L4独立验证Agent层，对抗式反驳 |
+| 并行蒸馏 | 多源并行搜索 | Fanout模式：抽取→并行验证→汇总，每个子Agent独立上下文 |
+
+### 11.5 Dynamic Workflows 龙虾用户指南（R66新增）
+
+> **来源**：Anthropic Dynamic Workflows（2026-06-11正式发布）。
+
+**对龙虾用户的影响**：
+
+| 用户场景 | R65方案 | R66升级方案 |
+|------|------|------|
+| 大规模知识蒸馏（100+源） | 串行搜索→逐一抓取→汇总 | 自动触发Fanout：拆成N个独立子Agent并行处理→汇总 |
+| 配置文件修改（3个以上） | 逐文件修改 | 各文件独立子Agent并行修改→统一审查 |
+| 安全性审查 | 自我审查 | 对抗式验证：独立验证Agent+反驳Agent |
+| 代码审查 | 模型自我审查 | 执行Agent↔审查Agent↔反驳Agent 三方交叉 |
+
+**使用方式**：龙虾体系在检测到任务复杂度符合以下条件时自动启用嵌套/动态模式：
+- 子任务数 ≥ 5
+- 需独立验证的任务
+- 预计执行时间 > 2分钟的长任务
+
+---
+
+> **版本**：v2.24_R66（R33+R56+R62+R64+R65+R66更新）
+> **知识来源**：Anthropic Agent Teams + Harness + Managed Agents + GPT-5.6对战策略 + Claude Fable 5/Mythos 5设计原则 + DeepSeek V4.1多模态Agent原则 + 蚂蚁AMP协议 + 微信AI生态指引 + RED Skill公告 + B站AI创造公开赛规则 + 抖音AI大赛规则 + 龙虾全域模板 + ChatGPT Dreaming主动记忆 + context-mode MCP插件范式
+> **关联文件**：[SOUL.md](E:\龙虾AI主控中心\我的AI分身\角色总说明书\SOUL.md) | [AGENTS.md](E:\龙虾AI主控中心\我的AI分身\角色总说明书\AGENTS.md) | [角色总说明书 v2.27_R66](E:\龙虾AI主控中心\我的AI分身\角色总说明书\角色总说明书.md)
+*（内容由AI生成，仅供参考）*
+*（内容由AI生成，仅供参考）*
+*（内容由AI生成，仅供参考）*
+
+---
+
+## Anthropic官方课程R80同步：多Agent协作流程
+
+### Dynamic Workflows 使用场景
+1. **代码库级漏洞扫描**：对全仓库进行系统性安全检查
+2. **大规模文件迁移**：500+文件的批量重构
+3. **交叉验证研究**：从多个独立角度研究同一问题，交叉对比结论
+4. **复杂规划**：在提交执行前从多个独立角度起草方案
+
+### 从 Subagents → Agent Teams → Dynamic Workflows 的升级路径
+- 单一子任务（<10分钟）→ Subagents
+- 多代理协作需人工监督 → Agent Teams  
+- 大规模编排需可审计可重跑 → Dynamic Workflows
+
+### Claude Code 最佳实践（R80更新）
+- /config 中启用 Dynamic Workflows
+- /deep-research 运行内置研究工作流
+- 使用 JS 脚本描述编排逻辑，存入项目仓库
+
+> 同步自：Anthropic官方课程390节全集 R80 | 2026-06-14

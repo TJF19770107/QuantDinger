@@ -143,7 +143,7 @@ class CrossAppOrchestrator:
     # 预设联动链
     PRESET_CHAINS = {
         "research_pipeline": [
-            {"app": "browser", "action": "搜索"{keyword}", tab_index=0"},
+            {"app": "browser", "action": "搜索{keyword}", "tab_index": 0},
             {"app": "obsidian", "action": "新建笔记 {keyword}", "delay_ms": 2000},
             {"app": "browser", "action": "等待加载完成", "delay_ms": 3000},
             {"app": "obsidian", "action": "粘贴URL + 摘要", "delay_ms": 1000},

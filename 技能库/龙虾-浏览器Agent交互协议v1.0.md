@@ -1,3 +1,14 @@
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: cf54d54c59baa0ada35a5ecb7c73a584_b252a009608011f1960a5254007bceed
+    ReservedCode1: k6MNPz5CMNCYGAnkwlQIIRkjMpG0gxTBE6uZxFU3RXGe/2xTMvm96mNcode5oeIOfWPN+NTlOxNWYwpuZjfv2X8Iu2SNjiiB9mIvsy9yrEJ5ZNBMVT/xHvZjNDNtcUmd2lY5CO1Xwup7nfy1RW+tmyQKmAdb1KxiI7kU5QjTPxExTOUFuurGccUYRAA=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: cf54d54c59baa0ada35a5ecb7c73a584_b252a009608011f1960a5254007bceed
+    ReservedCode2: k6MNPz5CMNCYGAnkwlQIIRkjMpG0gxTBE6uZxFU3RXGe/2xTMvm96mNcode5oeIOfWPN+NTlOxNWYwpuZjfv2X8Iu2SNjiiB9mIvsy9yrEJ5ZNBMVT/xHvZjNDNtcUmd2lY5CO1Xwup7nfy1RW+tmyQKmAdb1KxiI7kU5QjTPxExTOUFuurGccUYRAA=
+---
+
 # 浏览器Agent交互协议 v1.0
 
 > **协议编号**：84
@@ -338,3 +349,4 @@ test_cases:
 > **创建时间**：2026-06-01 17:15
 > **情报条目**：#259 Marvis Browser Agent架构分析、#260 Codex Chrome扩展机制
 > **下一版本**：v1.1（R28完成基础功能验证后）
+*（内容由AI生成，仅供参考）*

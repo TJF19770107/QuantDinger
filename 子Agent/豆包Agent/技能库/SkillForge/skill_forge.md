@@ -1,6 +1,6 @@
 # skill_forge.py
 
-> 原始文件: `skill_forge.py`  |  类型: `.py`  |  自动转换
+原始格式: Python
 
 ```python
 # skill_forge.py - 豆包Agent自主技能锻造引擎

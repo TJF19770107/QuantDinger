@@ -1,6 +1,8 @@
 # LOBSTER-BINANCE-CONFIG-v4.json
 
-> 原始文件: `LOBSTER-BINANCE-CONFIG-v4.json`  |  类型: `.json`  |  自动转换
+> ⚠️ **缺口标注 [GAP-001]**: 标的清单缺少AI Agent代币板块（VIRTUAL USDT / LUNA USDT 等）。基于P0-006行动项和二次蒸馏趋势#1（AI×Crypto价值传导），建议在下一版本 `LOBSTER-BINANCE-CONFIG-v5` 中新增AI Agent代币专项监控列表。
+
+原始格式: JSON
 
 ```json
 {

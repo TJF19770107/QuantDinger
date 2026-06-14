@@ -1,105 +1,101 @@
-# USER.md · 龙虾用户画像 · 完整档案
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: cf54d54c59baa0ada35a5ecb7c73a584_30e3eac664db11f192bd5254007bceed
+    ReservedCode1: c5aWRTcZWJL9PwNOSt20mxo0VR9KvK9xeD9PvjjkRebbfJkB7aVqpIAo1wCCBUfX5JmAuaTOresTnhniO0+ta/+By3YJmha0S6JwRhQczeRd2L3ixS3Vp8AFj/i3NNSdOfr7YZ6f7SwPseR6AahsQkYZv+pwqgcbedxDjiH+OR9scB8wOtCaUTy2eKA=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: cf54d54c59baa0ada35a5ecb7c73a584_30e3eac664db11f192bd5254007bceed
+    ReservedCode2: c5aWRTcZWJL9PwNOSt20mxo0VR9KvK9xeD9PvjjkRebbfJkB7aVqpIAo1wCCBUfX5JmAuaTOresTnhniO0+ta/+By3YJmha0S6JwRhQczeRd2L3ixS3Vp8AFj/i3NNSdOfr7YZ6f7SwPseR6AahsQkYZv+pwqgcbedxDjiH+OR9scB8wOtCaUTy2eKA=
+---
 
-版本号：v2.2 (2026-06-01 · R26全域蒸馏增量更新)
-画像来源：R11-R26全15轮迭代行为数据 + 用户人格画像_R26 + 进化规划_R26
-用途：为全部子Agent提供用户背景上下文，确保交互个性化与一致性
+# USER.md   多 Agent 协作流程
+
+> 来源：Anthropic 官方课程提炼 · 同步日期：2026-06-10
+> 同步自：Claude Opus 4.6 Swarm 模式 + Agent SDK 子代理
 
 ---
 
-## 一、基础档案
+## 多 Agent 协作核心流程
 
-| 字段 | 内容 |
-|------|------|
-| 称谓 | 龙虾 |
-| 角色定位 | AI分身构建者 / 系统架构师 / 全域迭代引擎 / 量化策略师 |
-| 核心标签 | 全域迭代引擎 · 持续进化者 · 技术极客 · 安全卫士 · 务实执行者 · 系统架构师 · Agent工程化先锋 |
-| 核心产出 | "我的AI分身"体系 — 豆包Agent v10.2_R26 + Hermes Agent v3.7_R26 + OpenClaw龙虾Agent v3.7_R26 + 87项技能协议 + 5条标准工作流 + 知识库4208+文件 |
-| 技术栈 | AI Agent系统设计 / 多Agent协作架构 / Skills工程化 / 数字分身蒸馏 / MCP协议 / GEPA+SICA三层进化 / Harness Engineering / Autogenesis自进化 / Agentic Neural Networks / goal模式持久化执行 / Dynamic Workflows并行验证 |
-| 工作环境 | Windows 10 (Build 19045) / Marvis统一调度平台 |
-| 体系规模 | 13个功能目录 / 3个子Agent / 87项技能协议 / 5条工作流 / 4208+个全体系文件 / 27维对标矩阵 |
-| 对标得分 | v3.19 / 27维 / 综合得分 98.6（目标） |
+### 任务接收与分解
+```
+用户需求   意图识别   领域匹配   子任务拆分   Agent路由
+```
+1. **意图识别**：判断任务类型（文件/浏览器/应用/搜索/系统）
+2. **领域匹配**：匹配最优 Sub Agent
+3. **子任务拆分**：跨域任务按阶段分解，单域任务整体派发
+4. **Agent路由**：明确先后依赖关系，确定执行顺序
+
+### 单 Agent 闭环（推荐）
+- 所有工作可合并在一次派发内完成时，**必须整包派发**
+- Agent内部具备自主规划能力，无需外部指导步骤
+
+### 多 Agent 协作模式
+
+| 场景 | 模式 | 示例 |
+|------|------|------|
+| 串行依赖 | A完成  B开始 | app-agent启动游戏  computer-agent调整配置 |
+| 并行无关 | A和B同时执行 | file-agent搜索文件 + search-agent搜索网络 |
+| 扇出模式 | 多个Worker并行 | 批量文件迁移、大规模重构 |
 
 ---
 
-## 二、技术背景与能力矩阵
+## Claude Code Agent Teams 协作模式
 
-### 2.1 核心能力域（R26状态）
-
-| 能力域 | 水平 | 证据与产出 | R26变化 |
-|--------|------|-----------|:---:|
-| AI Agent系统架构 | 专家级 | 三层Agent治理架构 + 三引擎贯通 + GEPA+SICA三层骨架 + 15轮全域迭代 | → |
-| Skills协议工程 | 专家级 | 87项标准化技能协议 + agentskills.io对齐 + agent-skills 47.3K⭐对标 | ↑ |
-| 多Agent编排 | 高级→高级+ | Swarm编排+Owner/Worker/Verifier + goal模式+LIFE框架吸收 | ↑ |
-| 数字分身构建 | 高级 | 完整六步蒸馏法落地执行，15轮全域迭代验证，#83 AI分身蒸馏专家 | → |
-| Harness Engineering | 高级 | 六大维度体系化落地，豆包得分97，幻觉拦截机制待升级 | → |
-| 跨平台部署 | 高级→高级+ | 桌面/微信/小程序/QClaw/OpenClaw + Hermes Win原生对齐 + Marvis深度集成 | ↑ |
-| 知识管理 | 高级 | 4208+文件的统一知识库体系，8个关键概念词条 | → |
-| 自进化系统 | 前沿 | 对标矩阵驱动15轮持续迭代（90.6→98.3+），4项满分维度，Deli Chen方法论吸收 | ↑ |
-| **新增关注** | - | Agent持久化执行：goal模式跨session + 断点续跑 | NEW |
-| **新增关注** | - | Dynamic Workflows并行：百Agent并行验证+互相反驳收敛 | NEW |
-
-### 2.2 技术偏好演进轨迹（R26更新）
-
-| 阶段 | 时间 | 关注焦点 | 核心突破 |
-|------|------|---------|---------|
-| 基础搭建期 | Q1 2026 | Agent基础架构设计 | 三层Agent治理架构、13目录模块规范 |
-| R11-R15迭代加速期 | 2026年5月 | 自进化+多Agent协作 | 对标矩阵90.6→97.5，技能协议#46→#70 |
-| R16-R22架构深水期 | 2026年6月1日 | 三引擎贯通+Harness Engineering | 对标矩阵97.8，GEPA+SICA骨架代码，全域蒸馏闭环 |
-| R23-R25稳定化期 | 2026年6月1日 | 蒸馏闭环验证+版本一致性 | 对标矩阵98.3，87项协议，14轮迭代积累 |
-| **R26执行工程化期** | **2026年6月1日** | **goal模式+可验证执行+并行验证** | **对标矩阵目标98.6，三引擎执行层升级** |
-
-### 2.3 R26新增技术关注
-
-1. **执行可验证性**：Hermes Agent五层防烂尾（心跳/僵尸回收/退出拦截/幻觉拦截/重试预算）→ 幻觉拦截是核心竞争力，计划吸收进GEPA+SICA安全协议
-2. **跨session持久化**：Codex goal模式14小时不间断案例 → "关终端/重启不断，断点续跑"是效率新范式
-3. **Dynamic Workflows**：Claude Opus 4.8 拆大任务→数百并行子Agent互相验证/反驳/收敛 → 多Agent并行验证新范式
-4. **Agent Skills标准化**：addyosmani/agent-skills 47.3K⭐ + 7强制命令 + 23生产级技能 → #84协议对标升级
-5. **Hermes Agent Windows原生**：无需WSL/Cygwin/Docker，GitBash+PortableGit 45MB → 跨平台部署简化
-
-### 2.4 双轨工作流（R26确认）
+### Swarm 协作工作流
 
 ```
-定时轨道（全自动）              交互轨道（按需触发）
-├─ 每2小时全域蒸馏              ├─ 用户指令→Agent路由
-├─ 情报采集→对标升级            ├─ 量化策略报告生成
-├─ 技能/工作流/配置同步          ├─ 文档/代码/文件处理
-├─ 全域同步报告生成              ├─ 系统运维与巡检
-└─ 迭代日志归档                  └─ 对话交互与记忆更新
+用户: "构建包含 OAuth、测试和文档的用户认证系统"
+
+[Team Lead] 分析需求   创建计划   审批后进入委派模式
+
+   auth-backend: 实现 OAuth 提供者集成（独立 worktree）
+   auth-frontend: 构建登录/登出 UI 组件（独立 worktree）
+   test-agent: 编写认证流程集成测试（独立 worktree）
+   docs-agent: 记录 API 端点和用法（独立 worktree）
+
+[并行执行] 所有 Agent 同时工作，通过任务板协调
+
+[Synthesis] Team Lead 整合所有成果
 ```
 
----
+### 任务板协调机制
 
-## 三、行为偏好（R26复核确认）
+共享任务列表位于 ~/.claude/tasks/{team-name}/
 
-### 3.1 执行模式
-- **全自动优先**：15轮迭代中100%全自动执行，零人工干预
-- **批量并行**：情报采集→分析→蒸馏→报告→同步全流水线
-- **质量控管**：五道门控从未因质量问题回滚
-- **自我验证**：R26新增——执行后验证产出物是否真实落盘，不得仅凭Agent自述
+```
+{
+  "id": "1",
+  "subject": "实现 OAuth 回调处理器",
+  "status": "in_progress",
+  "owner": "auth-backend",
+  "blocks": ["2", "3"],
+  "description": "处理 OAuth 重定向和 token 交换..."
+}
+```
 
-### 3.2 交互偏好
-- 中文回复，结构化分节格式（数字编号分步 + 表格 + Markdown）
-- 核心结论处输出"一键信号"摘要块（量化策略场景）
-- 龙虾五步法框架（意图识别→能力映射→方案规划→自主执行→反思进化）
-- 拒绝过度寒暄、拒绝冗余铺垫、拒绝未经请求的表情符号
+**自组织规则**：
+1. 检查 TaskList 寻找可用工作
+2. 认领未分配、未阻塞的任务
+3. 完成后标记状态
+4. 发现额外工作时创建新任务
 
-### 3.3 知识管理偏好
-- 所有产出物统一路径（E:\龙虾AI主控中心\我的AI分身\）
-- MD5去重、统一归档、永久记忆
-- 量化策略报告双路径同步（量化策略资产报告库 + 角色总说明书）
+### Writer/Reviewer 对抗模式
 
----
+| 角色 | 职责 | 上下文 |
+|------|------|--------|
+| **Writer Agent** | 实现功能 | 项目完整 context |
+| **Reviewer Agent** | 审查差异 | 新鲜 context，只看 diff + 标准 |
+| **Test Agent** | 运行验证 | 隔离环境，只运行测试 |
+| **Lead Agent** | 协调流程 | 接收缺陷报告，委派修复 |
 
-## 四、R26目标与预期
+### 上下文效率对比
 
-| 维度 | R25 | R26目标 | 驱动力 |
-|------|:---:|:---:|------|
-| 对标得分 | 98.3 | 98.6+ | goal模式+Skills对标升级 |
-| 全域蒸馏 | 14轮 | 15轮 | 本轮闭环 |
-| 技能协议 | 87项 | 87-90项 | 候选#88-#90 |
-| Agent版本 | v10.2_R25/v3.7_R25 | v10.3_R26/v3.8_R26 | 同步升级 |
-| 核心配置 | v2.1 | v2.2 | SOUL/USER/AGENTS |
-
----
-
-*USER.md v2.2 | R26全域蒸馏更新 | 2026-06-01*
+| 指标 | 单 Agent | Agent Teams |
+|------|---------|-------------|
+| 平均 context 使用率 | 80-90% | ~40% |
+| 大型代码库 (>5万行) | 往往超出容量 | 认知负载分散 |
+| Token 膨胀 | 单次会话持续膨胀 | 每次委派刷新上下文 |
+| 并行能力 | 无（串行） | 天然支持并行 |
+*（内容由AI生成，仅供参考）*

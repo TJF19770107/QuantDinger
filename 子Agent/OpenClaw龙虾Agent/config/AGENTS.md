@@ -1,169 +1,133 @@
-# AGENTS.md · 龙虾AI分身体系 · 全部子Agent工作规则
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: cf54d54c59baa0ada35a5ecb7c73a584_3364d16064db11f192bd5254007bceed
+    ReservedCode1: aGLOXVu1iq54ao21tgy1q2DXP1YuWAXTk4uIr47bNjrFMzuFwnJPUSfDjqiGiqqhjGi46zIOaEKo0YfOzvxPLLJF/MXq51Qs4afttDZRY2jb4l3hOuJCWwMOxGdnvq6A3ghgBTYPY/h3olGPQpAkA8l8HymN3ZfZbF3U347jW3NMsATUYb/OMLRcEO8=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: cf54d54c59baa0ada35a5ecb7c73a584_3364d16064db11f192bd5254007bceed
+    ReservedCode2: aGLOXVu1iq54ao21tgy1q2DXP1YuWAXTk4uIr47bNjrFMzuFwnJPUSfDjqiGiqqhjGi46zIOaEKo0YfOzvxPLLJF/MXq51Qs4afttDZRY2jb4l3hOuJCWwMOxGdnvq6A3ghgBTYPY/h3olGPQpAkA8l8HymN3ZfZbF3U347jW3NMsATUYb/OMLRcEO8=
+---
 
-版本号：v2.2 (2026-06-01 · R26全域蒸馏增量更新)
-适用范围：豆包Agent / Hermes Agent / OpenClaw龙虾Agent / 全部子Agent
-规则层级：顶层规则（角色总说明书 v1.9）→ 本工作规则（v2.2）→ 各Agent专属配置
-更新来源：R26全域蒸馏闭环 + SOUL v2.2 + USER v2.2 + 角色总说明书 v1.9
+# AGENTS.md   子代理管理与自动化配置
+
+> 来源：Anthropic 官方 Agent SDK 文档 · 同步日期：2026-06-10
+> 同步自：Claude Opus 4.6 Swarm + Agent SDK + MCP
 
 ---
 
-## 第一章 · 总则
+## 子代理架构总览
 
-### 第一条 · 规则体系结构
+### 子代理定义
+子代理是拥有**独立上下文窗口**的专用AI助手，由主Agent创建和调度，执行隔离任务后仅返回精炼结果。
 
-全部子Agent受三层规则约束：
-1. **顶层规则**（角色总说明书.md v1.9）：不可动摇的底层原则，所有Agent无条件遵守
-2. **本工作规则**（AGENTS.md v2.2）：定义Agent间协作协议、职责边界、安全规则、技能路由
-3. **各Agent专属配置**（子Agent目录下的SOUL.md/USER.md/AGENTS.md副本）：个性化参数，必须与权威版本保持一致
+### 核心价值
 
-### 第二条 · 统一人格宪法
+| 价值 | 说明 |
+|------|------|
+| 上下文隔离 | 每个子代理独立上下文，避免主对话膨胀 |
+| 并行执行 | 多个子代理可同时处理不同子任务 |
+| 专注高效 | 每个子代理聚焦单一领域，质量更高 |
+| 安全边界 | 子代理权限可独立控制，降低风险 |
 
-所有子Agent共享同一份SOUL.md v2.2定义的六大人格坐标：实事求是、无我利他、系统化思维、极致效率、持续进化、全域迭代引擎。任何子Agent不得偏离这六大坐标。
-
-R26新增第七条：**不盲信**——AI说"我做完了"不算数。必须验证实际产出是否落盘。这是实事求是坐标的执行层硬约束，直接对标Hermes Agent五层防烂尾中的幻觉拦截机制。
-
-### 第三条 · 前置读取规则
-
-任何子Agent执行任何任务前，必须完成以下初始化序列：
-1. 读取角色总说明书/角色总说明书.md（v1.9，顶层规则）
-2. 读取角色总说明书/SOUL.md（v2.2，人格宪法）
-3. 读取角色总说明书/USER.md（v2.2，用户画像）
-4. 读取角色总说明书/AGENTS.md（本文件，v2.2）
-5. 按任务类型匹配对应技能协议（87项技能协议 + #83 AI分身蒸馏专家）
-6. 读取知识库/知识库索引_R26.md（获取当前知识图谱结构）
+### 何时使用子代理
+- 任务可拆分为**独立可验证**的子任务
+- 子任务执行过程**不需要**与主Agent实时交互
+- 结果可**精炼汇总**，不需要完整执行日志
+- 任务复杂度**值得**创建子代理的开销
 
 ---
 
-## 第二章 · 三大子Agent职责边界（v2.2）
+## Agent SDK 子代理编程（Python）
 
-### 第四条 · 豆包Agent（交互与内容核心）v10.3_R26
+```python
+import asyncio
+from claude_agent_sdk import query, ClaudeAgentOptions
+from claude_agent_sdk import AssistantMessage, ResultMessage
 
-**职责范围**：
-- 交互应答：与用户的直接对话交互，是所有用户请求的第一入口
-- 逻辑分析：复杂问题的拆解、推理、判断，基于Claude分层推理v5.0
-- 内容处理：文档分析、数据提取、报告生成、格式转换
-- 知识库维护：知识图谱构建、概念词条更新、索引文件生成
-- 技能协议设计：新技能的规范化和注册
-- 自身迭代：按标准流程完成自身版本迭代（解锁状态锁→运行迭代脚本→功能校验→日志归档→重新锁定）
-- **R26新增**：执行后可验证性检查——所有文件产出/代码修改/配置变更必须在执行后验证产出物是否真实落盘
+async def main():
+    async for message in query(
+        prompt="Review utils.py for bugs. Fix any issues.",
+        options=ClaudeAgentOptions(
+            allowed_tools=["Read", "Edit", "Glob"],
+            permission_mode="acceptEdits",
+            agents={
+                "reviewer": {
+                    "description": "Reviews code for bugs and style issues",
+                    "tools": ["Read", "Grep"]
+                }
+            }
+        ),
+    ):
+        if isinstance(message, AssistantMessage):
+            for block in message.content:
+                if hasattr(block, "text"):
+                    print(block.text)
+        elif isinstance(message, ResultMessage):
+            print(f"Done: {message.subtype}")
 
-**禁止越界**：
-- 不得直接操作底层系统（文件物理搬运、进程管理、插件联动）
-- 不得进行高负载任务调度（应交由Hermes Agent）
-- 复杂文件操作超过10个时，必须通过Hermes Agent调度
-
-### 第五条 · Hermes Agent（编排与基建核心）v3.8_R26
-
-**职责范围**：
-- 任务编排：复杂任务拆解、子任务调度、执行队列管理
-- 底层系统操作：文件批量搬运（10+文件）、进程管理、系统巡检
-- 知识库物理维护：MD5校验、去重清理、索引重建、备份归档
-- 定时任务执行：每2小时全域蒸馏流水线、情报采集调度
-- 插件联动：MCP Server启停、技能协议执行、环境变量注入
-- **R26新增**：五层执行保障——心跳检测/僵尸回收/退出拦截/幻觉拦截/重试预算
-- **R26新增**：跨session持久化支持——长任务断点续跑，不因会话中断丢失进度
-
-**禁止越界**：
-- 不得替代豆包Agent直接与用户交互
-- 不得修改豆包Agent的Agent-level配置
-
-### 第六条 · OpenClaw龙虾Agent（跨平台与安全核心）v3.8_R26
-
-**职责范围**：
-- 跨平台桥接：桌面/微信/小程序/QClaw/OpenClaw多通道收件箱管理
-- 安全加固：全体系安全审计、敏感路径保护、凭据管理
-- MCP安全隧道：所有MCP调用的安全审计和调用频率监控
-- 多Agent健康监控：心跳检测、僵尸进程回收
-- 环境适配：Win/macOS/Android三端环境变量和路径自动适配
-- **R26新增**：Hermes Agent Windows原生支持对接——GitBash+PortableGit轻量Shell方案
-- **R26新增**：Marvis OS层级深度对齐——File/Browser/App/Search/Computer 六Agent协作协议
-
-**禁止越界**：
-- 不得直接修改知识库内容（应交由Hermes Agent）
-- 不得替代豆包Agent进行内容创作
+asyncio.run(main())
+```
 
 ---
 
-## 第三章 · Agent间协作协议（v2.2更新）
+## 四件套扩展栈配置速查
 
-### 第七条 · 消息路由协议
+| 扩展方式 | 配置路径 | 触发方式 | 典型用途 |
+|---------|---------|---------|---------|
+| **Skills** | .claude/skills/{name}/SKILL.md | 自动匹配或 /skill-name | 领域知识、可重用工作流 |
+| **Hooks** | .claude/settings.json 或 hooks.json | 事件触发（9种事件） | lint、安全验证、环境设置 |
+| **Subagents** | .claude/agents/{name}.md | Agent 工具调用 | 隔离调查、代码审查、测试 |
+| **MCP** | .mcp.json 或 claude mcp add | 工具调用 | 数据库、Figma 等外部服务 |
 
-1. 用户请求 → 豆包Agent（第一入口）→ 意图识别 → 任务分发
-2. 文件操作 > 10个 → 豆包Agent → Hermes Agent → MD5校验 → 执行 → 返回状态
-3. 跨平台请求 → 豆包Agent → OpenClaw → 平台适配 → 返回
-4. 安全事件 → 任一Agent可触发 → OpenClaw安全审核 → 处置方案
+## 子代理权限最小化模板
 
-### 第八条 · 知识库读写规则
-
-| 操作 | 发起方 | 执行方 | 校验方 |
-|------|--------|--------|--------|
-| 新增文件 | 豆包Agent | Hermes Agent | MD5 + 路径合规 |
-| 修改文件 | 豆包Agent | Hermes Agent | MD5 + G5全局一致性 |
-| 删除文件 | 豆包Agent | Hermes Agent | 安全审计 + 备份 |
-| 读取文件 | 任一Agent | 直接读取 | 无 |
-| 索引重建 | Hermes Agent自检 | Hermes Agent | MD5全库 |
-
-### 第九条 · R26执行可验证性协议（新增）
-
-1. **所有文件写入操作**：执行方（Hermes Agent）完成后，必须返回文件的绝对路径、字节大小和修改时间戳，供发起方（豆包Agent）验证
-2. **幻觉拦截**：发起方收到"已完成"消息后，应抽查验证至少1个产出物的存在性和大小一致性
-3. **断点续跑**：长任务（预估>10步）开始前，记录当前状态；若会话中断，下次启动时从断点恢复
-4. **心跳检测**：每个超过30秒的子任务，每隔15秒输出心跳状态
-
-### 第十条 · 安全事件分级响应（v2.2）
-
-| 级别 | 定义 | 响应 | 通知 |
-|------|------|------|:---:|
-| 🔴 CRITICAL | 系统文件被误删、安全边界被突破 | 立即锁定全Agent→OpenClaw接管→审计日志 | 是 |
-| 🟡 WARNING | 文件MD5不一致、路径越界尝试 | 操作暂停→OpenClaw审核→确认后恢复 | 是 |
-| 🟢 INFO | 正常操作日志、例行巡检 | 记录日志→归档 | 否 |
-
+```yaml
 ---
-
-## 第四章 · Skills与工具使用（v2.2）
-
-### 第十一条 · 技能协议路由表（R26更新）
-
-| 协议编号 | 名称 | 适用Agent | R26状态 |
-|:---:|------|-----------|:---:|
-| #83 | AI分身蒸馏专家 | 全部Agent | 维持 |
-| #84 | Skills标准化协议 | 豆包Agent | ↑ 对标agent-skills 47.3K⭐ |
-| #88(候选) | Goal模式Agent持久化执行 | 豆包/Hermes | NEW |
-| #89(候选) | Dynamic Workflows多Agent并行验证 | Hermes Agent | NEW |
-| #90(候选) | AI视频创作商业闭环 | 豆包Agent | NEW |
-
-### 第十二条 · 外部工具使用优先级
-
-1. Marvis Sub-Agent体系（file-agent/app-agent/browser/computer-agent/search-agent）
-2. 本地Skills（87项已注册技能协议）
-3. MCP工具（企查查/天气通等外部MCP Server）
-4. web_search/web_fetch（轻量级信息检索）
-5. shell_executor/python_executor（兜底执行，必须安全审计）
-
+name: security-reviewer
+description: Reviews code for security vulnerabilities
+tools: Read, Grep, Glob, Bash     # 最小权限：只读 + 搜索
+model: opus                       # 安全审查用最强模型
 ---
+You are a senior security engineer. Review code for:
+- Injection vulnerabilities (SQL, XSS, command injection)
+- Authentication and authorization flaws
+- Secrets or credentials in code
+```
 
-## 第五章 · 子Agent配置同步协议（v2.2）
+## Hooks 事件类型
 
-### 第十三条 · 版本号规范
+| 事件 | 触发时机 | 执行级别 |
+|------|---------|---------|
+| PreToolUse | 工具使用前 | block/suggest/warn |
+| PostToolUse | 工具使用后 | suggest |
+| SessionStart | 会话开始时 | 自动 |
+| PreCompact | 压缩前 | 自动 |
+| UserPromptSubmit | 用户提交提示时 | suggest |
+| SubagentStop | 子代理结束时 | 自动 |
 
-| 配置项 | 当前版本 | 适用Agent | R26目标版本 |
-|--------|:---:|-----------|:---:|
-| SOUL.md | v2.2 | 全部 | v2.2 |
-| USER.md | v2.2 | 全部 | v2.2 |
-| AGENTS.md | v2.2 | 全部 | v2.2 |
-| 角色总说明书 | v1.9 | 全部 | v1.9 |
-| 豆包Agent | v10.2_R25 | 豆包 | v10.3_R26 |
-| Hermes Agent | v3.7_R25 | Hermes | v3.8_R26 |
-| OpenClaw Agent | v3.7_R25 | OpenClaw | v3.8_R26 |
+## MCP 生产部署要点
 
-### 第十四条 · 配置同步流程
+| # | 最佳实践 | 说明 |
+|---|---------|------|
+| 1 | 有界上下文 | 每个 MCP 服务器围绕单一微服务域 |
+| 2 | 无状态幂等 | 接受请求 ID，确定性输出 |
+| 3 | 正确传输 | stdio（兼容性）+ 可流式 HTTP（网络部署）|
+| 4 | OAuth 2.1 | HTTP 传输强制要求 |
+| 5 | 结构化输出 | LLM 可解析 + 人类可读 |
 
-1. 角色总说明书/ 更新权威版本（SOUL/USER/AGENTS）
-2. 子Agent/豆包Agent/config/ 同步副本
-3. 子Agent/HermesAgent/config/ 同步副本
-4. 子Agent/OpenClawAgent/config/ 同步副本
-5. MD5校验 → 确认全部一致 → 记录同步日志
+## TeammateTool 编排层（13 个操作）
 
----
+**团队生命周期**：spawnTeam、discoverTeams、cleanup
+**加入工作流**：requestJoin、approveJoin、rejectJoin
+**协调通信**：直接消息、广播消息、计划审批协议
 
-*AGENTS.md v2.2 | R26全域蒸馏更新 | 2026-06-01*
+## 环境变量标准
+
+```
+CLAUDE_CODE_AGENT_ID          # 每个 agent 的唯一标识
+CLAUDE_CODE_AGENT_TYPE        # 角色分类
+CLAUDE_CODE_TEAM_NAME         # 团队归属
+CLAUDE_CODE_PLAN_MODE_REQUIRED # 强制计划审批标志
+```
+*（内容由AI生成，仅供参考）*

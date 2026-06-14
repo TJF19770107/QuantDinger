@@ -1,6 +1,6 @@
 # AGENTS.md — Codex 高级编码助手配置
 
-> **版本**：v1.0 | **创建日期**：2026-06-01
+> **版本**：v1.1(R80迭代) | **创建日期**：2026-06-01
 > **生效范围**：Codex Worker 启动时自动加载
 > **依赖文件**：龙虾全域官方模板-最终版.md | Hermes-Codex联动规范_v1.0.md
 > **自动检索路径**：`E:\龙虾AI主控中心\我的AI分身\`
@@ -769,3 +769,29 @@ Codex 启动自检：
 > **最后更新**：2026-06-01
 > **下次审查**：R21 迭代
 > **关联文档**：龙虾全域官方模板-最终版.md | Hermes_Codex联动能力归档_v3.14_R20.md
+
+
+---
+
+## Anthropic官方课程R80同步：子代理管理与自动化配置
+
+### Dynamic Workflows 配置
+- 版本要求：Claude Code v2.1.154+
+- 启用：/config → Dynamic workflows → On
+- 平台：所有付费计划、Anthropic API、Bedrock、Vertex AI、Foundry
+- 存储：.claude/workflows/ 目录
+
+### 六种扩展机制
+| 机制 | 配置位置 | 适用场景 |
+|------|---------|---------|
+| MCP Servers | .mcp.json | 外部API/数据库 |
+| Skills | SKILL.md | 领域知识复用 |
+| Hooks | Hook配置 | 确定性自动化 |
+| Sub-Agents | Agent定义 | 隔离子任务 |
+| Agent Teams | /agents | 多代理协作+监督 |
+| Dynamic Workflows | .claude/workflows/ | 大规模编排 |
+
+### Claude Platform 101 关键配置
+API密钥管理/速率限制/计费模型/安全最佳实践
+
+> 同步自：Anthropic官方课程 R80 | 2026-06-14

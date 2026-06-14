@@ -1,9 +1,22 @@
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: cf54d54c59baa0ada35a5ecb7c73a584_fe69a52767ac11f1a99c5254007bceed
+    ReservedCode1: tVH4SDQ0S/LvbKz1uwhOHobTWl83JL5nEQknWGziAZaFStJgEwa8FLQ1WquFv7xfWSdMJSme/jM8Khft0C01Dh/y75iOO+PZtLcGW/sMDxR/bNlYpLaki6Yl0TyXxtgd+cKEK/GdPLW4Lx1E9p6jUcBnoRnn/uIIb2DP7QzczG3qZNT8S1oFcHHIrf8=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: cf54d54c59baa0ada35a5ecb7c73a584_fe69a52767ac11f1a99c5254007bceed
+    ReservedCode2: tVH4SDQ0S/LvbKz1uwhOHobTWl83JL5nEQknWGziAZaFStJgEwa8FLQ1WquFv7xfWSdMJSme/jM8Khft0C01Dh/y75iOO+PZtLcGW/sMDxR/bNlYpLaki6Yl0TyXxtgd+cKEK/GdPLW4Lx1E9p6jUcBnoRnn/uIIb2DP7QzczG3qZNT8S1oFcHHIrf8=
+---
+
+
+
 # AGENTS.md — Codex 高级编码助手配置
 
-> **版本**：v2.1(R45) | **创建日期**：2026-06-01 | **最后更新**：2026-06-02
+> **版本**：v2.3(R80迭代) | **创建日期**：2026-06-01 | **最后更新**：2026-06-03
 > **生效范围**：Codex Worker 启动时自动加载
-> **依赖文件**：龙虾全域官方模板-最终版.md | Hermes-Codex联动规范_v1.0.md
-> **自动检索路径**：`E:\龙虾AI主控中心\我的AI分身\`
+> **依赖文件**：龙虾全域官方模板-最终版.md | Hermes-Codex联动能力归档_v3.0_R53.md
+> **关联协议**：#185 运行时自演化 / #186 工作流托管
 
 ---
 
@@ -17,11 +30,12 @@
 
 | 能力域 | 描述 | 成熟度 |
 |--------|------|--------|
-| 代码生成 | 生成 Python/Shell/JS/Batch/PS1 脚本，处理文件读写、数据处理 | 96/100 |
+| 代码生成 | 生成 Python/Shell/JS/Batch/PS1 脚本，处理文件读写、数据处理 | 97/100 |
 | 文件操作 | 文件读写、格式转换、目录扫描、批量处理 | 94/100 |
 | CLI 自动化 | 飞书 CLI / Git / npm / pip 命令行自动化操作 | 90/100 |
 | 脚本编排 | 多步骤脚本流编排，错误处理，日志记录 | 92/100 |
 | 工具链集成 | 调用外部工具（lark-cli、git、ffmpeg 等） | 88/100 |
+| 自愈修复 | 错误自动检测→修复→重试→降级闭环 | 95/100 |
 
 ### 1.3 角色边界
 
@@ -89,7 +103,7 @@ E:\龙虾AI主控中心\我的AI分身\
 ├── 技能库/                    # 技能文档与协议（Codex 启动时自动加载）
 │   ├── 龙虾全域官方模板-最终版.md
 │   ├── AGENTS.md              # 本文件
-│   ├── 龙虾-*.md              # 72 项技能协议
+│   ├── 龙虾-*.md              # 185 项技能协议
 │   └── Codex+飞书CLI自动化技能手册.md
 ├── 知识库/                    # 结构化知识文档
 │   └── Hermes-Codex联动规范_v1.0.md
@@ -862,7 +876,190 @@ Codex 启动自检：
 
 ---
 
-> **版本**：v2.1（R45 Hermes-Codex联动能力归档 + Worker边界强化 + 自动检索R45强化 + 联动故障处理）
-> **最后更新**：2026-06-02
-> **下次审查**：R46 迭代
-> **关联文档**：龙虾全域官方模板-最终版.md | Hermes-Codex联动能力归档_v2.0_R45.md
+## 十、Anthropic Academy 核心能力注入（R79）
+
+> **注入来源**：Anthropic Academy 官方课程（C09/C10/C11/C17）+ Claude Certified Architect 认证体系
+> **注入时间**：2026-06-14
+
+### 10.1 Claude Academy 子代理课程精华
+
+#### 10.1.1 三大设计模式（Codex 参考）
+
+| 模式 | 机制 | Codex 适用场景 | 实现 |
+|------|------|---------------|------|
+| **Structured Outputs** | 强制 JSON Schema 返回 | 所有 task 结果（已在结果输出范式中定义） | `output_schema: {...}` |
+| **Blocker Reporting** | 卡住时主动上报 | 长时间脚本执行、资源等待 | 超时 + 主动返回 `{status: "blocked"}` |
+| **Tool Restriction** | 限制可用工具 | 安全约束（二、项目约束已定义） | `allowed_tools` 白名单 |
+
+#### 10.1.2 子代理 7 步创建流程（含 Goal 僵死检测）
+
+```
+Step 1: 定义任务边界 → 明确输入/输出 Schema
+Step 2: 配置输出格式 → Structured Output (JSON Schema)
+Step 3: 配置工具白名单 → Tool Restriction
+Step 4: 设置超时与上报 → Blocker Reporting
+Step 5: 创建 Subagent → 传入 task + schema + tools
+Step 6: 启动执行 + 监控 → Goal 僵死检测
+Step 7: 结果验证 → Schema 校验 → 上报或降级
+```
+
+#### 10.1.3 Goal 僵死检测机制（新增）
+
+| 检测维度 | 检测方式 | 触发动作 |
+|---------|---------|---------|
+| **时间僵死** | 单步骤超过 60s 无进展 | 上报 `{status: "blocked", reason: "timeout"}` |
+| **循环僵死** | 连续 3 次相同错误未恢复 | 熔断，上报 `{status: "circuit_broken"}` |
+| **资源僵死** | 内存 > 80% 或磁盘 < 500MB | 暂停非关键操作，释放资源 |
+| **依赖僵死** | 外部工具连续 2 次不可用 | 标记工具降级，切换替代方案 |
+| **语义僵死** | 连续 3 轮未产生有效输出增量 | 终止当前策略，切换 Plan B |
+
+### 10.2 Hooks 生命周期注入最佳实践
+
+#### 10.2.1 Hooks 注入点
+
+```
+代理循环（Agentic Loop）
+    │
+    ├── [PreToolUse]     ← 工具调用前：参数校验、权限检查、日志记录
+    ├── [PostToolUse]    ← 工具调用后：结果验证、格式标准化
+    ├── [PreMessage]     ← 消息生成前：敏感信息过滤、上下文裁剪
+    ├── [PostMessage]    ← 消息生成后：输出格式化、编码校验
+    ├── [OnError]        ← 错误发生时：自动重试、降级触发、告警
+    └── [OnStop]         ← 任务终止时：资源释放、临时文件清理、日志归档
+```
+
+#### 10.2.2 Hooks 设计原则
+
+| 原则 | 说明 |
+|------|------|
+| **零上下文成本** | Hooks 运行在代理循环之外，不消耗 Token |
+| **确定性执行** | 每个 Hook 必须幂等、可重复、可预测 |
+| **轻量优先** | Hook 执行 < 100ms，长时间操作用异步 |
+| **失败不阻塞** | Hook 失败不应阻断主流程（除非是 PreToolUse 安全校验） |
+
+#### 10.2.3 龙虾体系 Hooks 映射
+
+| Academy Hooks | 龙虾体系对应 | 当前状态 |
+|--------------|-------------|---------|
+| PreToolUse | 安全约束检查（二、项目约束） | ✅ 已实现 |
+| PostToolUse | 结果格式标准化（自愈闭环） | ✅ 已实现 |
+| OnError | 自愈策略矩阵（七、自愈闭环） | ✅ 已实现 |
+| PostMessage | 输出稳性保障（四、错误兜底 4.4） | ✅ 已实现 |
+| OnStop | 待建设 | ⚠️ 待引入 |
+
+### 10.3 Skills 工程化标准
+
+#### 10.3.1 Progressive Disclosure 目录结构
+
+```
+技能库/skill-name/
+├── SKILL.md              # 入口文件：简短描述 + 触发条件（始终加载，≈200 tokens）
+├── instructions/         # 核心指令（触发时按需加载）
+│   └── main.md           # 完整工作流指令
+├── scripts/              # 可执行脚本（不消耗 Agent 上下文）
+│   ├── helper.py         # Python 辅助脚本
+│   └── validator.sh      # Shell 验证脚本
+└── references/           # 参考资料（按需加载）
+    ├── api-docs.md       # API 文档参考
+    └── examples/         # 示例文件
+```
+
+> **设计要点**：SKILL.md 只占 ≈200 tokens，完整指令触发时才加载。防止 Skills 过多撑爆上下文。
+
+#### 10.3.2 三级共享机制
+
+| 层级 | 机制 | 范围 | 龙虾当前状态 |
+|------|------|------|-------------|
+| **个人** | 本地 Skills 目录（`技能库/`） | 单机 | ✅ 72 项技能协议 |
+| **团队** | Commit 到 Repo + Plugins 分发 | 项目成员 | ⚠️ Git 同步可用，Plugins 待建设 |
+| **企业** | 统一管理部署（企业级 Skill Registry） | 全组织 | ❌ 待建设 |
+
+#### 10.3.3 Skills vs 其他扩展的选型
+
+```
+需要教 Claude 某种工作方式？
+  ├─ 静态规范/编码标准 → Skills（SKILL.md）
+  ├─ 项目级约定 → CLAUDE.md
+  ├─ 事件触发自动化 → Hooks
+  └─ 隔离独立执行 → Sub-Agents
+```
+
+### 10.4 MCP 生产级部署标准
+
+#### 10.4.1 Transport 选型标准
+
+| 维度 | stdio | HTTP SSE |
+|------|-------|----------|
+| **适用场景** | 本地 Client，单进程 | 多 Client 远程调用 |
+| **延迟** | 极低（进程间通信） | 网络延迟（受带宽影响） |
+| **鉴权** | 无需（本地信任边界） | 必需（Bearer Token / OAuth） |
+| **并发** | 单连接 | 多连接 |
+| **部署复杂度** | 低 | 中高（需负载均衡 + 反向代理） |
+| **运维成本** | 低 | 需监控 + 告警 + 日志 |
+| **龙虾适用** | 内部工具集成 | 跨设备/远程服务 |
+
+#### 10.4.2 错误重试与容错
+
+| 机制 | 实现 |
+|------|------|
+| **指数退避重试** | 1s → 2s → 4s（最大 3 次） |
+| **心跳检测** | 30s 间隔 ping，3 次失败触发重连 |
+| **Token 鉴权** | Bearer Token + 定期轮换（24h 有效期） |
+| **熔断** | 连续 5 次失败 → 熔断 60s → 半开探测 → 恢复或持续熔断 |
+| **降级** | MCP 不可用时回退到本地工具调用 |
+
+### 10.5 Claude Certified Architect 五大领域 → 龙虾体系对标
+
+| Academy 认证领域 | 权重 | 龙虾体系对标 | 覆盖状态 |
+|-----------------|------|-------------|---------|
+| **Agentic Architecture & Orchestration** | 27% | SOUL.md 二章（Orchestrator-Worker）+ USER.md 三章（多Agent协作） | ✅ 85% |
+| **Claude Code Configuration & Workflows** | 20% | AGENTS.md 全篇（Codex Worker 配置）+ SOUL.md 2.5（四步循环） | ✅ 80% |
+| **Prompt Engineering & Structured Output** | 20% | AGENTS.md 三章（task XML 输入格式）+ 自愈闭环 | ✅ 75% |
+| **Tool Design & MCP Integration** | 18% | 待建设（当前直接调用工具，无 MCP 中间层） | ⚠️ 20% |
+| **Context Management & Reliability** | 15% | USER.md 3.6（上下文隔离）+ AGENTS.md 四/七章（错误兜底+自愈） | ✅ 85% |
+
+> **龙虾体系综合覆盖率**：~73%。最大短板为 MCP Integration（当前无 MCP Server 中间层）。
+
+### 10.6 R79 注入后的优先建设项
+
+| 优先级 | 建设项 | 对应 Academy 课程 | 预期收益 |
+|--------|--------|------------------|---------|
+| P0 | MCP Server 中间层搭建 | C11 + C17 | 统一工具接入，消除直调碎片化 |
+| P1 | Hooks 生命周期完整实现 | C08 | 代理循环规范化，减少隐式行为 |
+| P2 | Skills 三级共享（团队+企业） | C09 | 技能协议跨团队复用 |
+| P3 | Goal 僵死检测完整实现 | C10 | Subagent 可靠性提升 |
+
+---
+
+> **版本**：v2.3（R79 Anthropic Academy 核心能力注入）
+> **最后更新**：2026-06-14
+> **升级说明**：新增第十章 Anthropic Academy 核心能力注入，包含子代理课程精华、Hooks 生命周期、Skills 工程化、MCP 生产级部署、认证考试对标、僵死检测机制
+> **关联文档**：SOUL.md R79 | USER.md R79 | Anthropic官方课程-390节全集.md（共享知识库）
+*（内容由AI生成，仅供参考）*
+*（内容由AI生成，仅供参考）*
+
+
+---
+
+## Anthropic官方课程R80同步：子代理管理与自动化配置
+
+### Dynamic Workflows 配置
+- 版本要求：Claude Code v2.1.154+
+- 启用：/config → Dynamic workflows → On
+- 平台：所有付费计划、Anthropic API、Bedrock、Vertex AI、Foundry
+- 存储：.claude/workflows/ 目录
+
+### 六种扩展机制
+| 机制 | 配置位置 | 适用场景 |
+|------|---------|---------|
+| MCP Servers | .mcp.json | 外部API/数据库 |
+| Skills | SKILL.md | 领域知识复用 |
+| Hooks | Hook配置 | 确定性自动化 |
+| Sub-Agents | Agent定义 | 隔离子任务 |
+| Agent Teams | /agents | 多代理协作+监督 |
+| Dynamic Workflows | .claude/workflows/ | 大规模编排 |
+
+### Claude Platform 101 关键配置
+API密钥管理/速率限制/计费模型/安全最佳实践
+
+> 同步自：Anthropic官方课程 R80 | 2026-06-14

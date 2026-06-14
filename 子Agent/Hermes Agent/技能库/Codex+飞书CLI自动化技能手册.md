@@ -1,247 +1,347 @@
-# Codex + 飞书CLI 自动化技能手册 v1.0
+# Codex + 飞书CLI自动化技能手册
 
-> **创建日期**：2026-05-31
-> **对标来源**：飞书官方 CLI (larksuite/cli) + Codex CLI + 多源技术文章提炼
-> **归属**：龙虾全域技能池
-> **状态**：ACTIVE
+> 版本：v1.0 | 生成日期：2026-06-14 | 来源：公众号文章 + 全网开源项目调研
 
 ---
 
-## 一、飞书 CLI 核心架构
+## 一、概述
 
-### 1.1 三层命令架构
+飞书于2026年3月底正式开源CLI工具（lark-cli），覆盖即时通讯、云文档、多维表格、日历、会议、邮箱、任务、知识库等11大业务域，提供200+命令和19个Agent Skills。Codex CLI作为OpenAI推出的AI编程助手，可与飞书CLI深度集成，实现"一句话操作飞书全量数据"的自动化能力。
 
-| 层级 | 前缀/模式 | 适用对象 | 说明 |
-|------|----------|---------|------|
-| Shortcuts 层 | `+` 前缀 | 日常用户 / AI Agent 默认 | 高频操作封装，智能默认值，风险验证 |
-| API Commands 层 | 无前缀 | AI Agent 精细操作 | 100+ 命令，与飞书开放 API 一一对应 |
-| Raw API 层 | 直接调用 | 高级开发 | 覆盖飞书全部 2500+ OpenAPI |
-
-### 1.2 11 大业务域 + 19 个 AI Skill
-
-| 业务域 | Skill 前缀 | 能力 |
-|--------|-----------|------|
-| 消息/群聊 | `lark-im` | 发消息、搜群聊、管理群成员、消息历史 |
-| 文档 | `lark-doc` | 创建/读取/更新文档，Markdown 双向转换 |
-| 日历 | `lark-calendar` | 查日程、建事件、查忙闲、邀请参会人 |
-| 邮件 | `lark-mail` | 收发邮件、管理草稿、订阅新邮件事件 |
-| 电子表格 | `lark-sheets` | 读写单元格、批量追加、条件查找 |
-| 多维表格 | `lark-base` | 增删改查记录、聚合分析、生成仪表盘 |
-| 任务 | `lark-task` | 创建/完成/分配任务，设置子任务和提醒 |
-| 知识库 | `lark-wiki` | 浏览节点、创建文档、管理结构 |
-| 通讯录 | `lark-contact` | 搜同事、查部门架构 |
-| 会议纪要 | `lark-vc/lark-minutes` | 提取妙记摘要、待办、逐字稿 |
-| 搜索 | `lark-search` | 跨业务域搜消息、文档、应用 |
+本手册系统梳理Codex+飞书CLI的集成方案、核心命令、权限配置与自动化场景，形成标准化SOP。
 
 ---
 
-## 二、安装与接入流程
+## 二、飞书CLI核心能力矩阵
 
-### 2.1 飞书 CLI 安装（3步闭环）
+### 2.1 11大业务域
+
+| 业务域 | 核心能力 | 典型命令 |
+|--------|---------|---------|
+| 即时通讯 | 消息收发、群管理、机器人交互 | `lark im send` `lark im list` |
+| 云文档 | 创建/编辑/搜索文档 | `lark doc create` `lark doc search` |
+| 云空间 | 文件管理、知识库操作 | `lark drive upload` `lark drive list` |
+| 电子表格 | 表格读写、公式计算 | `lark sheet read` `lark sheet write` |
+| 多维表格 | 数据CRUD、视图管理 | `lark base query` `lark base insert` |
+| 日历 | 日程查询、创建会议 | `lark calendar list` `lark calendar create` |
+| 视频会议 | 创建/管理会议 | `lark meeting create` `lark meeting list` |
+| 邮箱 | 邮件收发 | `lark mail send` `lark mail list` |
+| 任务 | 任务创建/分配/跟踪 | `lark task create` `lark task list` |
+| 知识库 | 知识管理、搜索 | `lark wiki search` `lark wiki create` |
+| 通讯录 | 部门/用户查询 | `lark contact search` |
+
+### 2.2 飞书CLI安装与配置
 
 ```bash
-# Step 1: 安装 CLI
-npm install -g @larksuite/cli
+# 安装飞书CLI
+git clone https://github.com/larksuite/cli.git
+cd cli
+npm install -g
 
-# Step 2: 安装 AI Skills
-npx skills add larksuite/cli -y -g
+# 验证安装
+lark --version
 
-# Step 3: 初始化配置
-lark-cli config init --new
+# 配置凭证（需要飞书开放平台 App ID 和 App Secret）
+lark config set appId cli_xxxxxxxxxxxxx
+lark config set appSecret xxxxxxxxxxxxxxxxxxxxxxxx
 ```
-
-配置完成后**重启 AI 工具**（Codex / Claude Code / Cursor / OpenClaw）使 Skills 生效。
-
-### 2.2 用户授权（两种模式）
-
-| 模式 | 命令 | 能力 |
-|------|------|------|
-| 不授权模式 | 无需操作 | 基础操作：发消息、创建文档 |
-| 用户身份模式 | `lark-cli auth login` | 访问日历、私信、邮箱等个人数据 |
-
-### 2.3 飞书 MCP 配置（适用于 Codex）
-
-**飞书开发者后台配置：**
-
-1. 登录 [飞书开发者后台](https://open.feishu.cn/app) → 创建企业自建应用
-2. 保存 APP ID 和 APP Secret
-3. 添加应用能力（如机器人）
-4. 配置权限（开通所需用户权限）
-5. 安全设置 → 重定向 URL：`http://localhost:3000/callback`
-6. 创建版本并发布
-
-**本地 MCP 登录：**
-
-```powershell
-npx -y @larksuiteoapi/lark-mcp login -a <APP_ID> -s <APP_SECRET>
-```
-
-弹出浏览器窗口后点击授权。
-
-**Codex config.toml 配置：**
-
-```toml
-# C:\Users\<用户名>\.codex\config.toml
-[mcp_servers.feishu]
-command = "npx.cmd"
-args = [
-  "-y",
-  "@larksuiteoapi/lark-mcp",
-  "mcp",
-  "-a", "<APP_ID>",
-  "-s", "<APP_SECRET>",
-  "--oauth"
-]
-env = { SystemRoot="C:\\Windows", PROGRAMFILES="C:\\Program Files" }
-startup_timeout_ms = 60_000
-```
-
-**验证：** 在 Codex 中输入 `/MCP` 查看飞书 MCP 是否已加载。
 
 ---
 
-## 三、核心操作命令速查
+## 三、Codex + 飞书集成方案
 
-### 3.1 文档操作
+### 3.1 方案一：飞书CLI直接集成（推荐）
 
-| 操作 | Shortcut 命令 | API 命令 |
-|------|-------------|---------|
-| 创建文档 | `lark-cli docs +create` | `lark-cli doc create --title "标题" --content "内容"` |
-| 读取文档 | `lark-cli docs +read --url <链接>` | `lark-cli doc get --doc_token <token>` |
-| 更新文档 | `lark-cli docs +update` | `lark-cli doc update --doc_token <token> --content "新内容"` |
-| Markdown→飞书 | `lark-cli docs +import-md` | `lark-cli doc import --format markdown --file <路径>` |
-| 飞书→Markdown | `lark-cli docs +export-md` | `lark-cli doc export --format markdown` |
+最直接的集成方式——通过飞书CLI让Codex直接操作飞书数据。
 
-### 3.2 消息与群聊
+```bash
+# 在Codex中直接使用飞书CLI命令
+codex exec "用飞书CLI帮我查一下今天的日程"
+codex exec "帮我在飞书创建一个明天下午3点的会议"
+codex exec "读取飞书多维表格中的销售数据并生成汇总报告"
+```
 
-| 操作 | Shortcut 命令 |
-|------|-------------|
-| 发送消息 | `lark-cli im +messages-send --receive_id <id> --content "消息"` |
-| 搜索群聊 | `lark-cli im +chat-search --keyword <关键词>` |
-| 群消息总结 | `lark-cli im +messages-summary --chat_id <群ID>` |
+**Codex上下文注入方式**：
+1. 将飞书CLI的GitHub README链接发给Codex，让其自动安装
+2. 提供App ID和App Secret给Codex完成配置
+3. Codex自动完成权限申请和授权流程
 
-### 3.3 日历操作
+### 3.2 方案二：feishu-codex-bridge（长连接桥接）
 
-| 操作 | Shortcut 命令 |
-|------|-------------|
-| 查看今日日程 | `lark-cli calendar +agenda` |
-| 创建日程 | `lark-cli calendar +event-create --summary "标题" --start_time <时间>` |
-| 查忙闲 | `lark-cli calendar +freebusy --user_id <用户ID>` |
+通过飞书长连接实现双向通信，手机上即可操控本地Codex。
 
-### 3.4 多维表格 (Base)
+```bash
+# 克隆仓库
+git clone https://github.com/lutianding118-cmd/feishu-codex-bridge.git
+cd feishu-codex-bridge
+npm install
 
-| 操作 | 命令 |
+# 配置 .env
+FEISHU_APP_ID=你的飞书App ID
+FEISHU_APP_SECRET=你的飞书App Secret
+FEISHU_VERIFICATION_TOKEN=
+BRIDGE_PORT=3457
+BRIDGE_AUTH_CODE=123456
+DEFAULT_WORKSPACE_DIR=D:\workspace
+CODEX_COMMAND=codex
+TASK_HEARTBEAT_MS=60000
+FEISHU_MESSAGE_MODE=direct
+
+# 启动
+npm start
+```
+
+**核心特性**：
+- 群=项目：每个群绑定一个本地目录
+- 话题=会话：话题内连续Codex会话（自动resume）
+- 流式卡片：推理/命令/文件改动实时刷新
+- 免@对话：话题内直接说话
+
+### 3.3 方案三：Agent Notifier（远程操控）
+
+将Claude Code和Codex CLI的交互搬到飞书，手机上批准权限、选择方案。
+
+```bash
+git clone https://github.com/KaminDeng/agent_notifier.git
+cd agent_notifier
+# 按README配置飞书应用并启动
+```
+
+**核心特性**：
+- 飞书卡片实时推送权限确认
+- 方案选择交互式卡片
+- 多终端并行路由，互不干扰
+- 支持输入框自由回复
+
+### 3.4 方案四：modelzen/feishu-codex-bridge（增强版）
+
+功能最丰富的桥接方案。
+
+```bash
+git clone https://github.com/modelzen/feishu-codex-bridge.git
+cd feishu-codex-bridge
+npm install
+
+# 配置 config.json
+{
+  "appId": "cli_xxxxx",
+  "appSecret": "xxxxx",
+  "webhookUrl": "https://open.feishu.cn/...",
+  "allowedOpenIds": ["ou_xxxxx"],
+  "codexCommand": "codex",
+  "workingDir": "D:\\workspace",
+  "mode": "tui",
+  "outputSource": "session"
+}
+
+npm start
+```
+
+**增强特性**：
+- 文档评论回复（飞书云文档评论@机器人直接驱动Codex）
+- 私聊控制台（管理面板：新建项目/列表/设置/诊断）
+- Codex用量统计（5小时/7天限额进度、热力图）
+- 战绩分享卡（可转发到任意群）
+- AES-256-GCM加密密钥库
+- 跨平台后台服务（macOS lauchd / Windows登录自启 / Linux systemd）
+
+---
+
+## 四、飞书开放平台权限配置
+
+### 4.1 创建飞书自建应用
+
+```
+1. 登录飞书开放平台 → 应用管理 → 创建应用 → 企业自建应用
+2. 填写应用名称（如"Codex助手"）
+3. 启用机器人能力
+4. 记录 App ID 和 App Secret
+```
+
+### 4.2 权限配置清单
+
+| 权限代码 | 权限说明 | 用途 |
+|---------|---------|------|
+| im:message | 获取与发送单聊、群聊消息 | 消息收发核心 |
+| im:message:send_as_bot | 以应用身份发送消息 | 机器人主动推送 |
+| im:resource | 获取消息中的资源文件 | 文件操作 |
+| drive:drive | 访问云空间 | 文件管理 |
+| doc:doc | 云文档读写 | 文档操作 |
+| calendar:calendar | 日历读写 | 日程管理 |
+| contact:contact | 通讯录访问 | 用户查询 |
+| bitable:app | 多维表格操作 | 数据管理 |
+| meeting:meeting | 会议管理 | 创建会议 |
+
+### 4.3 事件订阅配置
+
+| 事件 | 说明 |
 |------|------|
-| 新增记录 | `lark-cli base record-create --app_token <token> --table_id <id> --fields '{"项目":"Codex接入"}'` |
-| 查询记录 | `lark-cli base record-list --app_token <token> --table_id <id>` |
-| 更新记录 | `lark-cli base record-update --app_token <token> --table_id <id> --record_id <id>` |
+| im.message.receive_v1 | 接收消息（核心事件） |
+| im.message.reaction.created_v1 | 消息反应创建 |
+| drive.file.read_v1 | 文件读取事件 |
 
-### 3.5 邮件操作
-
-| 操作 | 命令 |
-|------|------|
-| 发送邮件 | `lark-cli mail +send --to <邮箱> --subject "主题" --body "内容"` |
-| 查收邮件 | `lark-cli mail +list` |
+**推荐使用长连接模式**：无需公网IP，本机直连飞书服务器。
 
 ---
 
-## 四、Codex + 飞书 自动化场景 SOP
+## 五、自动化场景SOP
 
-### 4.1 场景一：AI 调研 → 飞书文档自动生成
+### 5.1 场景一：每日早报自动推送
 
-```
-1. Codex 接收调研任务 → 执行 web_search / web_fetch 收集资料
-2. Codex 整理内容为结构化 Markdown
-3. Codex 调用 lark-cli docs +create --title "调研报告" --content "<Markdown正文>"
-4. 飞书自动创建文档，返回链接
-5. Codex 将链接交付用户
-```
-
-### 4.2 场景二：批量数据 → 飞书多维表格
-
-```
-1. 用户提供 CSV / Excel / Markdown 表格数据
-2. Codex 解析数据结构
-3. Codex 调用 lark-cli base record-create 逐条写入飞书 Base
-4. 完成后返回飞书表格链接
+```bash
+# 通过Codex调用飞书CLI生成并推送每日早报
+codex exec "用飞书CLI执行以下操作：
+1. 查询我今天的所有日程
+2. 读取团队多维表格中本周的任务列表
+3. 查看未读重要消息
+4. 将以上信息汇总成早报，发送到「每日早报」飞书群"
 ```
 
-### 4.3 场景三：群消息自动总结
+### 5.2 场景二：会议纪要自动生成
 
-```
-1. Codex 定时或触发式调用 lark-cli im +messages-summary
-2. 获取群消息内容
-3. Codex LLM 提炼关键信息（待办/决策/讨论要点）
-4. 通过 lark-cli im +messages-send 发送总结到群内
-5. 或通过 lark-cli docs +create 生成会议纪要文档
-```
-
-### 4.4 场景四：日程智能管理
-
-```
-1. 用户：「帮我看看下周哪天有空，安排一个2小时的 Codex 评审会」
-2. Codex 调用 lark-cli calendar +freebusy 查询忙闲
-3. 找到可用时段后调用 lark-cli calendar +event-create 创建日程
-4. 自动邀请参会人
-5. 发送日程确认消息
+```bash
+codex exec "用飞书CLI帮我：
+1. 读取今天下午会议的相关飞书文档
+2. 提取关键讨论点
+3. 创建一份会议纪要文档
+4. 发送链接到项目群"
 ```
 
-### 4.5 场景五：运营素材批量生成 → 飞书表格
+### 5.3 场景三：数据报表自动处理
 
+```bash
+codex exec "用飞书CLI执行：
+1. 读取多维表格「销售数据」本月所有记录
+2. 按地区和产品线汇总
+3. 生成分析报告并写入飞书文档
+4. 发送汇总消息到「销售团队」群"
 ```
-1. Codex 维护选题表
-2. 批量生成标题/副标题/CTA/模板类型
-3. 写入飞书多维表格
-4. 导出 CSV → Canva Bulk Create 批量生成素材图
+
+### 5.4 场景四：任务自动化分配
+
+```bash
+codex exec "用飞书CLI执行：
+1. 读取多维表格「需求池」中未分配的需求
+2. 根据成员工作负载自动分配
+3. 为每个新任务设置截止日期
+4. 飞书私聊通知相关人员"
+```
+
+### 5.5 场景五：知识库智能检索
+
+```bash
+codex exec "用飞书CLI搜索知识库中关于「微服务架构」的所有文档，提取关键设计模式和最佳实践，汇总成一份技术指南"
+```
+
+### 5.6 场景六：消息智能分流与自动回复
+
+```bash
+# 通过bridge监听飞书消息，Codex自动处理
+# 在feishu-codex-bridge中配置自动回复规则
+codex exec "监控飞书群消息，当检测到包含'bug'关键词的消息时，
+自动在飞书多维表格创建issue记录，并回复处理进度卡片"
 ```
 
 ---
 
-## 五、错误处理与权限配置
+## 六、错误处理与故障排查
 
-### 5.1 常见错误与修复
+### 6.1 常见错误
 
-| 错误信息 | 原因 | 修复方案 |
+| 错误现象 | 原因 | 解决方案 |
 |---------|------|---------|
-| `permission denied` | 未开通对应权限 | 飞书开发者后台 → 权限管理 → 开通用户权限 → 重新发布 |
-| `token expired` | 授权过期 | 执行 `lark-cli auth login` 重新授权 |
-| `MCP server not found` | Codex 未正确加载 MCP | 检查 config.toml 配置，确认 `startup_timeout_ms = 60_000` |
-| `npx.cmd not found` | Windows 上 npx 路径问题 | 将 `npx` 替换为 `npx.cmd` |
-| `app not published` | 应用未发布 | 飞书开发者后台 → 创建版本 → 发布 |
+| "Connected to Feishu WebSocket" 不出现 | 飞书应用未发布/未安装 | 检查飞书开放平台应用状态 |
+| 推送乱码/碎字符 | mode设置不当 | 使用 `mode: "tui"` + `outputSource: "session"` |
+| Codex进程卡死 | 任务超时 | 配置watchdog自动终止（默认120s） |
+| 长连接断开 | 网络波动 | bridge内置自动重连机制 |
+| 权限不足 | 飞书应用权限未开通 | 检查权限管理页面补充授权 |
+| 消息不推送 | 机器人未被添加进会话 | 将机器人拉入目标群聊/私聊 |
 
-### 5.2 权限最小化原则
+### 6.2 调试命令
 
-- 日常操作推荐 `--recommend` 参数：`lark-cli auth login --recommend`
-- 仅申请推荐权限，自动审批，不触发管理员审核
-- 按需扩展权限，避免一次性全开
+```bash
+# 检查飞书CLI状态
+lark --version
+lark config list
 
----
+# 检查Codex状态
+codex --version
 
-## 六、Codex 特有配置要点
+# 查看bridge日志（如开启debugLogs）
+tail -f ~/.feishu-codex-bridge/logs/app.log
 
-### 6.1 工作流集成
-
-Codex 原生支持 Tools 机制，飞书 CLI 作为外部工具可通过以下方式集成：
-
-1. **MCP 方式**：在 config.toml 中配置 feishu MCP server（推荐）
-2. **Shell 方式**：通过 `shell_executor` 直接调用 `lark-cli` 命令
-3. **Agent Skills 方式**：安装 `npx skills add larksuite/cli -y -g` 后，Codex 自动识别 19 个 Skill
-
-### 6.2 上下文优化
-
-- 给 Codex 清晰上下文和目标描述
-- 使用 Codex 的 `/goal` 进行跨会话持久化任务追踪
-- 关键操作前让 Codex 先 `dry-run` 预览效果
+# 测试飞书连接
+lark im send --receive_id ou_xxxxx --msg_type text --content '{"text":"测试连接"}'
+```
 
 ---
 
-## 七、技能迭代记录
+## 七、安全最佳实践
 
-| 日期 | 版本 | 更新内容 |
-|------|------|---------|
-| 2026-05-31 | v1.0 | 初始版本，涵盖飞书 CLI 11 大业务域、Codex 接入配置、5 大自动化场景 SOP |
+### 7.1 凭证管理
+
+```
+- 飞书App Secret使用AES-256-GCM加密存储（~/.feishu-codex-bridge/）
+- 不将凭证写入环境变量或代码仓库
+- 定期轮换App Secret
+```
+
+### 7.2 访问控制
+
+```
+- allowedOpenIds白名单机制：仅授权用户可控制CLI
+- 群隔离：每个群绑定独立工作目录
+- 会话隔离：每个话题独立Codex进程
+- 敏感操作二次确认（删除/修改核心数据）
+```
+
+### 7.3 数据保护
+
+```
+- 本地加密密钥库不入仓库
+- 飞书消息传输使用TLS加密
+- 调试日志默认关闭，生产环境禁用debugLogs
+```
 
 ---
 
-> **关联技能**：龙虾-多Agent协同看板协议 v1.0 / 龙虾-动态工作流引擎规范 v1.0 / 龙虾-长时域Goal追踪规范 v1.0
-> **文件路径**：E:\龙虾AI主控中心\技能库\Codex+飞书CLI自动化技能手册.md
+## 八、技能库扩充建议
+
+### 8.1 需新增的Agent Skills
+
+| 技能名称 | 功能 | 优先级 |
+|---------|------|:---:|
+| feishu-message-sender | 飞书消息发送 | 🔴 高 |
+| feishu-doc-creator | 飞书文档创建与编辑 | 🔴 高 |
+| feishu-calendar-manager | 飞书日程管理 | 🟡 中 |
+| feishu-bitable-operator | 飞书多维表格CRUD | 🔴 高 |
+| feishu-meeting-organizer | 飞书会议组织 | 🟡 中 |
+| feishu-wiki-searcher | 飞书知识库检索 | 🟡 中 |
+| codex-bridge-manager | Codex桥接管理 | 🔴 高 |
+
+### 8.2 与龙虾全域模板的对接
+
+```
+- 飞书CLI操作 → 协议#127 桌面全平台操控
+- Codex集成 → 协议#240 超级Agent融合
+- 飞书桥接安全 → 协议#246 七维纵深防御
+- 自动化执行 → 协议#238 自进化闭环v6.1
+```
+
+---
+
+## 九、参考资源
+
+| 资源 | 地址 |
+|------|------|
+| 飞书CLI官方仓库 | https://github.com/larksuite/cli |
+| Codex CLI官方文档 | https://codexguide.ai |
+| feishu-codex-bridge | https://github.com/lutianding118-cmd/feishu-codex-bridge |
+| modelzen增强bridge | https://github.com/modelzen/feishu-codex-bridge |
+| Agent Notifier | https://github.com/KaminDeng/agent_notifier |
+| 飞书开放平台 | https://open.feishu.cn |
+| Codex × 飞书CLI教程 | https://codexguide.ai/recipes/feishu-cli-codex.html |
+
+---
+
+*（内容由AI生成，基于公众号文章+全网开源项目调研，仅供参考）*

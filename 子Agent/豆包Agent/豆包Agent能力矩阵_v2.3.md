@@ -1,6 +1,6 @@
 # 豆包Agent能力矩阵_v2.3.json
 
-> 原始文件: `豆包Agent能力矩阵_v2.3.json`  |  类型: `.json`  |  自动转换
+原始格式: JSON
 
 ```json
 {

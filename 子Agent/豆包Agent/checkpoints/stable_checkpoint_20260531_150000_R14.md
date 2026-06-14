@@ -1,6 +1,6 @@
 # stable_checkpoint_20260531_150000_R14.json
 
-> 原始文件: `stable_checkpoint_20260531_150000_R14.json`  |  类型: `.json`  |  自动转换
+原始格式: JSON
 
 ```json
 {

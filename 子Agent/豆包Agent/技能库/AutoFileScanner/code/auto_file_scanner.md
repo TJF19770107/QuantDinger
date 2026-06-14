@@ -1,6 +1,6 @@
 # auto_file_scanner.py
 
-> 原始文件: `auto_file_scanner.py`  |  类型: `.py`  |  自动转换
+原始格式: Python
 
 ```python
 """

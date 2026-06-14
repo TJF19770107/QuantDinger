@@ -1,6 +1,8 @@
 # LOBSTER-VNPY-CONFIG-v4.json
 
-> 原始文件: `LOBSTER-VNPY-CONFIG-v4.json`  |  类型: `.json`  |  自动转换
+> ⚠️ **缺口标注 [GAP-001]**: vt_symbols列表缺少AI Agent代币（VIRTUALUSDT.BINANCE / LUNAUSDT.BINANCE 等）。建议与 LOBSTER-BINANCE-CONFIG 同步更新。
+
+原始格式: JSON
 
 ```json
 {
