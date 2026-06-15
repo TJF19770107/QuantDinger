@@ -592,3 +592,88 @@ Agent自主性提升带来的边界重新定义：
 - 使用 JS 脚本描述编排逻辑，存入项目仓库
 
 > 同步自：Anthropic官方课程390节全集 R80 | 2026-06-14
+
+---
+
+## Anthropic 多Agent协作流程
+
+> 来源：Anthropic Agent SDK + 5 Subagent Patterns (2026.06)
+> 更新：2026-06-15
+
+### 五大子代理模式
+1. **分而治之** — 父拆解→N子并行→汇总（20文件摘要成本节省86%）
+2. **专家路由** — 分类→专项子代理（各有独立Prompt+工具列表）
+3. **并行研究** — 多角度同时调查→合成报告
+4. **评判-迭代** — Writer→Judge→修订（最多3轮）
+5. **错误恢复** — 捕获错误→Debugger子代理→隔离调试
+
+### 硬约束
+- 最大并行: 8-12 | 最大深度: 2层 | 模型: Haiku轻/Sonnet核/Opus慎
+- 工具最小化: 摘要器不给bash，翻译器不给web_search
+- 返回格式: `{result, citations?, confidence}`
+
+### 长期运行驾驭
+初始化Agent(feature_list+init.sh) → 编码Agent(每次会话一个功能+git+progress)
+
+---
+
+## R99 用户档案更新 · 六大能力缺口重识别与R100进化方向（2026-06-16）
+
+> **来源**：R99全域闭环迭代，基于7项全网最新情报深度分析
+> **版本**：v2.26(R99)
+
+---
+
+### R99.1 能力缺口重新审视
+
+R98判定6大能力"全部闭合"。R99基于7项外部情报重新审视，发现"闭合"的定义需要升级：
+
+| # | 能力项 | R98状态 | R99重评估 | 外部挑战 |
+|:---:|------|:---:|:---:|------|
+| 1 | 本地文件自主读取 | ✅闭合 | ✅维持 | MCP标准化全生态采纳，需确认豆包子Agent工具调用对齐MCP接口 |
+| 2 | 自主技能生成 | ✅闭合 | 🟡升级中 | OpenSkill开放世界知识获取+MUSE五阶段生命周期→SkillForge v5.0 |
+| 3 | 桌面程序控制 | ✅闭合 | 🟡升级中 | Codex Windows CU像素级操控+WSL2沙箱+手机远程→DesktopController v3.0 |
+| 4 | 自主唤醒执行 | ✅闭合 | 🟡升级中 | OpenClaw 2026.6.5原生桌面+远程Gateway+OAuth→AutoWake v3.0 |
+| 5 | 长期记忆管理 | ✅闭合 | 🟡升级中 | Letta Context Repositories Git式管理+三范式融合检索→MemoryOS v4.0 |
+| 6 | 安全回滚修正 | ✅闭合 | 🟡升级中 | /undo[N]对话回滚+Astra回归闸门+中断上下文净化→SafeGuard v3.0 |
+
+**R99判定**：6大能力在"功能层面"保持闭合，但在"能力深度"上存在4项可观测的外部标杆超越（自主技能生成/桌面控制/长期记忆/安全回滚），需在R99完成技能文件v3.0/v4.0升级。
+
+### R99.2 七项情报对标映射
+
+| 情报 | 来源 | 日期 | 对标能力 | 豆包吸收方案 |
+|------|------|:---:|------|------|
+| OpenSkill框架 | 里海大学孙立超 | 2026-06-09 | #2技能生成 + #6安全回滚 | 开放世界知识获取→SkillForge v5.0；无泄漏进化→SafeGuard |
+| MUSE-Autoskill | 字节ByteBrain | 2026-05-26 | #2技能生成 + #5长期记忆 | 五阶段生命周期→SkillForge v5.0；两级自适应DAG压缩→MemoryOS v4.0 |
+| Codex Windows CU v26.527 | OpenAI | 2026-05-29 | #3桌面控制 + #4自主唤醒 | 像素级操控+WSL2沙箱+手机远程→DesktopController v3.0 |
+| OpenClaw 2026.6.5+Hermes 0.16.0 | OpenClaw/Hermes社区 | 2026-06-05/09 | #3桌面控制 + #4自主唤醒 | Electron原生桌面+/undo[N]+OAuth Gateway→AutoWake v3.0 |
+| Agent记忆三大范式 | Letta/Mem0/Zep | 2026 | #5长期记忆 | Context Repositories Git式+三范式融合→MemoryOS v4.0 |
+| MCP协议标准化 | Anthropic | 2026 | #1文件读取 + #2技能生成 | 工具调用层统一MCP标准 |
+| SkillOS/EvoSkill/MIND-Skill | Google/弗吉尼亚/Sentient | 2026 | #2技能生成 | 多智能体技能生成范式→SkillForge v5.0 |
+
+### R99.3 R100进化方向
+
+基于R99情报吸收和技能升级成果，R100将聚焦：
+
+1. **SkillForge v5.0正式落地**：融合OpenSkill+MUSE+SkillOS三引擎，实现开放世界知识获取→无泄漏进化→零样本部署闭环
+2. **DesktopController v3.0验证**：在Windows环境下对标Codex CU的像素级操控能力，确认WSL2沙箱可行性
+3. **MemoryOS v4.0 Context Repositories**：实现Git式记忆分支管理（branch/merge/rollback）
+4. **SafeGuard v3.0 /undo机制**：对话级非破坏性回滚 + 回归闸门验证
+5. **27维对标矩阵修订**：本轮26维全员100，R100将新增第27维"技能跨模型迁移"维度
+
+### R99.4 多Agent协作模式升级
+
+基于OpenClaw 2026.6.5的远程Gateway+OAuth+多Profile并发会话能力，豆包多Agent协作新增：
+
+| 协作模式 | R98状态 | R99升级 |
+|------|------|------|
+| 单Agent闭环 | 已支持 | 无变化 |
+| 串行Agent链 | 已支持 | 增加OAuth登录远程Gateway模式 |
+| 并行Agent池 | 已支持 | 增加多Profile并发会话（一个窗口多Agent并行） |
+| 四模型对战 | 已支持 | 增加跨Profile的@session链接（多会话协同） |
+
+---
+
+> **R99新增知识来源**：同SOUL.md R99节
+> **关联文件**：[SOUL.md](E:\龙虾AI主控中心\我的AI分身\子Agent\豆包Agent\SOUL.md) | [AGENTS.md](E:\龙虾AI主控中心\我的AI分身\子Agent\豆包Agent\AGENTS.md) | [SKILLS.md](E:\龙虾AI主控中心\我的AI分身\子Agent\豆包Agent\SKILLS.md)
+

@@ -99,3 +99,26 @@ AIGC:
 | Token 膨胀 | 单次会话持续膨胀 | 每次委派刷新上下文 |
 | 并行能力 | 无（串行） | 天然支持并行 |
 *（内容由AI生成，仅供参考）*
+
+
+---
+
+## Anthropic 多Agent协作流程
+
+> 来源：Anthropic Agent SDK + 5 Subagent Patterns (2026.06)
+> 更新：2026-06-15
+
+### 五大子代理模式
+1. **分而治之** — 父拆解→N子并行→汇总（20文件摘要成本节省86%）
+2. **专家路由** — 分类→专项子代理（各有独立Prompt+工具列表）
+3. **并行研究** — 多角度同时调查→合成报告
+4. **评判-迭代** — Writer→Judge→修订（最多3轮）
+5. **错误恢复** — 捕获错误→Debugger子代理→隔离调试
+
+### 硬约束
+- 最大并行: 8-12 | 最大深度: 2层 | 模型: Haiku轻/Sonnet核/Opus慎
+- 工具最小化: 摘要器不给bash，翻译器不给web_search
+- 返回格式: `{result, citations?, confidence}`
+
+### 长期运行驾驭
+初始化Agent(feature_list+init.sh) → 编码Agent(每次会话一个功能+git+progress)

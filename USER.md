@@ -32,7 +32,7 @@ AIGC:
 ---
 # USER.md — 多Agent协作流程（龙虾AI分身用户指南）
 
-> **版本**：v2.7 (R84迭代) | **创建日期**：2026-06-01 | **更新日期**：2026-06-14
+> **版本**：v2.8 (R86迭代) | **创建日期**：2026-06-01 | **更新日期**：2026-06-15
 > **来源**：Anthropic Agent Teams官方文档 + Agent SDK编排模式（Orchestrator/Pipeline/Mesh） + Plugins打包协作体系 + Claude Code Subagents + Skills九类分类法 + 四支柱AI OS架构 + 龙虾全域模板融合
 > **生效范围**：所有子Agent协作任务
 > **依赖文件**：SOUL.md / AGENTS.md / 角色总说明书.md / Anthropic官方课程-390节全集.md
@@ -1137,3 +1137,129 @@ git worktree remove ../project-reviewer-a  # 清理不需要的 worktree
 - 工作流脚本可被团队成员复用和审计
 
 > 同步自：Anthropic官方课程390节全集 R80 | 2026-06-14
+
+---
+
+## Anthropic官方博客R81同步：Skills使用最佳实践（2026-06-15）
+
+> **数据来源**：Anthropic 官方博客 "Lessons from building Claude Code: How we use skills" (2026-06-03)
+
+### Verification Skills 是质量关键
+
+Product Verification 类 Skills 对 Claude 输出质量的提升在 Anthropic 内部最可量化。建议投入一周时间专门打磨 Verification Skills：
+- 让 Claude 录制操作视频，便于观察实际测试过程
+- 在每个步骤强制执行程序化断言
+- 使用 Playwright/tmux 等外部工具实现无头浏览器或终端驱动验证
+
+**龙虾对标**：优先建设产品验证类 Skills（部署冒烟测试、API 响应断言、UI 回归检查），将验证从"人工抽查"升级为"Skill 自动驱动"。
+
+### Composing Skills：通过名称引用实现依赖
+
+Skills 之间可通过名称引用形成组合：
+- 例如 CSV 生成 Skill → 引用文件上传 Skill → 生成后自动上传
+- 若目标 Skill 已安装，模型会自动调用
+- 目前市场尚未原生支持依赖声明，但名称引用已足够实用
+
+**龙虾对标**：技能库中的 Skill 可通过 `use_skill` 名称引用实现组合，例如发票检索 Skill 可引用 Excel 处理 Skill 实现检索→导出闭环。
+
+### Memory in Skills：用日志文件持久化上下文
+
+某些 Skill 可通过内嵌数据实现跨会话记忆：
+- 最简单：追加式文本日志（如 standups.log），每次运行时 Claude 读取自身历史
+- 进阶：JSON 文件或 SQLite 数据库
+- 路径：使用 `${CLAUDE_PLUGIN_DATA}` 环境变量获取稳定存储目录
+- 效果：下次运行时 Claude 知道「上次做了什么」、「这次有什么变化」
+
+**龙虾对标**：定时任务日志（`龙虾任务日志.md`）已实现类似机制，可进一步结构化。
+
+### Product Verification 对输出质量的量化提升
+
+在 Anthropic 内部实践中，Verification Skills 是对输出质量提升最可量化的 Skill 类别：
+- signup-flow-driver 确保注册→验证→入门全流程无回归
+- checkout-verifier 验证 Stripe 支付完整链路
+- 每条验证规则对应一个可观测的通过/失败状态，形成质量指标
+
+**核心原理**：验证 Skill 将"代码是否工作"从 Claude 的自我判断（容易产生幻觉自信）转变为可观测的程序化断言。
+
+> **版本**：R81 | 更新时间：2026-06-15 定时任务
+
+
+## Anthropic 多 Agent 协作流程与架构
+
+> 来源：Anthropic Claude Agent SDK 文档 + 5 Subagent Patterns (2026)
+> 更新日期：2026-06-15
+
+### 协作模式选择流程
+
+```
+任务到达
+  ├─ 单次简单任务？ → 直接调用 LLM（不用 Agent）
+  ├─ 可分解为固定步骤？ → Prompt Chaining / Routing / Parallelization
+  │   ├─ 步骤有依赖？ → Prompt Chaining（串行）
+  │   ├─ 多类型混合？ → Routing（分类后专项处理）
+  │   └─ 无依赖？ → Parallelization（并行扇出）
+  ├─ 需要动态分解？ → Orchestrator-Workers
+  │   └─ 需要迭代质量？ → Judge-and-Iterate
+  └─ 需要长期自主？ → Autonomous Agent + Long-Running Harness
+```
+
+### 五大子代理模式
+
+#### 1. 分而治之（Divide-and-Conquer）
+**场景**：将 50 个文件转换为 Markdown
+**流程**：父 Agent 拆解 → 扇出 N 个 Haiku 子代理 → 汇总结果
+**成本**：20 文件摘要 $0.12 vs 单 Agent $0.85（节省 86%）
+
+#### 2. 专家路由（Specialist Routing）
+**场景**：同一个入口接收代码审查、翻译、SQL 编写请求
+**流程**：入口判断类型 → 路由到专项子代理（各有独立 Prompt + 工具允许列表）
+**成本**：30 轮编码循环 $0.70 vs 单 Agent $1.90（节省 63%）
+
+#### 3. 并行研究（Parallel Research）
+**场景**：对同一问题从多角度调查
+**流程**：派生 4 个子代理（怀疑者/乐观者/历史学家/对立者）→ 合成
+**成本**：50 页报告 $0.55 vs 单 Agent $2.40（节省 77%）
+
+#### 4. 评判-迭代（Judge-and-Iterate）
+**场景**：营销文案需要符合品牌声音评分标准
+**流程**：Writer(Sonnet) → Judge(Haiku) → 修订 → 循环（最多 3 轮）
+**关键约束**：必须设置最大迭代次数和 wall-clock 超时
+
+#### 5. 错误恢复（Error Recovery）
+**场景**：工具调用失败，父代理不自行调试
+**流程**：捕获错误 → 派生 Debugger 子代理 → 应用诊断
+**设计原则**：混淆的调试过程发生在一性子代理中，不污染父上下文
+
+### 子代理管理硬约束
+
+| 约束项 | 推荐值 |
+|--------|--------|
+| 最大并行数 | 8-12（受 rate limit 约束） |
+| 最大深度 | 2 层（父→子），3 层以上调试噩梦级 |
+| 模型选择 | Haiku 处理翻译/分类；Sonnet 核心推理；Opus 仅在真正需要时 |
+| 工具授权 | 最小化原则：摘要器不给 bash，翻译器不给 web_search |
+| 返回格式 | 强制 schema：`{result, citations?, confidence}`，拒绝全文转录 |
+| 缓存策略 | 共享系统 Prompt 的子代理复用 Prompt Cache |
+
+### 长期运行 Agent 驾驭模式
+
+```
+Session 1（初始化 Agent）：
+  写 feature_list.json → 写 init.sh → git init + commit
+
+Session 2-N（编码 Agent）：
+  pwd → 读 git log + progress → 读 feature_list → 选一个功能
+  → 开发 → 端到端测试 → git commit + 更新 progress
+
+每次会话只做一件事，结束时环境处于干净状态（可合并主分支）
+```
+
+### 子代理调用决策
+
+| 场景 | 使用子代理？ | 原因 |
+|------|-------------|------|
+| 20 文件摘要 | ✅ 是 | 并行扇出，节省 86% 成本 |
+| 单次问答 | ❌ 否 | 路由开销超过节省（-50%） |
+| 50 页研究报告 | ✅ 是 | 并行研究 5 角度，节省 77% |
+| 聊天回复 < 1.5s | ❌ 否 | 延迟敏感，每次派生增加 200-600ms |
+| 30 轮编码循环 | ✅ 是 | 专家路由 + 上下文隔离 |

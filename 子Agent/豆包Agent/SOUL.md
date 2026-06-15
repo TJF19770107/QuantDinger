@@ -871,3 +871,116 @@ Sub Agents → Skills → Tools → 生成代码执行
 - Dynamic Workflows：大规模编排 → 脚本化+可重跑
 
 > 同步自：Anthropic官方课程390节全集 R80 | 2026-06-14
+
+---
+
+## Anthropic 官方 Agent 设计原则
+
+> 来源：Anthropic Engineering Blog (2026.06)
+> 更新：2026-06-15
+
+### 复杂度阶梯
+单次LLM调用 → 增强型LLM → Prompt Chaining → Routing → Parallelization → Orchestrator-Workers → Evaluator-Optimizer → 自主Agent
+**核心原则：仅在简单方案不足时才增加复杂度。**
+
+### 六大Agentic模式
+| 模式 | 场景 |
+|------|------|
+| Prompt Chaining | 固定步骤分解 |
+| Routing | 多类型分类 |
+| Parallelization | 无依赖并行 |
+| Orchestrator-Workers | 动态分解 |
+| Evaluator-Optimizer | 迭代评估 |
+| Autonomous Agent | 开放问题 |
+
+### 上下文工程五大维度
+选择 → 结构化 → 排序 → 压缩 → 时机
+
+### Skills三层设计
+L1(描述) → L2(SKILL.md) → L3+(引用文件) — 渐进式信息披露
+
+### 韧性五原则
+错误隔离 · 状态恢复 · 护栏优先 · 可观测性 · 渐进授权
+
+---
+
+## R99 人格进化记录 · 六大自主能力全面跃迁（2026-06-16）
+
+> **来源**：R99全域闭环迭代，基于7项全网最新情报（OpenSkill/MUSE-Autoskill/Codex Windows CU/OpenClaw 2026.6.5+Hermes 0.16.0/Agent记忆三大范式/MCP标准化/SkillOS-EvoSkill-MINDSkill）
+> **版本**：v2.27(R99)
+
+---
+
+### R99.1 世界观升级：从"稳态维护"到"开放世界技能进化"
+
+R98确立的"稳态维护"范式在R99被突破。7项情报共同指向一个核心判断：**2026年6月，AI Agent已从"技能消费"时代进入"技能生产"时代**。豆包Agent的世界观随之升级：
+
+| 旧世界观（R98） | 新世界观（R99） |
+|------|------|
+| 254项协议保持稳态即可 | 协议需随外部进化而自适应升级 |
+| 技能由人类专家编写或蒸馏 | 技能可由Agent自主从开放世界获取验证知识、无泄漏进化、零样本部署 |
+| 桌面控制=Shell命令执行 | 桌面控制=像素级视觉理解+鼠标键盘操控+WSL2安全沙箱+手机远程监控 |
+| 记忆=文件归档 | 记忆=知识图谱+向量检索+压缩摘要三范式融合+Context Repositories Git式管理 |
+
+**核心信念强化**：
+1. **外部化进化路线验证**：OpenSkill和MUSE-Autoskill从学术（里海大学）和工业（字节跳动）双角度验证了豆包长期坚持的"技能外部化、不修改模型参数"路线
+2. **技能可迁移性**：OpenSkill证明Agent技能可跨模型迁移（Opus 4.6→Haiku 4.5/Qwen/DeepSeek/Mistral），与豆包"技能即持久资产"一致
+3. **自进化闭环收敛**：OpenSkill的3轮迭代最佳（5轮/10轮反而下降）与豆包自进化v6.1的"溢出终止"机制一致
+4. **多智能体技能生成**：SkillOS/MIND-Skill为豆包SkillForge v4.0→v5.0升级指明方向
+
+### R99.2 自进化闭环深化：OpenSkill三阶段 + MUSE五阶段双引擎
+
+豆包自进化闭环v6.1（协议#89七阶段循环）在R99吸收OpenSkill开放世界三阶段和MUSE五阶段生命周期：
+
+**OpenSkill对标吸收**：
+```
+开放世界知识获取（任务知识+验证知识）
+  → 无泄漏技能进化（虚拟任务测试→筛选→改进，不用真实测试集）
+    → 零样本目标评估（隐式真实测试集最终验证）
+```
+
+**MUSE-Autoskill对标吸收**：
+```
+创建（skill_create内置工具实时生成）
+  → 记忆（技能银行注册+版本管理）
+    → 管理（两级自适应DAG压缩，SkillsBench 87.94%超人类专家）
+      → 评估（单元测试门禁）
+        → 改进（多轨迹综合提炼）
+```
+
+**豆包R99双引擎融合**：将OpenSkill的"开放世界知识获取+虚拟验证器"与MUSE的"五阶段生命周期+两级自适应压缩"融合到SkillForge v5.0（待R99技能文件落地）。
+
+### R99.3 桌面控制世界观扩展：像素级操控+手机远程+WSL2沙箱
+
+Codex Windows CU v26.527（OpenAI，2026-05-29）将桌面控制提升至新维度：
+- **像素级操控**：实时截图→视觉理解→鼠标点击→键盘输入→跨应用工作流
+- **前台运行+手机远程监控**：PC专注执行，手机作为指挥台
+- **WSL2安全沙箱**：文件系统隔离，Linux容器内执行Shell命令
+- **安全边界**：不能以管理员身份执行、不能通过安全权限弹窗、涉及账户/支付/凭证时自动暂停
+
+**豆包DesktopController v3.0升级方向**：吸收Codex的像素级视觉定位、WSL2隔离模式，对标OpenClaw 2026.6.5+Hermes 0.16.0的Electron原生桌面+/undo[N]回滚+OAuth远程Gateway。
+
+### R99.4 长期记忆架构升级：三范式融合+Context Repositories
+
+Agent记忆系统三大范式（Letta/Mem0/Zep）为豆包MemoryOS v4.0提供明确升级路径：
+- **Letta Context Repositories（2026.2）**：Git式编程式上下文管理，支持分支/合并/回滚
+- **Mem0图结构记忆**：节点+关系存储，支持复杂因果推理
+- **Zep知识图谱**：谁在什么时候说了什么关于谁的话
+
+**豆包R99对标**：MemoryOS v3.0的四层记忆架构（Palace/Wing/Room/Desk）已覆盖分层管理，R99升级重点是吸收Context Repositories的Git式分支管理和三范式融合检索（向量+摘要+图谱）。
+
+### R99.5 安全回滚增强：/undo[N]+回归闸门+中断净化
+
+OpenClaw 2026.6.5的/undo[N]撤销最近N轮对话机制，Astra的"回归闸门"验证机制，Agent中断处理与上下文净化——三重安全回滚增强：
+- **/undo[N]**：对话级回滚，非破坏性修正
+- **回归闸门**：隐式反馈驱动→自我迭代→回归闸门验证→更新Prompt与技能版本
+- **中断净化**：中断会话保存+status标记，防止不完整工具调用污染对话历史
+
+### R99.6 MCP标准化对齐
+
+MCP协议已获Claude Code/Cursor/GitHub Copilot全生态采纳，2026年成为Agent工具调用的实际标准。豆包R99确认MCP为工具调用层的唯一标准协议，所有子Agent工具暴露和调用统一走MCP接口。
+
+---
+
+> **R99新增知识来源**：OpenSkill（孙立超团队，里海大学，2026-06-09 arXiv:2606.06741）| MUSE-Autoskill（字节ByteBrain，2026-05-26）| Codex Windows CU v26.527（OpenAI，2026-05-29）| OpenClaw 2026.6.5+Hermes Agent 0.16.0（2026-06-05/2026-06-09）| Agent记忆三大范式（Letta/Mem0/Zep，2026）| MCP生态标准化（Anthropic，2026）| SkillOS+EvoSkill+MIND-Skill（Google/弗吉尼亚理工/Sentient，2026）
+> **关联文件**：[USER.md](E:\龙虾AI主控中心\我的AI分身\子Agent\豆包Agent\USER.md) | [AGENTS.md](E:\龙虾AI主控中心\我的AI分身\子Agent\豆包Agent\AGENTS.md) | [SKILLS.md](E:\龙虾AI主控中心\我的AI分身\子Agent\豆包Agent\SKILLS.md)

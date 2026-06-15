@@ -21,7 +21,7 @@ AIGC:
 ---
 # AGENTS.md — 子代理管理与自动化配置（龙虾AI分身运维手册）
 
-> **版本**：v2.6 (R84迭代) | **创建日期**：2026-06-01 | **更新日期**：2026-06-14
+> **版本**：v2.7 (R86迭代) | **创建日期**：2026-06-01 | **更新日期**：2026-06-15
 > **来源**：Anthropic Claude Code Subagents官方文档(完整frontmatter + 7步创建流程) + Agent SDK子代理编排 + Skills开放标准 + Hooks生命周期 + Plugins打包分发 + 四支柱AI OS架构 + 龙虾全域模板
 > **生效范围**：豆包Agent / Hermes Agent / OpenClaw龙虾Agent / 所有Sub Agent
 > **依赖文件**：SOUL.md / USER.md / 角色总说明书.md / 龙虾全域官方模板-最终版.md / Anthropic官方课程-390节全集.md
@@ -1674,3 +1674,175 @@ exit 0
 - 安全最佳实践：密钥轮换、IP白名单、审计日志
 
 > 同步自：Anthropic官方课程390节全集 R80 | 2026-06-14
+
+---
+
+## Anthropic官方博客R81同步：Skills配置与市场管理（2026-06-15）
+
+> **数据来源**：Anthropic 官方博客 "Lessons from building Claude Code: How we use skills" (2026-06-03)
+
+### Skills Marketplace 管理流程
+
+Anthropic 采用有机发现机制，四步流程：
+
+| 阶段 | 操作 | 责任方 |
+|------|------|--------|
+| **1. 沙箱** | 上传到 GitHub 沙箱文件夹，在 Slack 等渠道推广 | Skill 作者 |
+| **2. Traction** | 作者判断是否有足够使用量 | Skill 作者 |
+| **3. PR** | 提交 PR 移入 marketplace | Skill 作者 |
+| **4. Marketplace** | 正式发布，全员可安装 | 团队 |
+
+关键特点：不设中央审批团队，靠有机 traction 驱动。
+
+### Skills 分发策略
+
+| 方式 | 路径 | 适用规模 | 上下文成本 |
+|------|------|---------|-----------|
+| **Repo 内嵌** | `./.claude/skills/` | 小团队、少量仓库 | 每个 Skill 增加少量上下文 |
+| **Plugin Marketplace** | 内部插件市场 | 规模化、多仓库 | 团队自行决定安装，按需加载 |
+
+选择准则：repo 内嵌适合起步；当团队扩大或 Skill 数量增长到上下文开销不可忽视时，迁移到 marketplace。
+
+### Skills 度量
+
+使用 PreToolUse Hook 记录 Skill 使用情况：
+
+```python
+# 示例：记录每次 Skill 调用
+def pre_tool_use_hook(tool_name, tool_input, skill_context):
+    if skill_context and skill_context.get("skill_name"):
+        log_skill_usage(
+            skill_name=skill_context["skill_name"],
+            timestamp=datetime.now().isoformat(),
+            user=os.getenv("USER")
+        )
+```
+
+- 发现热门 Skills（使用频率高）→ 优先维护
+- 发现触发不足的 Skills（低于预期）→ 检查 description 是否准确描述触发条件
+
+### 描述写给模型而非人类
+
+Claude Code 启动时构建所有可用 Skill 的 description 列表，Claude 据此判断「是否有匹配的 Skill」。因此：
+
+- ❌ **错误**：description = 功能摘要（"这个 Skill 帮助格式化代码"）
+- ✅ **正确**：description = 触发条件（"当用户需要格式化 Python 代码或检查 PEP8 规范时使用"）
+
+应在 description 中包含触发词，如 "babysit"、"deploy"、"standup" 等。模型不是人类读者，不需要理解 Skill 是做什么的——它只需要知道**何时触发**。
+
+> **版本**：R81 | 更新时间：2026-06-15 定时任务
+
+
+## Anthropic 子代理管理与自动化配置
+
+> 来源：Anthropic Claude Code Advanced Patterns (2026.03) + Agent SDK 文档
+> 更新日期：2026-06-15
+
+### 五大工程机制速览
+
+| 机制 | 用途 | 本质 | 绕过模型？ |
+|------|------|------|-----------|
+| **CLAUDE.md** | 硬性规则（≤200行） | 静态指令 | 否 |
+| **Skills** | 流程和领域知识（≤500行 SKILL.md） | 按需加载 | 否 |
+| **Subagents** | 委派独立工作 | 独立上下文 | 否 |
+| **Hooks** | 确定性自动化 | 事件驱动脚本 | **是（唯一）** |
+| **MCP** | 外部系统访问 | 标准协议 | 否 |
+
+### 子代理目录结构
+
+```
+项目根/
+├── .claude/
+│   ├── agents/                 # 项目级子代理
+│   │   ├── code-reviewer.md
+│   │   ├── test-runner.md
+│   │   └── debugger.md
+│   ├── hooks/                  # 生命周期 Hook
+│   │   ├── pre-tool-use/
+│   │   └── post-tool-use/
+│   └── settings.json           # 项目配置
+├── CLAUDE.md                   # 项目级硬性规则（≤200行）
+└── ~/.claude/agents/           # 用户级子代理（全局可用）
+```
+
+### 子代理配置模板
+
+```yaml
+---
+name: code-reviewer
+description: Expert code review specialist. Use PROACTIVELY after code changes to review diffs and suggest improvements.
+tools: read, grep, glob    # 最小化原则：只给读权限
+model: claude-haiku-4-5    # 轻量模型处理审查任务
+---
+你是一个资深代码审查专家。审查代码变更时：
+1. 关注逻辑错误和边界情况
+2. 检查安全性问题
+3. 建议代码结构改进
+4. 以简洁 checklist 格式输出
+```
+
+### Hooks 配置示例
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "command": "npx prettier --write $CLAUDE_FILE_PATH"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "command": "if echo \"$CLAUDE_TOOL_INPUT\" | grep -q 'rm -rf'; then echo 'BLOCK: dangerous command'; exit 1; fi"
+      }
+    ]
+  }
+}
+```
+
+### 自动化配置决策矩阵
+
+| 需求 | 使用 CLAUDE.md | 使用 Skills | 使用 Hooks | 使用 Subagents |
+|------|:---:|:---:|:---:|:---:|
+| 禁止使用 npm（始终适用） | ✅ | ❌ | ✅ (PreToolUse) | ❌ |
+| PR 评审流程（有时适用） | ❌ | ✅ | ❌ | ✅ |
+| 保存时自动格式化 | ❌ | ❌ | ✅ | ❌ |
+| 隔离执行高风险操作 | ❌ | ❌ | ❌ | ✅ |
+| 代码风格约定 | ✅ | ✅ | ✅ (PostToolUse) | ❌ |
+
+### 权限最小化矩阵
+
+| 子代理类型 | 允许工具 | 禁止工具 | 推荐模型 |
+|------------|----------|----------|----------|
+| code-reviewer | read, grep, glob | Bash, Write, Edit | Haiku |
+| test-runner | Bash, Read | Write, Edit | Haiku |
+| debugger | read, Bash, grep | Write, Edit | Sonnet |
+| translator | read, Write | Bash, web_search | Haiku |
+| security-auditor | read, grep, glob | Bash, Write, Edit, web_search | Sonnet |
+
+### 团队规模模板
+
+| 项目规模 | 推荐子代理数 | 并行上限 | 示例配置 |
+|----------|-------------|---------|----------|
+| 小型（个人项目） | 1-3 | 3 | code-reviewer + test-runner |
+| 中型（小团队） | 3-5 | 6 | + debugger + security-auditor |
+| 大型（多团队） | 5-8 | 12 | + translator + doc-writer + db-helper |
+| 不建议超过 | 8 | 12 | 超过后上下文管理成本激增 |
+
+### 自进化 Hook 模式
+
+```
+SessionStart Hook:
+  → 读取上次会话的 progress 文件
+  → 注入到系统 Prompt 作为背景
+
+PostToolUse Hook (Write/Edit):
+  → 自动运行 linter
+  → 自动更新 progress 时间戳
+
+PreToolUse Hook (Delete):
+  → 拦截危险删除操作
+  → 检查操作对象是否在保护列表中
+```

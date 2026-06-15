@@ -708,3 +708,32 @@ API密钥管理/速率限制/计费模型/安全最佳实践
 
 > 同步自：Anthropic官方课程 R80 | 2026-06-14
 *（内容由AI生成，仅供参考）*
+
+
+---
+
+## Anthropic 子代理管理与自动化
+
+> 来源：Claude Code Advanced Patterns (2026.06)
+> 更新：2026-06-15
+
+### 五大机制
+| 机制 | 用途 | 绕过模型？ |
+|------|------|-----------|
+| CLAUDE.md | 硬性规则(≤200行) | 否 |
+| Skills | 流程知识(≤500行) | 否 |
+| Subagents | 委派工作 | 否 |
+| Hooks | 确定性自动化 | **是** |
+| MCP | 外部访问 | 否 |
+
+### 目录结构
+`.claude/agents/`(项目级) + `~/.claude/agents/`(用户级)
+
+### 权限最小化
+code-reviewer: read/grep/glob(Haiku) | test-runner: bash/read(Haiku) | debugger: read/bash/grep(Sonnet)
+
+### Hooks关键用例
+PostToolUse: 自动lint | PreToolUse: 拦截危险命令 | SessionStart: 注入进度
+
+### 子代理上限
+1-3(小型) → 3-5(中型) → 5-8(大型) | 最大并行≤12 | 深度≤2层

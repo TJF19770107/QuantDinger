@@ -899,3 +899,98 @@ MCP Server需要被多个Agent同时调用？
 - 安全最佳实践：密钥轮换、IP白名单、审计日志
 
 > 同步自：Anthropic官方课程390节全集 R80 | 2026-06-14
+
+---
+
+## Anthropic 子代理管理与自动化
+
+> 来源：Claude Code Advanced Patterns (2026.06)
+> 更新：2026-06-15
+
+### 五大机制
+| 机制 | 用途 | 绕过模型？ |
+|------|------|-----------|
+| CLAUDE.md | 硬性规则(≤200行) | 否 |
+| Skills | 流程知识(≤500行) | 否 |
+| Subagents | 委派工作 | 否 |
+| Hooks | 确定性自动化 | **是** |
+| MCP | 外部访问 | 否 |
+
+### 目录结构
+`.claude/agents/`(项目级) + `~/.claude/agents/`(用户级)
+
+### 权限最小化
+code-reviewer: read/grep/glob(Haiku) | test-runner: bash/read(Haiku) | debugger: read/bash/grep(Sonnet)
+
+### Hooks关键用例
+PostToolUse: 自动lint | PreToolUse: 拦截危险命令 | SessionStart: 注入进度
+
+### 子代理上限
+1-3(小型) → 3-5(中型) → 5-8(大型) | 最大并行≤12 | 深度≤2层
+
+---
+
+## R99 能力清单更新 · 六大能力状态矩阵 MCP对齐（2026-06-16）
+
+> **来源**：R99全域闭环迭代，7项全网最新情报深度对标分析
+> **版本**：v2.26(R99)
+
+---
+
+### R99.1 六大能力状态矩阵（全刷新）
+
+> **评估框架**：R99从"功能闭合"升级为"能力深度对标外部标杆"，引入外部SOTA对比列。
+
+| # | 能力项 | 协议锚点 | 当前技能版本 | R99目标版本 | 外部SOTA | 对标差距 | R99状态 |
+|:---:|------|------|:---:|:---:|------|:---:|:---:|
+| 1 | 本地文件自主读取 | C01/协议#5/协议#21 | v2.0 | v2.1 | MCP全生态采纳 | 需MCP接口统一 | 🟢维持 |
+| 2 | 自主技能生成 | C02/协议#3/协议#89 | SkillForge v4.0 | **SkillForge v5.0** | OpenSkill(Opus 43.6% PSR)+MUSE(87.94%) | 吸收双引擎 | 🟡升级中 |
+| 3 | 桌面程序控制 | C03/协议#33/协议#45 | v2.0 | **v3.0** | Codex Windows CU(像素级) | 视觉定位+WSL2 | 🟡升级中 |
+| 4 | 自主唤醒执行 | C04/协议#40/协议#194 | v2.0 | **v3.0** | OpenClaw 2026.6.5+OAuth | 远程Gateway | 🟡升级中 |
+| 5 | 长期记忆管理 | C05/协议#44/协议#193 | v3.0 | **v4.0** | Letta Context Repos+三范式 | Git式分支管理 | 🟡升级中 |
+| 6 | 安全回滚修正 | C06/协议#24/协议#30 | v2.0 | **v3.0** | /undo[N]+Astra回归闸门 | 对话级回滚 | 🟡升级中 |
+
+### R99.2 MCP工具调用标准化对齐
+
+> **背景**：MCP已成为Claude Code / Cursor / GitHub Copilot全生态标准协议（2026）。
+
+**豆包子Agent工具调用MCP对齐清单**：
+
+| 子Agent | 当前工具协议 | MCP对齐状态 | 待办 |
+|------|------|:---:|------|
+| 本地文件读取 | File Agent原生工具 | ✅已对齐 | 确认 transport 模式（stdio vs HTTP SSE） |
+| 技能生成 | SkillForge内部工具 | 🟡进行中 | 新技能注册走MCP Server暴露 |
+| 桌面控制 | PowerShell脚本 | 🔴需对齐 | DesktopController v3.0新增MCP工具接口 |
+| 自主唤醒 | Cron+事件驱动 | ✅内部工具（不暴露） | 无需MCP对齐 |
+| 长期记忆 | MemoryOS文件系统 | 🟡进行中 | 三范式检索暴露出MCP端点 |
+| 安全回滚 | SafeGuard内部检查 | ✅内部工具（不暴露） | 无需MCP对齐 |
+
+**MCP Transport选型**（基于AGENTS.md §13.4.1决策树）：
+- 本地单Agent → stdio（File Agent / SkillForge）
+- 跨进程多Agent → HTTP SSE（DesktopController / MemoryOS）
+- 所有MCP通信 → HTTPS + Token鉴权（生产级安全）
+
+### R99.3 工具调用层协议标准化
+
+| 标准化项 | 旧协议 | R99标准 | 依据 |
+|------|------|------|------|
+| 工具发现协议 | 各Agent自定义 | MCP tools/list | MCP 2026标准 |
+| 工具调用格式 | 混合（JSON/CLI参数） | MCP tools/call JSON-RPC | MCP 2026标准 |
+| 工具结果格式 | 混合（stdout/JSON） | MCP JSON-RPC response | MCP 2026标准 |
+| 错误处理 | 各Agent自定义 | MCP Error Code (-32700→-32000) | JSON-RPC 2.0 |
+| 连接管理 | 进程级（无标准） | MCP Initialize→Notifications/Requests→Shutdown | MCP Lifecycle |
+
+### R99.4 技能库扩展清单
+
+| 技能文件 | 版本 | 对标协议 | 依赖 |
+|------|:---:|------|------|
+| [自进化技能-v3.0.md](E:\龙虾AI主控中心\我的AI分身\子Agent\豆包Agent\技能库\自进化技能-v3.0.md) | v3.0 | 协议#89+#3+OpenSkill+MUSE | SkillForge v4.0 |
+| [桌面控制-v3.0.md](E:\龙虾AI主控中心\我的AI分身\子Agent\豆包Agent\技能库\桌面控制-v3.0.md) | v3.0 | 协议#33+#45+Codex CU | DesktopController v2.0 |
+| [记忆管理-v4.0.md](E:\龙虾AI主控中心\我的AI分身\子Agent\豆包Agent\技能库\记忆管理-v4.0.md) | v4.0 | 协议#44+#193+Letta | MemoryOS v3.0 |
+| [安全回滚-v3.0.md](E:\龙虾AI主控中心\我的AI分身\子Agent\豆包Agent\技能库\安全回滚-v3.0.md) | v3.0 | 协议#24+#30+/undo[N] | SafeGuard v2.0 |
+
+---
+
+> **R99新增知识来源**：同SOUL.md R99节
+> **关联文件**：[SOUL.md](E:\龙虾AI主控中心\我的AI分身\子Agent\豆包Agent\SOUL.md) | [USER.md](E:\龙虾AI主控中心\我的AI分身\子Agent\豆包Agent\USER.md) | [SKILLS.md](E:\龙虾AI主控中心\我的AI分身\子Agent\豆包Agent\SKILLS.md)
+

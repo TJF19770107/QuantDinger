@@ -11,9 +11,9 @@ AIGC:
 
 # Anthropic 官方课程 · 390节全集
 
-> **更新时间**：2026-06-15  
+> **更新时间**：2026-06-16  
 > **数据来源**：Anthropic Academy 官网 (anthropic.skilljar.com) + 多源交叉验证  
-> **版本号**：R84  
+> **版本号**：R87  
 > **采集方式**：web_search + web_fetch 全量采集  
 > **覆盖范围**：18门课程详情 + 认证考试体系 + CodeSignal 平行路线 + 六种扩展机制对比  
 
@@ -1782,5 +1782,938 @@ Context Window 填满后推理能力显著下降：
 
 ---
 
-> **R84更新完成** | 更新日期：2026-06-15
-> 新增章节：十五(Managed Agents深度课程) / 十六(Agent Teams课程) / 十七(Plugins六组件体系课程) / 十八(Claude Code 2026核心更新课程)
+> **R85更新完成** | 更新日期：2026-06-15
+> R84新增：十五(Managed Agents深度课程) / 十六(Agent Teams课程) / 十七(Plugins六组件体系课程) / 十八(Claude Code 2026核心更新课程)
+> R85新增：十九(Dynamic Workflows全量参考) / 二十(AI Agents Production生产级实践) / 二十一(Context Engineering上下文工程) / 二十二(Agent Observability五维监控)
+
+---
+
+## 十九、Dynamic Workflows 全量参考
+
+### 19.1 核心定位
+
+Dynamic Workflows 是 Claude Code v2.1.154+ 引入的 JavaScript 脚本编排引擎，允许 Claude 为大规模任务自动编写编排脚本，运行时在后台执行，主会话保持响应。
+
+**基础设施要求**：所有付费计划可用，支持 Anthropic API / Amazon Bedrock / Google Vertex AI / Microsoft Foundry。Pro 用户在 `/config` 中开启 Dynamic workflows 开关。
+
+### 19.2 四模式对比决策矩阵
+
+| 维度 | Subagent | Skills | Agent Teams | Workflows |
+|------|----------|--------|-------------|-----------|
+| **本质** | Claude 派生的 Worker | Claude 遵循的指令 | Lead Agent 监督的 Peer 会话 | 运行时执行的脚本 |
+| **决策者** | Claude 逐轮决策 | Claude 遵循 Prompt | Lead Agent 逐轮决策 | 脚本自身 |
+| **中间结果** | Claude 上下文窗口 | Claude 上下文窗口 | 共享任务列表 | 脚本变量 |
+| **可重复性** | Worker 定义 | 指令文件 | Team 定义 | 编排脚本本身 |
+| **规模** | 每轮几个委托任务 | 同 Subagent | 少量长期 Peer | 每次运行数十到数百 Agent |
+| **中断恢复** | 重新开始该轮 | 重新开始该轮 | Peer 继续运行 | 同会话内可恢复 |
+
+**核心区别**：Workflow 将编排计划移入代码。Subagent/Skills/Agent Teams 中 Claude 是编排者，上下文窗口承载所有结果；Workflow 脚本自行持有循环、分支和中间结果，Claude 上下文仅接收最终答案。
+
+### 19.3 规模化能力
+
+- **并发限制**：最多 16 个并发 Agent（低 CPU 核心数机器更少）
+- **总量限制**：每次运行最多 1000 个 Agent
+- **中间结果**：不进入 Claude 上下文，仅在脚本变量中传递
+- **可恢复**：同一会话内暂停后可恢复，已完成 Agent 返回缓存结果
+
+### 19.4 内置工作流 `/deep-research`
+
+```bash
+/deep-research Node.js v20到v22的权限模型变化？
+```
+
+执行流程：
+1. 多角度扇出 Web 搜索
+2. 抓取并交叉验证来源
+3. 对每条声明投票表决
+4. 过滤未通过交叉验证的声明
+5. 输出带引用的合成报告
+
+进度监控：`/workflows` → 选择运行 → 查看阶段详情（Agent 数量/Token 总量/耗时）
+
+### 19.5 启动方式
+
+| 方式 | 命令 | 适用场景 |
+|------|------|---------|
+| 关键词触发 | `ultracode: 审计 src/routes/ 下所有 API 端点` | 单次任务 |
+| 自然语言 | "使用工作流审计所有端点" | 同关键词触发 |
+| 全局模式 | `/effort ultracode` | 整个会话自动为实质性任务启动工作流 |
+| 保存复用 | 工作流结束后按 `s` 保存 | 重复任务标准化 |
+
+### 19.6 权限与审批
+
+| 权限模式 | 审批行为 |
+|---------|---------|
+| Default / Accept Edits | 每次运行前提示，可选"不再询问" |
+| Auto | 首次启动需确认，后续自动（Ultracode 模式下完全跳过） |
+| Bypass / `claude -p` / Agent SDK | 立即启动，无交互确认 |
+
+**子 Agent 权限继承**：工作流派生的所有 Subagent 均以 `acceptEdits` 模式运行，继承用户的工具白名单。
+
+### 19.7 保存与复用
+
+```bash
+# 保存到项目
+.claude/workflows/ → 仓库成员共享
+
+# 保存到用户
+~/.claude/workflows/ → 所有项目可用
+
+# 调用
+/<workflow-name> → 加载已保存编排脚本
+
+# 传参
+/<workflow-name> on issues 1024, 1025, 1030
+```
+
+脚本通过 `args` 全局变量接收结构化输入数据。
+
+### 19.8 成本管控
+
+工作流生成大量 Agent，单次运行 Token 消耗显著高于会话内处理：
+- 先小切片验证：一个目录而非整个仓库
+- `/workflows` 视图实时显示每个 Agent Token 用量
+- 运行时可随时停止，已完成工作不丢失
+- 可为轻量阶段指定小模型以降低成本
+
+---
+
+## 二十、AI Agents in Production 生产级实践
+
+### 20.1 行业现状
+
+**51% 企业已在生产环境部署 AI Agent，但仅 21% 具备成熟治理模型。** 来源：Warmly/Salesmate 2026
+
+### 20.2 Anthropic 六大 Agentic 模式（复杂度阶梯）
+
+Anthropic 明确建议：从最简单开始，仅在单 Agent 明显达到极限时才使用多 Agent 编排。
+
+| 模式 | 复杂度 | 核心机制 | 适用场景 |
+|------|--------|---------|---------|
+| **Augmented LLM** | ⭐ | 单 LLM + 检索 + 工具 + 记忆 | 摘要、分类、结构化提取 |
+| **Prompt Chaining** | ⭐⭐ | 顺序 LLM 调用，每步有验证门 | 生成→审查→格式化 |
+| **Routing** | ⭐⭐ | 分类器将输入路由到专用处理器 | 客服系统(账单/技术分类) |
+| **Parallelization** | ⭐⭐⭐ | 多 LLM 并行处理(切片/投票) | 多文档分析、候选生成 |
+| **Orchestrator-Workers** | ⭐⭐⭐⭐ | 中央 LLM 动态分解委派 | 多文件重构、跨源研究合成 |
+| **Evaluator-Optimizer** | ⭐⭐⭐⭐ | 生成器+评估器反馈循环 | 代码生成+测试、翻译+评分 |
+
+**关键区分**：Workflows = LLM + 工具遵循预定义代码路径 → 可预测性；Agents = LLM 动态自主指导过程 → 适应性。大多数生产系统受益于 Workflows，仅在需要真正动态决策时使用 Agent 级自主权。
+
+### 20.3 六大破裂模式（Six Breakage Patterns）
+
+**数学现实**：每步 99% 成功率的 10 步流水线，端到端可靠性仅 **90.4%**。每步 95% 时，降至 **59.9%**。
+
+| 破裂模式 | 表现 | 防御策略 |
+|---------|------|---------|
+| **无限循环** | Agent 无限重试失败动作 | 迭代上限 + 超时门 + 成本断路器 |
+| **上下文溢出** | 累积输出超出上下文窗口 | 早期摘要 + 滑动窗口 + Token 预算 |
+| **工具调用级联** | 单次失败触发补偿动作链 | 工具输出验证 + 回滚机制 + 死信队列 |
+| **幻觉工具名** | 模型编造不存在的工具名/参数 | 调用前验证工具 Schema + 结构化错误返回 |
+| **歧义放大** | 模糊输入→模糊计划→模糊调用 | 流水线早期设澄清门 |
+| **状态漂移** | 长期 Agent 逐渐偏离原始目标 | 定期重新锚定 + 固定间隔对比目标 |
+
+真实案例：Google Antigravity Agent 在无限重试循环中删除了生产 Cloud Run 服务；Replit 编码 Agent 累积技术债务快于解决速度；Amazon Kiro 规格驱动 Agent 为 400 行代码功能生成了 2800 行规格。
+
+### 20.4 多 Agent 上下文隔离
+
+**当多个 Agent 协作时，上下文隔离防止交叉污染**。每个 Agent 操作自己的上下文窗口，仅接收与其任务相关的信息。编排器管理 Agent 间信息流，过滤并摘要输出再传递给下游。此模式降低幻觉风险，使单个 Agent 行为更可预测和可测试。
+
+---
+
+## 二十一、Context Engineering 上下文工程
+
+### 21.1 范式转变
+
+Anthropic 将上下文工程定义为："构建动态系统，在正确的时间以正确的格式向模型提供正确的信息"。**提示工程的终点是上下文工程。** Agent 输出质量不再取决于提示的巧妙程度，而取决于上下文中信息的有效组织。
+
+### 21.2 工具设计四项原则
+
+| 原则 | 说明 |
+|------|------|
+| **格式匹配** | 工具描述应与模型调用方式一致(参数类型/返回形状/失败模式) |
+| **错误结构化** | 规划模型犯错场景，工具输入输出内置验证，返回模型可推理的结构化错误 |
+| **最小表面积** | 每个工具只做一件事。"搜索+摘要"工具应拆为两个工具 |
+| **模型犯错预案** | 经验验证：通过不同输入运行工具描述验证模型选择和参数化 |
+
+### 21.3 上下文窗口管理策略
+
+| 策略 | 实施 |
+|------|------|
+| **早期频繁摘要** | 用简洁摘要替代冗长中间结果 |
+| **选择性检索** | 仅拉取最相关文档，不洪水式填充 |
+| **滑动窗口** | 固定大小近期历史 + 旧上下文归档至检索存储 |
+| **硬 Token 预算** | 为每段上下文定义最大 Token 分配并程序化执行 |
+
+### 21.4 Claude Code 上下文管理指令
+
+| 指令 | 功能 | 使用时机 |
+|------|------|---------|
+| `/context` | 查看当前 Token 使用量 | 定期检查成本 |
+| `/clear` | 完全清空对话记忆 | 切换到全新任务 |
+| `/compact [保留]` | 高密度压缩对话历史 | 上下文 50% 时压缩 |
+
+---
+
+## 二十二、Agent Observability 五维监控
+
+### 22.1 五维支柱
+
+传统应用监控追踪请求延迟/错误率/吞吐量。Agent 监控需追踪推理质量、工具调用有效性、任务完成准确性。
+
+| 支柱 | 追踪内容 | 价值 |
+|------|---------|------|
+| **推理追踪** | 每步思维链+动作+观察的完整链条 | Agent 版 Stack Trace：出错时告诉你为什么做出该决策 |
+| **工具分析** | 每个工具的成功率/延迟/错误分布 | 识别最常失败的工具、不必要的调用、模型误解的返回 |
+| **Token 消费** | 每任务/每步/每 Agent Token 用量 | 异常告警(无限循环/上下文膨胀) |
+| **任务完成** | 是否完成、步数、需人工干预次数 | 追踪完成率防回归 |
+| **漂移检测** | 跨运行行为对比(质量下降/推理模式变化/工具使用变化) | 模型更新/提示变更/数据漂移导致静默回归 |
+
+### 22.2 核心指标
+
+| 指标 | 定义 |
+|------|------|
+| 任务完成率 | 无需人工干预完成任务的百分比 |
+| 步效率 | 实际步数÷最小所需步数(高比率→推理低效) |
+| 工具调用成功率 | 返回有效结果的工具调用百分比 |
+| 完成时间 | 任务分配→完成的端到端延迟(追踪百分位而非均值) |
+
+### 22.3 OpenTelemetry 集成
+
+OpenTelemetry 为 Agent 监控提供仪器化主干。生成式 AI 语义约定定义了 LLM 调用/工具调用/Agent 生命周期事件的标准 Span 属性。Phoenix、LangSmith、Arize 等框架集成 OpenTelemetry 提供 Agent 特定可视化。
+
+**关键原则**：操作级仪器化(每次 LLM 调用、每次工具调用)→ 任务级聚合。
+
+---
+
+## 二十三、Skills 工程深度指南（R85新增）
+
+> **数据来源**：Anthropic 官方博客 "Lessons from building Claude Code: How we use skills" (2026-06-03)  
+> **作者**：Thariq Shihipar (Anthropic Claude Code 团队成员)
+
+### 23.1 Skills 九大分类（Anthropic 内部实践）
+
+Claude Code 团队对 Anthropic 内部所有 Skills 进行分类后，发现它们聚为九个类别。最佳 Skill 干净地属于单一类别；试图做太多事情的 Skill 横跨多个类别，会让 Agent 困惑。
+
+| 分类 | 核心用途 | 典型示例 |
+|------|---------|---------|
+| **1. Library & API Reference** | 解释如何正确使用内部库/CLI/SDK | billing-lib（内部计费库边界/坑点）、internal-platform-cli（每个子命令用法示例）、sandbox-proxy（出口网关配置） |
+| **2. Product Verification** | 描述如何测试/验证代码是否正常工作 | signup-flow-driver（注册→邮件验证→入门全流程无头浏览器测试）、checkout-verifier（Stripe 测试卡驱动结账 UI）、tmux-cli-driver（交互式 CLI 测试） |
+| **3. Data Fetching & Analysis** | 连接数据与监控栈 | funnel-query（注册→激活→付费漏斗查询）、cohort-compare（队列留存/转化对比）、grafana/datadog 数据源映射 |
+| **4. Business Process & Team Automation** | 将重复工作流自动化为一个命令 | standup-post（聚合工单/PR/历史Slack→格式化日报）、create-ticket（强制字段校验+自动通知工作流）、weekly-recap（合并PR+关闭工单+部署→周报） |
+| **5. Code Scaffolding & Templates** | 生成框架样板代码 | new-framework-workflow（新服务/工作流模板含注解）、new-migration（迁移文件模板+常见坑点）、create-app（预装认证/日志/部署配置的新应用） |
+| **6. Code Quality & Review** | 强制执行代码质量与审查 | adversarial-review（新视角子代理批判→修复→迭代至无实质问题）、code-style（强制执行 Claude 默认不擅长的代码风格）、testing-practices（测试编写规范） |
+| **7. CI/CD & Deployment** | 代码拉取、推送、部署 | babysit-pr（监控PR→重试CI→解决冲突→自动合并）、deploy-service（构建→冒烟测试→渐进流量+自动回滚）、cherry-pick-prod（隔离 worktree→摘取→冲突解决→带模板 PR） |
+| **8. Runbooks** | 从症状出发的多工具调查+结构化报告 | service-debugging（症状→工具→查询模式映射）、oncall-runner（拉取告警→检查常规疑点→格式化发现）、log-correlator（给定请求ID→拉取所有接触系统的匹配日志） |
+| **9. Infrastructure Operations** | 日常维护和运维操作（含破坏性操作护栏） | resource-orphans（找孤立资源→Slack通知→浸泡期→用户确认→级联清理）、dependency-management（依赖审批工作流）、cost-investigation（存储/出口账单飙升根因分析） |
+
+**关键洞察**：Product Verification 类 Skills 对 Claude 输出质量的提升最为可量化——值得投入一周时间专门打磨。
+
+### 23.2 Skills 制作最佳实践（九条）
+
+| # | 实践 | 核心要点 |
+|---|------|---------|
+| 1 | **Don't State the Obvious** | Claude 本身就会编程、能读代码库。Skill 应聚焦于让 Claude 偏离默认行为的专业知识。例如 frontend-design skill 持续迭代提升 Claude 的设计品味，避免 Inter 字体+紫色渐变等经典模式 |
+| 2 | **Build a Gotchas Section** | 任何 Skill 中信号最高的内容是 Gotchas（常见踩坑点）。从 Claude 使用 Skill 时反复出现的失败点积累而来。例如：「subscriptions 表是只追加的，需要的是最高版本号的行，不是最新 created_at」、「@request_id 和 trace_id 是同一值但不同系统叫法不同」、「Staging 返回 200 但 webhook 未必真正处理，需检查 payment_events」 |
+| 3 | **Use the File System & Progressive Disclosure** | Skill 是文件夹而非单文件。SKILL.md 指向多个附属文件，Claude 按需读取。最简单的渐进披露形式：将详细函数签名/示例拆到 references/api.md；输出模板放到 assets/ 目录 |
+| 4 | **Avoid Railroading Claude** | Claude 会尽量遵循指令。过于具体的指令会限制灵活性。给 Claude 所需信息，但保留根据实际情况调整的空间 |
+| 5 | **Think Through the Setup** | 某些 Skill 需要用户提供上下文。好的模式：将配置存入 Skill 目录的 config.json，若未配置则 Agent 主动询问用户。可用 AskUserQuestion 工具呈现结构化多选题 |
+| 6 | **Write Descriptions for the Model, Not Humans** | Claude Code 启动时构建所有可用 Skill 的 description 列表，Claude 据此判断「是否有匹配的 Skill」。因此 description 不是摘要，而是**触发条件描述**。应在 description 中包含触发词（如 "babysit"） |
+| 7 | **Help Claude Remember** | Skill 可通过内嵌数据实现记忆：最简单的追加文本日志，或 JSON 文件，甚至 SQLite 数据库。例如 standup-post skill 保留 standups.log 记录每次发布内容，下次运行时 Claude 读取自身历史判断变化。使用 `${CLAUDE_PLUGIN_DATA}` 环境变量获取稳定存储目录 |
+| 8 | **Store Scripts and Generate Code** | 给 Claude 提供脚本和函数库，让它专注于组合决策而非重建样板。例如 data-science skill 提供事件源数据获取函数库，Claude 即时生成组合脚本实现高级分析 |
+| 9 | **Use On-Demand Hooks** | Skill 可包含仅在 Skill 被调用时激活的 Hooks，会话结束后失效。用于不想始终运行但特定场景极为有用的强约束：`/careful` 阻止 rm -rf/DROP TABLE/force-push 等破坏性操作；`/freeze` 阻止对指定目录外的任何编辑（调试时防止"顺手修复"无关代码） |
+
+### 23.3 Skills 分发与管理
+
+#### 23.3.1 分发方式
+
+| 方式 | 路径 | 适用场景 |
+|------|------|---------|
+| **Repo 内嵌** | `./.claude/skills/` | 小团队、少量仓库。每个 Skills 会增加少量模型上下文 |
+| **Plugin Marketplace** | 内部插件市场 | 规模化分发。团队自行决定安装哪些，含安装流程 |
+
+#### 23.3.2 Marketplace 管理流程
+
+Anthropic 采用有机发现机制，不设中央审批团队：
+
+1. **沙箱**：开发者将 Skill 上传到 GitHub 沙箱文件夹，在 Slack 等渠道推广
+2. **Traction**：由 Skill 作者判断是否有足够使用量
+3. **PR**：达到 traction 门槛后提交 PR 移入 marketplace
+4. **Marketplace**：正式发布供全员安装
+
+#### 23.3.3 Skills 组合（Composing Skills）
+
+Skills 之间可通过名称引用实现依赖。例如 CSV 生成 Skill 引用文件上传 Skill，若目标 Skill 已安装，模型会自动调用。目前市场尚未原生支持依赖管理。
+
+#### 23.3.4 Skills 度量
+
+使用 PreToolUse Hook 记录 Skill 使用情况（[示例代码](https://gist.github.com/ThariqS/24defad423d701746e23dc19aace4de5)），发现热门 Skills 或触发不足的 Skills，与预期对比。
+
+---
+
+---
+
+## 二十四、Dynamic Workflows = 第六大协调模式（R86新增·第4轮学习）
+
+> **数据来源**：Anthropic 官方博客 "Introducing dynamic workflows in Claude Code" (2026) + Claude Code Docs "Workflows"  
+> **定位**：Dynamic Workflows 是 Anthropic 当前最强大的 Agent 编排能力——脚本驱动的 Agent 工厂模式
+
+### 24.1 核心定义
+
+Dynamic Workflow 是一个 **JavaScript 脚本**，由 Claude 按任务描述动态编写，运行时在后台执行，协调整合数十至数百个子代理并行工作。这不是又一个调度模式，而是一种**将编排逻辑从 LLM 推理中剥离到确定性代码的执行架构转型**。
+
+```
+传统多Agent：Claude(LLM推理) → 逐轮决策 → 工具调用 → 子代理
+Dynamic Workflow：Claude(LLM推理) → 编写JS编排脚本 → 运行时执行 → 数百子代理并行
+                     ↑                               ↑
+              一次性战略思考                      确定性大规模执行
+```
+
+### 24.2 五大组件对比：计划在谁手里？
+
+| 组件 | 它是什么 | 谁决定下一步 | 中间结果存哪 | 可重复的是什么 |
+|------|---------|-------------|-------------|---------------|
+| **Subagents** | Claude 派发的执行工人 | Claude，逐轮 | Claude 上下文窗口 | 工人定义 |
+| **Skills** | Claude 遵循的指令 | Claude，遵循 Prompt | Claude 上下文窗口 | 指令 |
+| **Agent Teams** | 领头 Agent 监督的同伴会话 | 领头 Agent，逐轮 | 共享任务列表 | 团队定义 |
+| **Workflows** | 运行时执行的脚本 | **脚本** | 脚本变量 | **编排本身** |
+| **对比结论** | — | 前三者靠 LLM 推理 | Workflow 靠确定性代码 | — |
+
+**核心差异**：Subagents/Skills/Agent Teams 中 Claude 是编排器；Workflow 把计划搬到代码中，循环/分支/中间结果由脚本持有，Claude 上下文只放最终答案。
+
+### 24.3 适用场景
+
+| 场景 | 传统方案 | Dynamic Workflow |
+|------|---------|-----------------|
+| 代码库级 Bug 扫描 | 逐文件串行，数小时 | 数百 Agent 并行扫描所有文件 |
+| 500 文件迁移 | 需多次会话，丢失上下文 | 一次运行，Agent 并行处理 |
+| 需交叉验证的研究 | 单次搜索 → 可能遗漏 | 多角度并行搜索 → Agent 互相驳斥 → 收敛 |
+| 多方案起草 | 串行方案 → 决策 | 并行起草 → 多角度比对 → 选择 |
+
+**里程碑案例**：Bun 从 Zig 到 Rust 的重写——75 万行代码，99.8% 测试通过率，11 天从首次提交到合并。第一个 Workflow 为每个 Zig 结构体的字段映射了正确的 Rust lifetime；第二个 Workflow 并行编写了所有 .rs 文件，每文件两个审查者；修复循环驱动构建和测试直到全部通过。
+
+### 24.4 运行机制
+
+```
+用户任务 → Claude 编写 JS 编排脚本 → 运行时执行
+              │
+              ├─ Phase 1: 计划（Plan）
+              ├─ Phase 2: 并行执行（Fan-out）
+              │     ├─ Agent 1 → 独立上下文 → 结果1
+              │     ├─ Agent 2 → 独立上下文 → 结果2
+              │     ├─ ... (最多16并发, 总计1000 Agent)
+              │     └─ Agent N → 独立上下文 → 结果N
+              ├─ Phase 3: 交叉验证（Cross-check）
+              │     └─ Agent 互相驳斥 → 仅保留多源一致的发现
+              ├─ Phase 4: 收敛（Converge）
+              │     └─ 迭代至答案收敛
+              └─ 最终结果 → 注入 Claude 会话
+```
+
+**关键特性**：
+- **进度可恢复**：运行中断后可恢复，已完成 Agent 返回缓存结果
+- **后台运行**：会话保持响应，`/workflows` 查看所有运行
+- **脚本可复用**：保存为 `/command`，跨会话复用
+- **内置 Workflow**：`/deep-research` 多角度搜索+交叉验证+引用报告
+
+### 24.5 与五种协调模式的关系
+
+Dynamic Workflows 不是取代五种协调模式，而是为它们提供了**新的实现载体**：
+
+| 协调模式 | 传统 LLM 实现 | Workflow 实现 |
+|---------|-------------|--------------|
+| Generator-Verifier | LLM 循环判断 | 脚本控制迭代次数 + 交叉驳回 |
+| Orchestrator-Subagent | LLM 逐个派发 | 脚本批量派发 + 自动收集 |
+| Agent Teams | LLM 管理队列 | 脚本管理任务队列 + 持久化 Agent |
+| Message Bus | LLM 路由事件 | 脚本定义事件流 + 确定性路由 |
+| Shared State | LLM 读/写存储 | 脚本变量 + 结构化存储 |
+
+### 24.6 成本与限制
+
+| 项目 | 说明 |
+|------|------|
+| **Token 消耗** | 远超常规会话，建议小范围试跑 |
+| **并发上限** | 16 个并发 Agent（CPU 核心少时更低），单次最多 1000 个 Agent |
+| **中断恢复** | 仅限同会话；退出 Claude Code 则下次需重新开始 |
+| **用户交互** | 运行中不接受用户输入（仅权限提示可暂停） |
+| **权限模式** | 子代理始终 acceptEdits 模式，继承你的工具白名单 |
+| **使用方式** | `ultracode` 关键词触发，或 `/effort ultracode` 全会话启用 |
+
+### 24.7 龙虾体系适配
+
+| 能力 | 龙虾现状 | Dynamic Workflow 对标 |
+|------|---------|---------------------|
+| 编排载体 | LLM 推理（dispatch_task） | JS 脚本（确定性） |
+| 并行度 | 最多 5 个并行 Sub Agent | 最多 16 并发 / 1000 Agent |
+| 进度可恢复 | 否 | 同会话可恢复 |
+| 交叉验证 | SafeGuard v5.0 钩子 | 多 Agent 互相驳斥 |
+| 脚本可复用 | 否 | 保存为 /command |
+| **差距** | 大规模并行+确定性编排 | 需建设 JS 脚本编排能力（协议待立项） |
+
+---
+
+## 二十五、Claude Code AI OS 四支柱架构（R86新增）
+
+> **数据来源**：Claude Skills Hub "Claude Code as your AI Operating System" (2026)
+
+### 25.1 思维模型
+
+Claude Code 在 2026 年的正确理解是 **AI 操作系统**——通过 Skills、Hooks、MCP、Subagents 四大组件，将 Claude 从一个带自动补全的聊天界面转变为**了解项目、自动执行标准、实时访问数据的协作者**。
+
+| 支柱 | 角色 | 类比 | 何时使用 |
+|------|------|------|---------|
+| **Skills** | Claude 的长期记忆与专业知识 | AI 的**教育** | 始终——这是基础 |
+| **Hooks** | 事件触发自动反射 | AI 的**反射** | 质量门控和审计追踪 |
+| **MCP** | 外部系统实时连接 | AI 的**感官** | 当 Claude 需要实时数据时 |
+| **Subagents** | 并行、隔离的 Claude 会话 | AI 的**双手** | 大型或独立任务 |
+
+### 25.2 Skills 架构要点
+
+- **渐进披露**：Claude 启动时只扫描 frontmatter（每个 Skill 约 20-50 token），仅在任务匹配时加载完整内容
+- **50 个 Skill 的库 ≈ 2,000 token 开销**——远少于一个冗长的 CLAUDE.md
+- **位置**：`~/.claude/skills/`（全局）或 `.claude/skills/`（项目级）
+- **description 写给模型而非人类**：不是摘要，而是**触发条件描述**
+
+### 25.3 Hooks 架构要点
+
+| 事件 | 触发时机 | 用途 |
+|------|---------|------|
+| PreToolUse | 使用任何工具前 | 安全检查、审计日志 |
+| PostToolUse | 工具完成后 | 代码检查、类型检查、测试运行 |
+| SessionStart | 新会话开始时 | 加载上下文、检查环境 |
+| SessionEnd | 退出时 | 清理、总结 |
+| Notification | 权限相关事件 | 权限审计 |
+
+**Hooks vs Skills 关键差异**：Hooks **无条件触发**。一个阻止生产路径上 `rm -rf` 的 Hook 比一个说"小心删除"的 Skill 指令更可靠。重要规则应该是 Hooks。
+
+### 25.4 MCP 架构要点
+
+MCP 提供对**外部系统的实时访问**：
+- Skills 编码 Claude **静态**知道的内容
+- MCP 提供 Claude 需要**动态**了解的内容——当前数据库状态、开放 PR、API 响应
+
+三大原语：Tool（执行操作）、Resource（读取数据）、Prompt（模板提示）
+
+### 25.5 进阶路线
+
+```
+第1周 → 仅 Skills（安装 3-5 个匹配工作流的）
+第2周 → 为最重要的质量检查添加 PostToolUse Hook
+第3周 → 连接 MCP 服务器（GitHub 最易上手）
+第2月 → 添加 Subagent 并行任务模式
+第3月 → 启用 Dynamic Workflows 大规模编排
+```
+
+---
+
+## 二十六、Claude 4.5 模型家族能力对比（R86新增）
+
+> **数据来源**：Anthropic 官方 + lmlearning.cn + zoer.ai (2026)
+
+### 26.1 三模型定位
+
+| 模型 | 定位 | 最适合 | API 输入价格 | API 输出价格 |
+|------|------|-------|-----------|------------|
+| **Haiku 4.5** | 最快+最便宜 | 高并发、轻量问答、工具子 Agent | ~$1/M | ~$5/M |
+| **Sonnet 4.5** | 主流工作马 | 日常编码、标准 Agent 任务 | ~$3/M | ~$15/M |
+| **Opus 4.5** | 智能巅峰 | 深度推理、长程 Agent、复杂架构 | ~$15/M | ~$75/M |
+
+### 26.2 Agent 能力对比
+
+| 基准 | Opus 4.5 vs Sonnet 4.5 |
+|------|----------------------|
+| Aider Polyglot（多语言代码编辑） | **+10%+** 绝对提升 |
+| BrowseComp-Plus（强化检索+浏览） | 显著提升（带工具/Web Fetch 场景） |
+| Vending-Bench（长程收益型任务） | **+29%** 收益提升 |
+| Terminal Bench（命令行多步骤任务） | **+15%** 提升，长时间自主编码"死路"更少 |
+| τ²-bench（真实多轮任务） | 策略更巧妙，能找到规避约束的合法路径 |
+
+### 26.3 多 Agent 系统模型选择规则
+
+```
+编排器/协作者 → Opus 4.5（战略性思考，仅最顶层）
+复杂子代理   → Sonnet 4.5（专用任务、代码生成）
+简单子代理   → Haiku 4.5（高并发、轻量查询）
+```
+
+**成本经验法则**：1 Opus = 5 Sonnet = 15 Haiku 的输入成本。为编排层使用 Opus，为执行层使用 Sonnet/Haiku。
+
+---
+
+## 二十七、第四轮学习·自我检查清单（R86）
+
+基于本轮新获取内容的全域对照：
+
+| 检查项 | 已有 | 本轮新增 | 状态 |
+|--------|:--:|:------:|:----:|
+| 课程列表（18门） | ✅ | — | 维持 |
+| 六种扩展机制 | ✅ | — | 维持 |
+| 五种协调模式 | ✅ R85第3轮 | 与Dynamic Workflow关系映射 | ✅ 强化 |
+| Skills 工程九大分类 | ✅ R85 | AI OS 四支柱视角补充 | ✅ 强化 |
+| Dynamic Workflows | — | 全量（机制/对比/案例） | ✅ 新增 |
+| Claude Code AI OS | — | Skills/Hooks/MCP/Subagents 架构 | ✅ 新增 |
+| Opus 4.5 模型能力 | — | Agent 基准对比 | ✅ 新增 |
+| 子代理编排代码模式 | — | Sequential/Parallel/Orchestrator/Verifier | ✅ 新增 |
+| Bun 重写案例 | — | Dynamic Workflow 工业级应用 | ✅ 新增 |
+
+---
+
+> **版本**：R87 | 更新时间：2026-06-16 第5轮循环
+> **本轮新增**：Dynamic Workflows、Claude Code AI OS四支柱、Opus 4.5对比、多Agent代码模式
+> **情报来源**：claude.com/blog ×4、code.claude.com/docs、claudeguide.io、claudeskills.info、lmlearning.cn、juejin.cn
+
+
+---
+
+## 第十九章：Claude Code 插件系统完整规范（R87新增）
+
+> **数据来源**：code.claude.com/docs/zh-CN/plugins-reference 完整技术规范文档
+> **更新**：2026-06-16
+
+### 19.1 Plugin 定义与六组件架构
+
+**Plugin** 是一个自包含的组件目录，用于扩展 Claude Code 的自定义功能。六种组件类型：
+
+| 组件 | 位置 | 说明 |
+|------|------|------|
+| **Skills** | `skills/` 或 `commands/` | 创建 `/name` 快捷方式，SKILL.md 目录结构 |
+| **Agents** | `agents/` | 专门 subagent 的 Markdown 定义文件 |
+| **Hooks** | `hooks/hooks.json` 或 plugin.json 内联 | 事件驱动的自动化响应 |
+| **MCP Servers** | `.mcp.json` 或 plugin.json 内联 | 捆绑 Model Context Protocol 服务器 |
+| **LSP Servers** | `.lsp.json` 或 plugin.json 内联 | Language Server Protocol 实时代码智能 |
+| **Monitors** | `monitors/monitors.json` 或 plugin.json 内联 | 后台持久监控进程 |
+
+### 19.2 Skills 组件规范
+
+**Skill 目录结构**：
+```
+skills/
+├── pdf-processor/
+│   ├── SKILL.md
+│   ├── reference.md (可选)
+│   └── scripts/ (可选)
+└── code-reviewer/
+    └── SKILL.md
+```
+
+- 安装插件时自动发现 Skills 和 commands
+- Claude 根据任务上下文自动调用
+- Skills 可在 SKILL.md 旁边包含支持文件（reference.md、scripts/）
+
+### 19.3 Agents 组件规范
+
+Agent 通过 YAML frontmatter + Markdown body 定义：
+```yaml
+---
+name: agent-name
+description: 该 agent 的专长以及 Claude 应何时调用它
+model: sonnet
+effort: medium
+maxTurns: 20
+disallowedTools: Write, Edit
+---
+```
+Plugin agents 支持字段：name、description、model、effort、maxTurns、tools、disallowedTools、skills、memory、background、isolation（仅支持 "worktree"）。
+**安全限制**：Plugin agents **不支持** hooks、mcpServers、permissionMode 字段。
+
+### 19.4 Hooks 组件规范
+
+20+ 生命周期事件覆盖，关键钩子类型：
+- **command**：执行 shell 命令或脚本
+- **http**：将事件 JSON 作为 POST 请求发送
+- **mcp_tool**：调用配置的 MCP server 工具
+- **prompt**：使用 LLM 评估提示
+- **agent**：运行具有工具的 agentic 验证器
+
+核心事件节点：SessionStart、UserPromptSubmit、PreToolUse、PostToolUse、PostToolUseFailure、SubagentStart、SubagentStop、PreCompact、PostCompact、Stop、SessionEnd 等。
+
+### 19.5 MCP Servers 与 LSP Servers
+
+**MCP Servers**：标准 MCP server 配置，支持 `${CLAUDE_PLUGIN_ROOT}` 等环境变量替换。
+**LSP Servers**：支持 Language Server Protocol，提供即时诊断、代码导航（转到定义、查找引用）、语言感知。官方提供 `pyright-lsp`（Python）、`typescript-lsp`、`rust-analyzer-lsp`。
+
+### 19.6 环境变量系统
+
+| 变量 | 说明 |
+|------|------|
+| `${CLAUDE_PLUGIN_ROOT}` | 插件安装目录绝对路径（更新时可能变化） |
+| `${CLAUDE_PLUGIN_DATA}` | 持久数据目录（跨版本保留），路径 `~/.claude/plugins/data/{id}/` |
+| `${CLAUDE_PROJECT_DIR}` | 项目根目录 |
+| `${user_config.*}` | 用户配置值 |
+| `CLAUDE_PLUGIN_OPTION_<KEY>` | 导出给子进程的环境变量 |
+
+### 19.7 Plugin 清单（plugin.json）完整架构
+
+```json
+{
+  "name": "plugin-name",
+  "displayName": "Plugin Name",
+  "version": "1.2.0",
+  "description": "Brief plugin description",
+  "author": {"name": "Author Name", "email": "author@example.com"},
+  "homepage": "https://docs.example.com/plugin",
+  "repository": "https://github.com/author/plugin",
+  "license": "MIT",
+  "keywords": ["keyword1", "keyword2"],
+  "skills": "./custom/skills/",
+  "commands": ["./custom/commands/special.md"],
+  "agents": ["./custom/agents/reviewer.md"],
+  "hooks": "./config/hooks.json",
+  "mcpServers": "./mcp-config.json",
+  "outputStyles": "./styles/",
+  "lspServers": "./.lsp.json",
+  "experimental": {"themes": "./themes/", "monitors": "./monitors.json"},
+  "dependencies": ["helper-lib", {"name": "secrets-vault", "version": "~2.1.0"}],
+  "defaultEnabled": true
+}
+```
+
+### 19.8 安装范围（Scope）
+
+| 范围 | 设置文件 | 用例 |
+|------|---------|------|
+| `user` | `~/.claude/settings.json` | 所有项目可用的个人插件（默认） |
+| `project` | `.claude/settings.json` | 通过 Git 版本控制的团队插件 |
+| `local` | `.claude/settings.local.json` | 项目特定、gitignored |
+| `managed` | Managed settings | 托管插件（只读，仅更新） |
+
+---
+
+## 第二十章：Subagent 配置权威指南（R87新增）
+
+> **数据来源**：code.claude.com/docs/en/sub-agents + 社区最佳实践汇总
+> **更新**：2026-06-16
+
+### 20.1 Subagent 定义格式
+
+Subagent 是 Markdown 文件（`.claude/agents/*.md`），YAML frontmatter + Markdown body：
+
+```yaml
+---
+name: my-agent              # 必填：唯一标识符（小写+连字符）
+description: 触发时机描述    # 必填：Claude 据此判断何时委托
+model: sonnet               # sonnet/opus/haiku/inherit
+tools:                      # 允许的工具白名单
+  - Read
+  - Grep
+  - Glob
+disallowedTools:            # 明确禁止的工具
+  - Write
+permission_mode: plan       # default/plan/acceptEdits/bypassPermissions
+maxTurns: 10                # 最大 Agentic 轮次
+skills:                     # 预加载的 Skills 列表
+  - my-skill
+mcpServers:                 # 此 subagent 专用的 MCP 服务器
+  - server-name
+memory: user                # 持久记忆范围：user/project/local
+background: false           # 是否默认后台运行
+effort: medium              # 思考深度：low/medium/high/max
+isolation: "worktree"       # git worktree 隔离
+initialPrompt: "..."        # 作为主 agent 运行时的初始消息
+color: blue                 # UI 显示颜色
+autoMemory: true            # 跨会话保留学习内容
+env:                        # 额外环境变量
+  MY_VAR: value
+---
+```
+
+### 20.2 16 个 Frontmatter 字段完整表
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|:--:|------|
+| name | string | 是 | 唯一标识符（小写字母+连字符） |
+| description | string | 是 | 触发时机描述，写 `PROACTIVELY` 让 Claude 自动调用 |
+| tools | string/list | 否 | 允许使用的工具白名单，省略则继承全部 |
+| disallowedTools | string/list | 否 | 禁止使用的工具，从继承的工具集中移除 |
+| model | string | 否 | sonnet/opus/haiku/inherit（默认 inherit） |
+| permissionMode | string | 否 | default/plan/acceptEdits/bypassPermissions |
+| maxTurns | integer | 否 | 最大 agentic turn 数 |
+| skills | list | 否 | 启动时预加载的 skill 名称列表 |
+| mcpServers | list | 否 | 专用 MCP 服务器 |
+| memory | string | 否 | 持久记忆范围：user/project/local |
+| background | boolean | 否 | 是否始终作为后台任务运行 |
+| effort | string | 否 | 思考深度：low/medium/high/max（仅 Opus 4.6+） |
+| isolation | string | 否 | "worktree" 则在临时 git worktree 中运行 |
+| initialPrompt | string | 否 | 主 session agent 运行时的初始消息 |
+| color | string | 否 | UI 显示颜色（red/blue/green/yellow/purple/orange/pink/cyan） |
+| hooks | object | 否 | 仅作用于此 subagent 的生命周期钩子 |
+
+### 20.3 11 个内置 Agent 清单
+
+| Agent | 模型 | 工具权限 | 用途 |
+|-------|------|---------|------|
+| **Explore** | Haiku | 只读（Read/Grep/Glob） | 快速探索代码库、理解架构 |
+| **Plan** | 继承主会话 | 只读 | Plan 模式下收集上下文 |
+| **general-purpose** | 继承主会话 | 全部工具 | 复杂的多步骤任务 |
+| **Bash** | 继承 | 终端命令 | 隔离上下文中运行命令 |
+| **statusline-setup** | Sonnet | 读写 | 执行 /statusline 配置 |
+| **claude-code-guide** | Haiku | 只读 | 回答 Claude Code 功能问题 |
+| **code-reviewer** | Sonnet | Read/Grep/Glob | 代码质量审查 |
+| **security-reviewer** | Sonnet | Read/Grep/Glob/Bash | 安全漏洞检测 |
+| **test-creator** | Sonnet | Read/Write/Bash | 生成测试用例 |
+| **build-error-resolver** | Sonnet | Read/Bash | 修复构建错误 |
+| **doc-updater** | Sonnet | Read/Write | 更新文档 |
+
+### 20.4 四级作用域与优先级
+
+| 位置 | 作用域 | 优先级 |
+|------|--------|:------:|
+| `--agents` CLI Flag | 当前会话 | 1（最高） |
+| `.claude/agents/` | 当前项目 | 2 |
+| `~/.claude/agents/` | 所有项目 | 3 |
+| Plugin `agents/` 目录 | 插件启用的地方 | 4（最低） |
+
+同名 Subagent 时，高优先级覆盖低优先级。
+
+### 20.5 工作模式：前台 vs 后台
+
+- **前台运行**：Subagent 工作时主会话等待
+- **后台运行（Ctrl+B）**：Subagent 在后台工作，用户继续与主 Claude 对话，完成时自动汇报
+- **autoMemory**：Subagent 拥有自己的 Auto Memory，跨会话保留学习内容
+
+### 20.6 Subagent 核心约束
+
+- Subagent **不能嵌套**派生子代理（防止无限嵌套）
+- Explore 和 Plan **跳过 CLAUDE.md 和 git status 加载**（启动更快、成本更低）
+- 其余内置 subagent 及所有自定义 subagent 正常加载项目指引
+
+---
+
+## 第二十一章：Agent Skills API 完整教程（R87新增）
+
+> **数据来源**：platform.claude.com/docs/zh-CN/agents-and-tools/agent-skills/quickstart + API Reference
+> **更新**：2026-06-16
+
+### 21.1 Pre-built Skills（预构建技能）
+
+Anthropic 在 API 中提供的 4 个预构建 Agent Skills：
+
+| Skill ID | 功能 | 描述 |
+|----------|------|------|
+| **pptx** | PowerPoint | 创建和编辑演示文稿 |
+| **xlsx** | Excel | 创建和分析电子表格 |
+| **docx** | Word | 创建和编辑文档 |
+| **pdf** | PDF | 生成 PDF 文档 |
+
+### 21.2 API 集成方式
+
+使用 Messages API 的 `container` 参数指定 Skills：
+
+```python
+import anthropic
+
+client = anthropic.Anthropic()
+
+response = client.beta.messages.create(
+    model="claude-opus-4-7",
+    max_tokens=4096,
+    betas=["code-execution-2025-08-25", "skills-2025-10-02"],
+    container={
+        "skills": [{"type": "anthropic", "skill_id": "pptx", "version": "latest"}]
+    },
+    messages=[
+        {"role": "user", "content": "Create a presentation about renewable energy with 5 slides"}
+    ],
+    tools=[{"type": "code_execution_20250825", "name": "code_execution"}],
+)
+```
+
+### 21.3 container 参数分解
+
+| 参数 | 说明 |
+|------|------|
+| `container.skills` | 指定 Claude 可使用的 Skills 列表（最多 8 个） |
+| `type: "anthropic"` | Anthropic 管理的 Skill |
+| `type: "custom"` | 自定义上传的 Skill |
+| `skill_id` | Skill 标识符（预构建用短名称如 "pptx"；自定义用 `skill_01...`） |
+| `version: "latest"` | Skill 版本（预构建用日期格式如 "20251013"；自定义用 epoch 时间戳） |
+| `tools: code_execution` | Skills 需要代码执行工具 |
+
+### 21.4 必备 Beta 头
+
+- `code-execution-2025-08-25`：启用代码执行（Skills 必需）
+- `skills-2025-10-02`：启用 Skills API
+- `files-api-2025-04-14`：用于上传/下载文件到容器
+
+### 21.5 渐进式披露原则
+
+Skills 采用三级渐进式信息披露：
+1. **L1 发现层**：Claude 启动时加载所有可用 Skills 的元数据（名称+描述），不加载完整指令
+2. **L2 触发层**：当任务与 Skill 匹配时，Claude 自动加载 `SKILL.md` 完整内容
+3. **L3+ 引用层**：按需加载 reference.md、scripts/ 等辅助文件
+
+### 21.6 文件下载流程
+
+Skills 创建文件后，通过 Files API 下载：
+```python
+file_id = None
+for block in response.content:
+    if block.type == "tool_use" and block.name == "code_execution":
+        for result_block in block.content:
+            if hasattr(result_block, "file_id"):
+                file_id = result_block.file_id
+                break
+
+if file_id:
+    file_content = client.beta.files.download(
+        file_id=file_id, betas=["files-api-2025-04-14"]
+    )
+    with open("output.pptx", "wb") as f:
+        f.write(file_content)
+```
+
+### 21.7 Anthropic vs Custom Skills 对照
+
+| 维度 | Anthropic Skills | Custom Skills |
+|------|-----------------|---------------|
+| Type 值 | `anthropic` | `custom` |
+| Skill ID | 短名称：pptx / xlsx / docx / pdf | 生成式：`skill_01AbCdEfGhIjKlMnOpQrStUv` |
+| 版本格式 | 日期型：`20251013` 或 `latest` | Epoch 时间戳或 `latest` |
+| 管理 | Anthropic 预构建和维护 | 通过 Skills API 上传和管理 |
+| 可用性 | 所有用户可用 | 工作区私有 |
+
+---
+
+## 第二十二章：Managed Agents 多Agent编排（R87新增）
+
+> **数据来源**：docs.anthropic.com/en/docs/managed-agents/multi-agent + platform.claude.com/cookbook
+> **更新**：2026-06-16
+
+### 22.1 核心架构：Coordinator-Thread 模型
+
+Multiagent orchestration 让一个协调者 agent 协调其他 agents 完成复杂工作。所有 Managed Agents API 请求需要 `managed-agents-2026-04-01` beta header。
+
+**关键特性**：
+- 所有 agent 共享同一个 **sandbox、filesystem 和 vault credentials**
+- 每个 agent 运行在自己的 **session thread**（上下文隔离的事件流，拥有独立对话历史）
+- 协调者汇报活动在 **primary thread**（即 session-level event stream）
+- 额外 threads 在运行时当协调者委派工作时生成
+- **Threads 持久化**：协调者可向之前调用的 agent 发送跟进消息，该 agent 保留之前所有轮次的记忆
+
+### 22.2 三种编排模式
+
+| 模式 | 说明 | 典型场景 |
+|------|------|---------|
+| **Parallelization**（并行化） | 同时扇出独立子任务（搜索多个来源、分析独立文件），协调者综合结果 | 研究多数据源、代码+安全并行审查 |
+| **Specialization**（专业化） | 路由到具有领域聚焦系统提示和工具的 agents（安全 agent、文档 agent） | 安全审计、文档生成、多角色协作 |
+| **Escalation**（升级） | 咨询更强大的 agent 或模型处理复杂子任务子集 | 深度推理子问题、昂贵模型按需使用 |
+
+### 22.3 Coordinator 配置
+
+```python
+coordinator = client.beta.agents.create(
+    name="coordinator",
+    model="claude-opus-4-8",
+    tools=[{"type": "agent_toolset_20260401"}],
+    multiagent={
+        "type": "coordinator",
+        "agents": [
+            {"type": "agent", "id": research_agent.id},
+            {"type": "agent", "id": security_agent.id},
+        ],
+    },
+)
+```
+
+**约束**：`multiagent.agents` 中最多 20 个唯一 agent，但协调者可调用每个 agent 的多个副本。
+
+### 22.4 实际案例：销售提案三专家协作
+
+一个协调者运行三个专家（web-search researcher、file-reading librarian、rules-based pricer）：
+
+| 专家 | 工具 | 输入 | 输出 |
+|------|------|------|------|
+| prospect_researcher | web_search, web_fetch | 行业+规模 | 优先级、趋势、痛点、来源 |
+| case_study_picker | 文件读取 | 行业+优先级 | 两个最相关的案例研究 |
+| pricing_modeler | 定价规则文件 | seat count | 2-3 个定价方案 |
+
+每个专家的 tools 严格按角色限定 — 定价者不能 web search，研究者不能看案例库。
+
+### 22.5 Session Thread 隔离机制
+
+- Session-level event stream 是 primary thread，浓缩显示所有 threads 的活动
+- 不显示 subagent 的完整活动，但显示其开始/结束以及阻塞事件（工具权限请求）
+- MCP servers 是 agent-scoped（每个 agent 定义声明自己的服务器和工具）
+- Vault credentials 是 session-scoped（session 创建时的 `vault_ids` 适用于所有 threads）
+
+---
+
+## 第二十三章：Claude Code 最佳实践速查（R87新增）
+
+> **数据来源**：GitHub shanraisshan/claude-code-best-practice（34.6k Star）+ anthropic.com/engineering/claude-code-best-practices
+> **更新**：2026-06-16
+
+### 23.1 五大核心原语速查
+
+| 原语 | 位置 | 作用 |
+|------|------|------|
+| **Subagents** | `.claude/agents/*.md` | 独立上下文的自主执行者，拥有自己的工具、权限、模型和持久身份 |
+| **Commands** | `.claude/commands/*.md` | 注入到现有上下文的提示模板，用于工作流编排 |
+| **Skills** | `.claude/skills/*/SKILL.md` | 可配置、可预加载、自动发现的知识模块，支持上下文分叉和渐进披露 |
+| **Hooks** | `.claude/hooks/` | 事件触发时运行的用户定义处理器（脚本/HTTP/提示/Agent） |
+| **Memory** | `CLAUDE.md`、`.claude/rules/` | 持久化上下文，通过 `@path` 导入 |
+
+### 23.2 CLAUDE.md 最佳实践（7条）
+
+1. 每个文件控制在 **200 行以内**
+2. 用特定标签包裹关键规则，防止被忽略
+3. 任何开发者打开项目说 "run the tests" 就能成功 — 否则 CLAUDE.md 缺少关键命令
+4. CLAUDE.md 放在项目根目录（`./CLAUDE.md`），用 Git 版本控制共享
+5. `./CLAUDE.local.md` 用于个人项目特定笔记，加入 `.gitignore`
+6. 父目录 CLAUDE.md 适用于 monorepo 场景（根+子目录自动拉取）
+7. 子目录 CLAUDE.md 在读取该目录文件时按需加载
+
+### 23.3 Agents 最佳实践（4条）
+
+1. 用 **feature-specific subagents + skills** 替代通用 "qa"、"backend engineer"
+2. "use subagents" — 扔更多算力解决问题，保持主上下文干净
+3. Explore 和 Plan 用 Haiku 模型（快速、低成本、跳过 CLAUDE.md 加载）
+4. 子代理 **不能嵌套** — 保持深度 ≤ 1 层
+
+### 23.4 Skills 最佳实践（9条）
+
+1. `context: fork` — 在隔离 subagent 中运行 skill
+2. description 是触发器，不是摘要 — 写给模型看（"when should I fire?"）
+3. 每个 skill 目录结构：`SKILL.md` + `reference.md`（可选）+ `scripts/`（可选）
+4. Skills 支持渐进式披露 — 模型先看到元数据，匹配后才加载完整内容
+5. 用 `--plugin-dir` 在本地测试 skill 的 plugin 模式
+
+### 23.5 权限管理三阶梯
+
+| 方式 | 说明 |
+|------|------|
+| **Auto mode** | 单独的分类器模型审查命令，仅拦截风险操作 |
+| **Permission allowlists** | 允许特定安全工具（如 `npm run lint`、`git commit`） |
+| **Sandboxing** | OS 级隔离，限制文件系统和网络访问 |
+
+### 23.6 正确的开发流程（Pre-flight Check）
+
+```
+想法 → /prd-writer → 搞清楚做什么
+     → architect → 设计怎么做
+     → planner → 拆成小步骤
+     → 写代码（主Agent）
+     → code-reviewer + security-reviewer → 并行检查
+     → test-creator → 补测试
+     → ✅ 上线
+```
+
+每次任务前自动检查：需要读 3+ 文件？→ MUST 先用 Explore。是新功能？→ MUST 先 architect + planner。
+
+### 23.7 工具组合原则
+
+| 场景 | 推荐工具 |
+|------|---------|
+| GitHub 交互 | 安装 `gh` CLI（Claude 自动使用） |
+| AWS | `aws` CLI |
+| GCP | `gcloud` CLI |
+| 监控/告警 | `sentry-cli` |
+| 浏览器自动化 | Playwright MCP Server |
+| 数据库查询 | 对应数据库 MCP Server |
+
+> CLI 工具是与外部服务交互的**最高效方式**。Claude 也擅长学习不熟悉的 CLI 工具，使用 "Use 'foo-cli-tool --help' to learn about foo tool" 提示。
+
+---
+
+> **版本**：R87 | 更新时间：2026-06-16 第5轮循环
+> **本轮新增**：插件系统完整规范、Subagent 16字段配置指南、Agent Skills API教程、Managed Agents三模式编排、最佳实践速查
+> **情报来源**：code.claude.com/docs/zh-CN/plugins-reference + platform.claude.com + anthropic.com/engineering + GitHub shanraisshan/claude-code-best-practice

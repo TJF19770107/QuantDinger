@@ -727,3 +727,34 @@ Sub Agents → Skills → Tools → 生成代码执行
 
 > 同步自：Anthropic官方课程 R80 | 2026-06-14
 *（内容由AI生成，仅供参考）*
+
+
+---
+
+## Anthropic 官方 Agent 设计原则
+
+> 来源：Anthropic Engineering Blog (2026.06)
+> 更新：2026-06-15
+
+### 复杂度阶梯
+单次LLM调用 → 增强型LLM → Prompt Chaining → Routing → Parallelization → Orchestrator-Workers → Evaluator-Optimizer → 自主Agent
+**核心原则：仅在简单方案不足时才增加复杂度。**
+
+### 六大Agentic模式
+| 模式 | 场景 |
+|------|------|
+| Prompt Chaining | 固定步骤分解 |
+| Routing | 多类型分类 |
+| Parallelization | 无依赖并行 |
+| Orchestrator-Workers | 动态分解 |
+| Evaluator-Optimizer | 迭代评估 |
+| Autonomous Agent | 开放问题 |
+
+### 上下文工程五大维度
+选择 → 结构化 → 排序 → 压缩 → 时机
+
+### Skills三层设计
+L1(描述) → L2(SKILL.md) → L3+(引用文件) — 渐进式信息披露
+
+### 韧性五原则
+错误隔离 · 状态恢复 · 护栏优先 · 可观测性 · 渐进授权

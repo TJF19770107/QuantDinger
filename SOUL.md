@@ -32,7 +32,7 @@ AIGC:
 ---
 # SOUL.md — AI Agent 设计原则（龙虾AI分身核心宪章）
 
-> **版本**：v2.8 (R84迭代) | **创建日期**：2026-06-01 | **更新日期**：2026-06-14
+> **版本**：v2.9 (R86迭代) | **创建日期**：2026-06-01 | **更新日期**：2026-06-15
 > **来源**：Anthropic 官方课程(18门) + Claude Code "AI OS"四支柱架构 + Subagents官方文档 + Agent Skills开放标准 + Agent SDK编排模式 + Plugins打包体系 + Lessons from Building Claude Code + 中文社区深度解读 + 龙虾全域模板融合
 > **生效范围**：龙虾主AI分身 + 豆包Agent + Hermes Agent + OpenClaw龙虾Agent
 > **依赖文件**：角色总说明书.md / 龙虾全域官方模板-最终版.md / Anthropic官方课程-390节全集.md
@@ -1045,3 +1045,130 @@ Context Window 填满后 AI 推理能力显著下降——这是所有长对话 
 需要编排大规模Agent且追求可审计？→ Dynamic Workflows
 
 > 同步自：Anthropic官方课程390节全集 R80 | 2026-06-14
+
+---
+
+## Anthropic官方博客R81同步：Skills工程设计原则（2026-06-15）
+
+> **数据来源**：Anthropic 官方博客 "Lessons from building Claude Code: How we use skills" (2026-06-03)
+
+### Skills 九分类框架
+
+Anthropic 内部将 Skills 分为九个正交类别，最佳 Skill 干净地属于单一类别：
+
+| 分类 | 用途 |
+|------|------|
+| **Library & API Reference** | 内部库/CLI/SDK 正确用法，含参考代码和 gotchas |
+| **Product Verification** | 测试验证代码行为，常配 Playwright/tmux，对输出质量提升最可量化 |
+| **Data Fetching & Analysis** | 连接数据与监控栈，含凭证和数据源映射 |
+| **Business Automation** | 将重复工作流自动化为单命令，日志文件持久化上下文 |
+| **Code Scaffolding** | 生成含组织注解的框架样板，可与脚本组合 |
+| **Code Quality** | 强制执行代码风格与审查，可集成 Hooks 或 GitHub Action |
+| **CI/CD** | 代码拉取/推送/部署，可引用其他 Skill 收集数据 |
+| **Runbooks** | 症状→多工具调查→结构化报告 |
+| **Infrastructure Ops** | 日常运维操作，破坏性操作含护栏机制 |
+
+### Progressive Disclosure 原则
+
+Skill 是文件夹而非单文件。三级渐进披露机制：
+- **L1（始终加载）**：name + description，约 60 tokens
+- **L2（触发时加载）**：SKILL.md 正文，500-2000 tokens
+- **L3（按需加载）**：附属文件（references/、scripts/、assets/），Agent 按需读取
+
+设计含义：将整个文件系统视为上下文工程——SKILL.md 是目录，Claude 在合适的时机读取对应文件。50 个 Skills 常驻开销仅约 3000 tokens，等价于 2-3 个大型 MCP。
+
+### Gotchas 驱动迭代
+
+任何 Skill 中信号最高的内容是 Gotchas 部分。应从 Claude 使用 Skill 时反复出现的失败点积累：
+- 「subscriptions 表只追加，需要最高版本号而非最新 created_at」
+- 「@request_id 和 trace_id 是同一值但系统间叫法不同」
+- 「Staging 返回 200 但 webhook 未必真正处理，需检查 payment_events」
+
+**迭代模式**：Skill 从几行指令 + 一个 gotcha 起步，随 Claude 碰到新边界情况不断添加，持续进化。
+
+### Not Railroading：给 Claude 灵活性
+
+Claude 会尽量遵循指令，但 Skill 的高复用性要求避免过度具体。提供 Claude 所需信息，同时保留根据实际情况调整的空间。控制式指令（"你必须"、"严格按此顺序"）仅在关键安全护栏处使用。
+
+### On-Demand Hooks：轻量安全门
+
+Skill 可包含仅在 Skill 被调用时激活、会话结束后失效的 Hooks：
+- `/careful`：阻止 rm -rf、DROP TABLE、force-push 等破坏性操作
+- `/freeze`：阻止对指定目录外的任何编辑
+
+与全局 Hooks 的区别：全局 Hooks 始终运行，On-Demand Hooks 仅在需要时激活，避免"狼来了"效应。
+
+> **版本**：R81 | 更新时间：2026-06-15 定时任务
+
+
+## Anthropic 官方 Agent 设计原则与模式
+
+> 来源：Anthropic Engineering Blog (2024-2026) — Building Effective Agents / Effective Context Engineering / Agent Skills
+> 更新日期：2026-06-15
+
+### 复杂度阶梯：渐进式设计哲学
+
+**核心原则：仅在简单方案确实不足时才增加复杂度**
+
+```
+单次 LLM 调用
+  → 增强型 LLM（+检索/工具/记忆）
+    → Prompt Chaining（固定步骤链）
+      → Routing（分类路由）
+        → Parallelization（并行化·分区/投票）
+          → Orchestrator-Workers（动态分解编排）
+            → Evaluator-Optimizer（迭代评估优化）
+              → 自主 Agent（多子代理 + 长运行驾驭）
+```
+
+### 六大 Agentic 模式速查
+
+| 模式 | 定义 | 适用判断 |
+|------|------|----------|
+| **Prompt Chaining** | 步骤A→B→C 线性传递 | 任务可清晰分解为固定步骤 |
+| **Routing** | 分类→专项处理 | 有明确任务分类且可准确分类 |
+| **Parallelization** | 并行独立子任务 | 子任务无依赖关系 |
+| **Orchestrator-Workers** | 中央动态分解→Worker执行 | 无法预知子任务 |
+| **Evaluator-Optimizer** | 生成→评估→迭代 | 有明确评估标准 |
+| **Autonomous Agent** | 自主规划→执行→反馈循环 | 开放问题，无法硬编码路径 |
+
+### 上下文工程五大维度
+
+| 维度 | 核心问题 | 关键实践 |
+|------|----------|----------|
+| **选择** | 哪些 token 进入上下文？ | 相关性排序、去噪、优先级分层 |
+| **结构化** | token 如何组织？ | 格式一致性、层级标题、代码块 |
+| **排序** | token 的呈现顺序？ | 最重要信息放首位或末位 |
+| **压缩** | 如何减少 token 总量？ | 摘要、缓存、渐进式加载 |
+| **时机** | token 何时注入？ | 静态预加载 vs 动态按需检索 |
+
+### 六大上下文管理破裂模式
+
+1. **上下文污染** — 无关信息淹没关键指令
+2. **上下文漂移** — 长对话逐渐偏离原始目标
+3. **上下文遗忘** — 关键信息被截断或逐出窗口
+4. **上下文过载** — 窗口塞满导致忽略一半指令
+5. **格式崩溃** — 结构化输出退化
+6. **注意力稀释** — 多任务指令导致各任务表现下降
+
+### Agent Skills：三层渐进式信息披露
+
+| 层级 | 内容 | 加载时机 | 成本 |
+|------|------|----------|------|
+| L1 | name + description | 启动时预加载 | 极低 |
+| L2 | SKILL.md 正文 | 任务匹配时主动读取 | 中等 |
+| L3+ | 引用文件 + 可执行代码 | Agent 按需导航 | 按使用付费 |
+
+### 韧性设计五原则
+
+1. **错误隔离** — 子代理失败不污染父上下文
+2. **状态恢复** — git + progress 文件跨会话接力
+3. **护栏优先** — Hooks 强制执行关键约束（模型可忽略指令，但绕不开 Hook）
+4. **可观测性** — 五维评估（完成率/效率/正确性/可靠性/安全性）
+5. **渐进式授权** — 读写权限分离，从模拟到生产
+
+### 三核心原则（Anthropic 官方）
+
+1. **简单性** — 从最简单方案开始，仅在必要时增加复杂度
+2. **透明度** — 显式展示 Agent 的规划步骤
+3. **ACI 设计** — 像设计 HCI 一样精心设计 Agent-Computer Interface

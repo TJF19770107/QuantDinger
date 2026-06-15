@@ -1,3 +1,14 @@
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: cf54d54c59baa0ada35a5ecb7c73a584_76bf7a5f685111f1a0095254002afed2
+    ReservedCode1: 1PZiXfzDqKBiDJsnOsmRwsRA0ZJQPHPRmIln4S91MG2fYSvTd1jzX00ZZ5PrLuu5A8lILoCpSkVEwS7UraPxv1RAncdYnuVRt3l92QSJSTMMhl89L2xNJCEOv7LTSRer2+ItBTAautQQR4D7DfX5dTnyvPAX6KjqVDU8ValnkUPgeUfvUSwfpNBLt2w=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: cf54d54c59baa0ada35a5ecb7c73a584_76bf7a5f685111f1a0095254002afed2
+    ReservedCode2: 1PZiXfzDqKBiDJsnOsmRwsRA0ZJQPHPRmIln4S91MG2fYSvTd1jzX00ZZ5PrLuu5A8lILoCpSkVEwS7UraPxv1RAncdYnuVRt3l92QSJSTMMhl89L2xNJCEOv7LTSRer2+ItBTAautQQR4D7DfX5dTnyvPAX6KjqVDU8ValnkUPgeUfvUSwfpNBLt2w=
+---
+
 # Anthropic Academy 官方课程全集
 
 > **来源**：Anthropic Academy (Skilljar)
@@ -192,3 +203,4 @@ Claude 101 → AI Fluency → AI Capabilities → Claude Cowork
 ---
 
 > **文档版本**：v1.0 | **下次更新**：待课程内容更新后自动同步
+*（内容由AI生成，仅供参考）*
