@@ -965,3 +965,156 @@ project-root/
 - 安全最佳实践：密钥轮换、IP白名单、审计日志
 
 > 同步自：Anthropic官方课程390节全集 R80 | 2026-06-14
+
+---
+
+## Anthropic官方课程R88同步：子代理管理与自动化配置（2026-06-16）
+
+### 子代理定义方式（三种）
+
+**方式一：文件定义（推荐，可版本控制）**
+```yaml
+# .claude/agents/code-reviewer.md
+---
+name: code-reviewer
+description: Python code quality and security review specialist. PROACTIVELY invoke when code needs review.
+tools: [Read, Grep, Glob]
+model: sonnet
+maxTurns: 8
+permission_mode: plan
+---
+You are a Python senior engineer. Review code for security, performance, and style.
+```
+
+**方式二：API动态定义**
+```python
+agent = AgentDefinition(
+    name="security-scanner",
+    description="Security vulnerability scanner",
+    tools=["Read", "Grep", "Bash"],
+    model="sonnet",
+    maxTurns=6
+)
+```
+
+**方式三：自然语言即时创建**
+```
+"创建一个子代理扫描代码库的安全漏洞"
+```
+
+**五级作用域**：
+| 级别 | 配置位置 | 跨会话 | Agent Teams可用 |
+|------|---------|:---:|:---:|
+| managed | 中心化管理 | ✅ | ✅ |
+| user | `~/.claude/agents/` | ✅ | ✅ |
+| project | `.claude/agents/` | ✅ | ✅ |
+| plugin | 插件安装目录 | ✅ | ⚠️ |
+| CLI | `--agents`参数 | ❌ | ✅ |
+
+### 子代理权限限制策略（工具白名单）
+
+遵循**最小权限原则**，每个子代理仅暴露必要工具：
+
+```yaml
+# ✅ 安全扫描器只需要读取权限
+name: security-scanner
+tools: [Read, Grep]
+model: sonnet
+
+# ✅ 代码修复器需要写入权限
+name: code-fixer
+tools: [Read, Write, Edit]
+model: sonnet
+
+# ❌ 所有代理拥有全部工具（反面案例）
+name: do-everything-agent
+tools: [Read, Write, Edit, Bash, WebSearch, MCP]
+```
+
+**权限分配原则**：
+- 只读分析型 → Read / Grep / Glob
+- 代码修改型 → + Write / Edit
+- 系统操作型 → + Bash（限定命令集合）
+- 外部连接型 → + MCP（指定服务器）
+- **插件子代理不支持 hooks / mcpServers / permissionMode**
+
+### 子代理返回合约（结构化输出格式约定）
+
+定义明确的输出格式是子代理设计中最关键的实践：
+
+```yaml
+# ✅ 好的返回合约：结构化、可解析、可验证
+output_contract:
+  format: json
+  fields: [findings, sources, confidence, recommendations]
+  example: |
+    {
+      "findings": ["发现SQL注入漏洞在user.py:42"],
+      "sources": ["user.py line 42-45"],
+      "confidence": "high",
+      "recommendations": ["使用参数化查询"]
+    }
+```
+
+**核心原则**：
+- "返回JSON对象含 findings/sources/confidence" 优于 "总结你的发现"
+- 无序返回合约是多Agent系统首次构建中最常见的Bug
+- 每个子代理的产出必须可被编排器机械解析和验证
+
+### CLAUDE.md 多Agent感知规则
+
+项目 CLAUDE.md 在每个队友启动时都会被读取，是传达项目约定的最有效方式：
+
+```markdown
+## Agent Teams 协作约定
+
+### 文件所有权边界
+- Backend代码在 /src/api/ → 分配给backend队友
+- Frontend代码在 /src/components/ → 分配给frontend队友
+- 测试在 /tests/ → 分配给test队友
+- 共享类型在 /src/types/ → 通过Team Lead协调变更
+
+### 团队编号规范
+- 所有队友使用项目 .claude/agents/ 下的子代理定义
+- MCP服务器配置共享自 .mcp.json
+- 禁止队友自行修改 shared/ 目录
+
+### 交接格式
+- 计划 → Implementer: 任务描述 + 接口约束 + 截止点
+- Implementer → Tester: diff摘要 + 变更文件列表 + 已知风险点
+- Tester → Reviewer: 测试结果 + 失败清单 + 覆盖报告
+```
+
+### Skills与子代理的绑定关系
+
+Skills 可通过子代理定义中的 `skills` 字段预加载：
+
+```yaml
+name: db-migration-agent
+description: Database migration specialist
+tools: [Read, Write, Bash]
+skills:
+  - database-migration    # 任何需要做数据库变更的子代理自动加载此Skill
+  - sql-review
+model: sonnet
+```
+
+**绑定逻辑**：Skills 教会 Agent 做特定类型的事。当子代理被调用时，它会自动加载绑定的 Skills，按照定义的规范来操作。一个类比：**MCP是厨房里的刀、锅、食材，Skill是告诉厨师怎么用这些工具的菜谱。**
+
+### 优雅关闭流程
+
+当所有任务完成时，Team Lead 应使用 `SendMessage` 工具向每个队友发送关闭请求：
+
+```
+1. Team Lead 检查任务列表 → 所有任务均为 completed
+2. Team Lead → 每个队友发送关闭请求（SendMessage）
+3. 队友完成正在进行的工作 → 确认准备关闭
+4. Team Lead 收到所有队友确认 → 正式关闭团队会话
+```
+
+**关键原则**：
+- 避免突然关闭会话——可能留下孤立进程或不完整的任务状态
+- 队友空闲后需手动清理（避免Token泄漏）
+- 项目配置应在团队创建前就位（避免队友加载不一致的上下文）
+
+> 同步自：Anthropic官方课程390节全集 R88 | 2026-06-16

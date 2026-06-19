@@ -782,7 +782,757 @@ autoMemory: true
 
 ---
 
+## 十二、Dynamic Workflows：自动子代理生成与管理
+
+> 来源：Anthropic 2026-06-03 发布
+
+### 12.1 从手动配置到自动生成
+
+传统子代理管理模式 vs Dynamic Workflows 模式：
+
+| 维度 | 传统手动配置 | Dynamic Workflows |
+|------|------------|-------------------|
+| 子代理定义 | 手动编写 `.md` 文件 | Claude 自动生成 |
+| 任务分配 | 主Agent手动调度 | 自动拆解+分配 |
+| 并行控制 | 开发者手动规划 | 自动并行优化 |
+| 规模上限 | 通常 3-5 个 | 可达 100+ 个 |
+| 上下文管理 | 开发者手动控制 | 自动隔离 |
+
+### 12.2 自动生成子代理的生命周期
+
+```
+┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
+│ 任务分析  │ → │ 自动拆分  │ → │ 生成N个   │ → │ 并行执行  │
+│          │    │          │    │ Subagent  │    │          │
+└──────────┘    └──────────┘    └──────────┘    └─────┬────┘
+                                                      │
+                                              ┌───────▼────────┐
+                                              │ 结果汇总+归档   │
+                                              │ Subagent 自动销毁│
+                                              └────────────────┘
+```
+
+### 12.3 与传统 Subagent 配置的共存策略
+
+```
+项目根目录/
+├── CLAUDE.md                         # 保持不变：手动定义常驻子代理
+├── .claude/
+│   ├── subagents/                    # 手动定义（code-reviewer等）
+│   │   ├── code-reviewer.md
+│   │   ├── security-auditor.md
+│   │   └── doc-writer.md
+│   └── skills/                       # Skills 技能库
+│       └── ...
+│
+│ Dynamic Workflows 自动生成的子代理：
+│ → 临时创建，任务完成后自动销毁
+│ → 不污染 .claude/subagents/ 目录
+│ → 仅存在于会话生命周期内
+```
+
+**共存原则**：
+- 常驻子代理（code-reviewer、security-auditor）→ 手动定义在 `.claude/subagents/`
+- 大规模一次性任务 → 交给 Dynamic Workflows 自动生成
+- 两者互不干扰，根据任务规模自动选择
+
+### 12.4 触发条件配置
+
+```markdown
+# CLAUDE.md 中添加
+
+## Dynamic Workflows Policy
+- 当任务可拆分为 5+ 独立并行子任务时，优先使用 Dynamic Workflows
+- 当任务需要保持人工逐步骤审核时，退回手动 Subagent 模式
+- 安全敏感操作（数据库迁移、生产部署）必须人工审核
+```
+
+---
+
+## 十三、Skills 版本锁定与企业治理配置
+
+### 13.1 Skills Registry 配置
+
+```yaml
+# .claude/skills/registry.yaml
+skills:
+  - name: code-review
+    owner: dev-team
+    version: 2.1.0          # 生产环境锁定版本
+    eval_suite: review-evals-v3
+    rollback: 2.0.5
+    sandbox: true
+    approval: required
+    
+  - name: security-audit
+    owner: security-team
+    version: 1.4.2
+    eval_suite: sec-evals-v2
+    rollback: 1.4.0
+    sandbox: true
+    approval: required
+    
+  - name: doc-generator
+    owner: docs-team
+    version: 1.0.0
+    eval_suite: doc-evals-v1
+    rollback: 0.9.8
+    sandbox: false
+    approval: optional
+```
+
+### 13.2 企业治理检查清单
+
+| 控制领域 | 标准要求 | 配置物 |
+|---------|---------|--------|
+| 可发现性 | 小型可组合技能 + 清晰触发器和元数据 | SKILL.md + tags |
+| 质量门槛 | Generator→Evaluator 循环 + 阈值 | TESTS.md + eval_log |
+| 版本控制 | 锁定生产版本 + 回滚计划 | REGISTRY.md + CHANGELOG |
+| 安全 | 沙箱执行 + 凭据存保险库 + 审计I/O | THREAT.md + audit_log |
+| 监控 | 使用量指标 + 定期重评 + 负责人 | RUNBOOK.md |
+
+### 13.3 Skills 常见错误与修正配置
+
+| 错误模式 | 修正配置 |
+|---------|---------|
+| 单体"超级技能" | 拆分为窄领域技能，配独立 SKILL.md |
+| 缺失验证 | 添加 Evaluator 技能，配通过/失败阈值 |
+| 凭据内嵌 | 迁移至 Vault，使用 MCP/Proxy 访问 |
+| 无回滚 | 锁定版本号，保留 `rollback` 字段 |
+| 状态丢失 | 持久化产物到 Files API，记录 NOTES.md |
+
+### 13.4 新技能生态集成配置
+
+2026年6月社区技能的一键安装与配置：
+
+```bash
+# 自动沉淀工作流
+npx skills add claudeception
+
+# 版本管理（防覆盖）
+npx skills add xiaoerzhan/skill-vision-control
+
+# 文档转视频PPT
+npx skills add op7418/NanoBanana-PPT-Skills
+
+# 需求预判
+npx skills add humanplane/homunculus
+```
+
+安装后无需额外配置，自动生效。Skill Vision Control 会在更新时自动保留本地修改并提供 Diff 对比。
+
+
+---
+
+## 十四、Agent SDK 自动化配置（第5轮学习·R92新增）
+
+> 来源：platform.claude.com Agent SDK Python + code.claude.com/docs/en/sub-agents
+
+### 14.1 SDK 会话自动化配置
+
+```python
+from claude import ClaudeAgentOptions, MCPTool, ClaudeSDKClient
+
+options = ClaudeAgentOptions(
+    max_turns=20,                       # 轮次上限（防无限循环）
+    model="claude-sonnet-4-5",
+    mcp_servers={
+        "filesystem": mcp_filesystem,   # 内联 MCP
+        "database": mcp_database,       # 多 MCP 混合
+    },
+    system_prompt="你是自动化运维Agent..."
+)
+
+# 自动化生命周期：open → run → close
+client = ClaudeSDKClient()
+async with client.connect(options) as session:
+    result = await session.query("检查今天的错误日志")
+    # session 自动管理连接、上下文、清理
+```
+
+### 14.2 会话检索自动化
+
+```python
+# 按目录过滤当前项目所有协作会话
+active_sessions = client.list_sessions(
+    SessionQuery(directory="/team-project", status="active")
+)
+# 按时间排序，获取最近修改的文件和变更摘要
+for s in active_sessions:
+    history = client.get_session_messages(s.id)
+```
+
+**自动化场景**：
+- 每日自动审计前一天的所有 Agent 决策
+- CI/CD 中验证没有 Agent 执行非法操作
+- 多项目环境下按项目维度统计 Agent 使用量
+
+### 14.3 MCP 工具注册自动化
+
+```python
+@tool(
+    name="deploy_preview",
+    description="部署预览环境到 Vercel",
+    input_schema={"branch": str, "commit": str},
+    annotations=ToolAnnotations(readOnlyHint=False, openWorldHint=True)
+)
+async def deploy(args): ...
+
+# 工具注册即配置——零额外 JSON 文件
+server = create_sdk_mcp_server("ci-cd", tools=[deploy])
+```
+
+**设计哲学**：代码即配置。`@tool` 装饰器同时完成函数定义、类型声明、MCP 协议注册——消除配置漂移，确保"代码中的就是运行时的"。
+
+### 14.4 子代理配置字段更新（官方最新）
+
+| 新增/更新字段 | 类型 | 说明 |
+|-------------|------|------|
+| `autoMemory` | boolean | 跨会话持久记忆（无需主 Agent 手动维护） |
+| `memory` | `user`/`project`/`local` | 记忆存储作用域 |
+| `background` | boolean | 默认后台运行（不阻塞主会话） |
+| `isolation` | `worktree` | 隔离模式（独立工作树） |
+| `initialPrompt` | string | 主 Agent 派发时的初始消息 |
+| `effort` | `low`/`medium`/`high`/`max` | Opus 4.6+ 思考深度控制 |
+
+---
+
 > **版本更新声明**
-> 更新：2026-06-16 第三轮循环
-> 本轮新增：Plugin Agents 配置完整规范（agents/ 目录结构、16字段 frontmatter 表、安全限制）、Built-in Subagents 清单（11个内置 Agent 职责/模型/工具权限矩阵）、Subagent 作用域与优先级（四级覆盖链）、持久记忆 autoMemory 与后台运行 Ctrl+B 模式（记忆作用域、前后台模式选择、并行策略）
-> 情报来源：code.claude.com/docs + claudecode.xyz + studynil.com + 4sapi.com + digitalapplied.com
+> 更新：2026-06-16 第四轮循环
+> 本轮新增：Dynamic Workflows 自动子代理生成与管理（生命周期、与传统配置共存策略、触发条件配置）、Skills 版本锁定与企业治理（Registry配置、检查清单、错误修正）、新技能生态集成配置（npx 一键安装）
+
+
+---
+
+## 六、Claude Code 六种扩展机制速查（2026年5月）
+
+| 机制 | 文件位置 | 用途 | 触发方式 |
+|------|---------|------|---------|
+| CLAUDE.md | 项目根目录 | 持久化上下文、项目规则 | 自动加载 |
+| Skills | .claude/skills/*/SKILL.md | 可复用程序化知识 | 元数据自动匹配 |
+| Hooks | .claude/hooks/ | 事件触发处理器 | 事件驱动 |
+| Subagents | 内建 | 独立上下文任务委派 | 主Agent调度 |
+| MCP | 独立服务 | 外部工具/数据连接 | 工具调用 |
+| Dynamic Workflows | 内建（Max/Team） | 大规模并行任务拆分 | 自动触发 |
+
+### 6.1 Skills 六步标准工作流
+
+| 步骤 | 名称 | 操作 | 关键输出 |
+|------|------|------|---------|
+| Step 1 | 规划定义 | 明确任务、输入、输出、约束 | SPEC.md |
+| Step 2 | 技能选择 | 清晰触发器和元数据 | 技能匹配列表 |
+| Step 3 | 外部连接 | MCP Server 或程序化工具调用 | MCP配置 |
+| Step 4 | 验证循环 | Generator→Evaluator成对运行 | 验证日志 |
+| Step 5 | 状态交接 | Files API持久化输出物 | NOTES.md |
+| Step 6 | 迭代交付 | 验证通过链入下一步 | 最终产物 |
+
+### 6.2 Skills 企业治理矩阵
+
+| 控制领域 | 标准要求 | 证明产物 |
+|---------|---------|---------|
+| 可发现性 | 小型可组合技能，清晰触发器 | SKILL.md + tags |
+| 质量门槛 | Generator→Evaluator循环 | TESTS.md + 评估日志 |
+| 版本控制 | 锁定生产版本 + 回滚计划 | REGISTRY.md + CHANGELOG |
+| 安全 | 沙箱执行、凭据存保险库 | THREAT.md + 审计日志 |
+| 监控 | 使用量指标、定期重评 | RUNBOOK.md + 仪表盘 |
+
+---
+
+## 七、Agent Teams 子代理编排进阶（R89新增）
+
+> 来源：Anthropic 官方 Agent Teams + Hooks + Best Practices 文档
+> 更新：2026-06-16 第四轮循环
+
+### 7.1 Subagent 定义复用为 Teammate
+
+子代理定义可以在两种模式间复用：
+
+```bash
+# 作为 Subagent 委派（单会话内）
+"Use the security-reviewer agent to audit the auth module"
+
+# 作为 Agent Team Teammate（多会话协作）
+"Spawn a teammate using the security-reviewer agent type to audit the auth module"
+```
+
+**复用规则**：
+- `tools` 和 `model` 字段被 Teammate 沿用
+- 定义正文追加到 Teammate 的系统提示（不替换）
+- `skills` 和 `mcpServers` 在 Teammate 模式下从项目/用户设置加载
+- 团队协调工具（SendMessage、任务管理）始终可用
+
+### 7.2 Teammate 权限与模型
+
+| 配置项 | 行为 |
+|--------|------|
+| 权限继承 | Teammates 继承 Lead 的权限设置 |
+| 模型选择 | 默认不继承 Lead 的 `/model`，需显式指定 |
+| 计划审批 | 可要求 Teammate 先规划再执行 |
+| 直接交互 | Shift+Down 循环切换 / 分屏模式点击 |
+
+### 7.3 Hooks 事件完整生命周期
+
+```
+SessionStart → UserPromptSubmit → PreToolUse → PostToolUse →
+  ├── SubagentStart → SubagentStop
+  ├── TaskCreated → TaskCompleted
+  ├── TeammateIdle
+  ├── PreCompact → PostCompact
+  └── Stop → SessionEnd
+```
+
+**关键 Hooks 配置示例**：
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [{
+      "matcher": "Bash",
+      "hooks": [{
+        "type": "command",
+        "if": "Bash(rm *)",
+        "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-rm.sh"
+      }]
+    }],
+    "TeammateIdle": [{
+      "hooks": [{
+        "type": "command",
+        "command": "python .claude/hooks/quality-check.py"
+      }]
+    }]
+  }
+}
+```
+
+### 7.4 Hook 决策输出标准
+
+| 输出 | 效果 |
+|------|------|
+| `exit 0`（无 JSON 输出） | 无决策，走正常权限流程 |
+| `{"permissionDecision": "allow"}` | 明确放行 |
+| `{"permissionDecision": "deny", "permissionDecisionReason": "..."}` | 阻止并说明原因 |
+| `exit 2`（TeammateIdle/TaskCreated/TaskCompleted） | 发送反馈并保持工作/阻止操作 |
+
+### 7.5 Claude Code 环境配置 Checklist
+
+```bash
+# 1. CLAUDE.md —— 项目持久上下文（/init 自动生成）
+# 2. 权限配置 —— /permissions 白名单 + Auto Mode
+# 3. MCP 服务 —— claude mcp add 连接外部工具
+# 4. Hooks —— 事件驱动的确定性操作
+# 5. Skills —— .claude/skills/*/SKILL.md 领域知识
+# 6. Subagents —— .claude/agents/ 任务委派
+# 7. Agent Teams —— 启用 CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
+```
+
+**CLAUDE.md 编写铁律**：
+- ✅ 包含：Bash 命令、代码风格偏离项、测试指令、架构决策、环境怪癖、常见陷阱
+- ❌ 排除：能从代码推断的内容、标准语言约定、详细 API 文档、长篇解释、自明实践
+- 每个条目自问："删除它会导致 Claude 犯错吗？"——不删就保留，删了就砍掉
+
+---
+
+## 2026-06-16 更新：子代理管理进阶
+
+### 一、Subagent 定义格式（YAML Frontmatter + Markdown）
+
+Subagent 是带 YAML frontmatter 的 Markdown 文件，完整格式如下：
+
+```markdown
+---
+name: security-reviewer
+description: 审查代码安全漏洞，专注认证、注入、权限三类风险
+tools: Read, Grep, Glob
+model: sonnet
+memory: project
+---
+
+你是资深安全审计工程师。每次审查时：
+1. 先读取内存目录中的历史审计记录
+2. 再扫描目标代码
+3. 最后按严重程度（Critical / High / Medium / Low）分类输出
+```
+
+**字段说明**：
+
+| 字段 | 必填 | 说明 |
+|------|------|------|
+| `name` | ✅ | Subagent 唯一标识名称 |
+| `description` | ✅ | 一句话描述，用于主 Agent 自动匹配 |
+| `tools` | ✅ | 工具白名单（Read/Grep/Glob/Bash/Write/WebSearch/WebFetch/MCP 工具） |
+| `model` | ❌ | 指定模型（sonnet/haiku/opus），不指定则继承主会话 |
+| `memory` | ❌ | 持久记忆：project（项目级）或 user（用户级） |
+
+### 二、目录结构规范
+
+```
+~/.claude/agents/          # 用户级 Subagent（所有项目可用）
+  security-reviewer.md
+  doc-writer.md
+
+.claude/agents/            # 项目级 Subagent（仅当前项目）
+  code-reviewer.md
+  test-generator.md
+```
+
+**优先级规则**：
+- 项目级定义覆盖用户级同名 Subagent
+- Managed Settings 定义优先级最高，不可被用户/项目覆盖
+
+### 三、权限矩阵
+
+Subagent 的 `tools` 字段定义其可用工具白名单：
+
+| 工具 | 能力 | 风险等级 | 典型用途 |
+|------|------|---------|---------|
+| Read | 读取文件 | 🟢 低 | 代码审查、文档检查 |
+| Grep | 正则搜索 | 🟢 低 | 模式匹配、代码搜索 |
+| Glob | 文件名匹配 | 🟢 低 | 文件发现、目录遍历 |
+| Bash | 执行命令 | 🟡 中 | 运行测试、Git 操作 |
+| Write | 创建文件 | 🟡 中 | 生成代码、写报告 |
+| Edit | 编辑文件 | 🟡 中 | 修改代码、重构 |
+| WebSearch | 联网搜索 | 🟡 中 | 查文档、搜资料 |
+| WebFetch | 抓取网页 | 🟡 中 | 分析在线文档 |
+| MCP 工具 | 外部服务 | 🟡-🔴 中高 | 数据库查询、API 调用 |
+
+**权限最小化示例**：
+- 只读审查代理：`tools: Read, Grep, Glob`
+- 代码生成代理：`tools: Read, Write, Edit, Bash`
+- 研究代理：`tools: Read, WebSearch, WebFetch`
+
+**六档权限模式**（`permissionMode`）：
+| 模式 | 说明 |
+|------|------|
+| `plan` | 只读探索，不允许任何修改 |
+| `default` | 高风险操作需要手动确认 |
+| `acceptEdits` | 自动批准文件编辑 |
+| `auto` | 自动批准大多数操作 |
+| `bypassPermissions` | 跳过所有确认（危险） |
+
+### 四、Managed Settings 企业部署
+
+**managed-settings.json 路径**：
+- macOS: `~/Library/Application Support/ClaudeCode/managed-settings.json`
+- Windows: `C:\Program Files\ClaudeCode\managed-settings.json`（v2.1.75+）
+- Windows 注册表（GPO）: `HKLM\Software\Policies\Anthropic\ClaudeCode`
+
+**下发方式**：
+| 方式 | 平台 | 说明 |
+|------|------|------|
+| managed-settings.json | 全平台 | 直接部署到指定路径 |
+| MDM（Jamf/Kandji） | macOS | 通过设备管理系统推送 |
+| Windows 组策略（GPO） | Windows | 写入注册表策略 |
+| Anthropic 管理后台 | 全平台 | Web 控制台统一管理 |
+
+**锁定策略示例**：
+```json
+{
+  "permissions": {
+    "allow": ["Agent(security-reviewer)", "Agent(doc-writer)"],
+    "deny": ["Agent(general-purpose)"]
+  },
+  "allowManagedPermissionRulesOnly": true
+}
+```
+
+设置 `allowManagedPermissionRulesOnly: true` 后，用户和项目级别的权限规则完全禁止修改。
+
+### 五、Hooks 配置示例（settings.json）
+
+完整的 Hooks 配置结构：
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx your-tool init"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/validate-bash.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/log-tool-call.sh"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/slack-notify.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**事件类型详解**：
+| 事件 | 触发时机 | 控制能力 | 典型脚本 |
+|------|---------|---------|---------|
+| `SessionStart` | 会话启动 | 注入上下文 | `npx your-tool init` |
+| `PreToolUse` | 工具调用前 | Exit code 2 = 阻止 | `validate-bash.sh` |
+| `PostToolUse` | 工具调用后 | 记录 + 通知 | `log-tool-call.sh` |
+| `Notification` | 自定义事件 | 转发到外部 | `slack-notify.sh` |
+
+**关键约束**：
+- PreToolUse 脚本退出码 2 阻止工具执行
+- PostToolUse 脚本结果不影响工具执行（仅记录）
+- Hooks 是确定性代码，不依赖 LLM 判断
+
+### 六、MCP 最小化原则
+
+**按需配置，逐步接入**：
+
+1. **只添加实际使用的服务器**："tool names are cheap, tool output is not"——工具名不占上下文，但工具返回占用
+2. **密钥不提交**：Token 通过 `${ENV_VAR}` 形式引用环境变量，`.mcp.json` 中不写明文密钥
+3. **Scope 分层**：
+   - Project scope：团队标准工具和安全本地服务器 → 提交到仓库
+   - User scope：个人工具、私人 Token、实验性工具 → 不提交
+   - Local scope：测试新服务器 → 避免提交
+4. **逐步接入**：安装一个 → 确认 Claude 正确使用 → 再添加下一个。不要一次连 20 个。
+
+**从低风险到高风险的接入顺序**：
+```
+只读型 MCP → 低风险写入 → 高风险写入（需人工确认 + 审计）
+```
+
+**安全检查清单**：
+- [ ] `.mcp.json` 中没有明文 Token
+- [ ] 所有密钥通过环境变量引用
+- [ ] 服务器按 scope 正确分层
+- [ ] 写操作 MCP 有 PreToolUse Hook 门禁
+- [ ] 高风险 MCP 有审计日志
+
+### 七、Agent Teams 团队规模模板
+
+| 规模 | Teammate 数 | 典型配置 | 适用场景 |
+|------|------------|---------|---------|
+| **小型** | 2-3 | Lead + 2 Teammates | 简单代码审查、双视角验证、小功能开发 |
+| **中型** | 4-7 | Lead + 4-6 Teammates | 多模块并行开发、全栈项目、中型代码迁移 |
+| **大型** | 8-15 | Lead + 8-14 Teammates | 大型代码库迁移、跨服务重构、深度交叉验证 |
+
+**团队规模选择原则**：
+- 从 2-3 人小型团队起步，验证协作模式可行后再扩展
+- 超过 5 个 Teammates 协调成本指数增长
+- 大型团队（8+）仅用于已有成功经验 + 任务天然可高度并行化的场景
+
+**实验性功能声明**：Agent Teams 在 2026 年初为实验性功能，需手动设置 `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` 启用。生产环境建议等待正式发布后再大规模使用。
+
+---
+
+## R91 增量：子代理嵌套配置 & 权限规则参数匹配（2026-06-17）
+
+> 来源：Claude Code v2.1.172-v2.1.178 + Havoptic Changelog
+
+### 一、子代理5层嵌套配置
+
+**CLAUDE.md 配置示例**（主代理定义可嵌套的子代理）：
+
+```markdown
+## Subagents
+
+### codebase-auditor
+- Purpose: 大型代码库分层审查
+- Max Depth: 3
+- Tools: Read, Glob, Grep, Agent
+- Agent(model:sonnet)
+
+### deep-analyzer
+- Purpose: 深度分析（可递归分解）
+- Max Depth: 5
+- Tools: Read, Glob, Grep, Agent, Bash
+```
+
+**嵌套权限控制**：
+- 子代理的 `Agent` 工具即为其嵌套能力
+- 每层子代理的工具白名单独立配置
+- 深层子代理默认继承父级的工具限制并只能更严格
+
+### 二、权限规则参数匹配（v2.1.178）
+
+**`Tool(param:value)` 语法**：允许权限规则匹配工具的具体入参。
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(npm:*)",
+      "Agent(model:sonnet)",
+      "Agent(model:haiku)"
+    ],
+    "deny": [
+      "Bash(rm:*)",
+      "Bash(sudo:*)",
+      "Agent(model:opus)"
+    ]
+  }
+}
+```
+
+**应用场景**：
+
+| 规则 | 效果 |
+|------|------|
+| `Agent(model:sonnet)` | 仅允许 Sonnet 模型的子代理 |
+| `Agent(model:opus)` deny | 禁止 Opus 子代理（控制成本） |
+| `Bash(rm:*)` deny | 全局禁止删除命令 |
+| `Bash(git:*)` allow | 允许所有 git 操作 |
+| `Write(path:src/*)` allow | 仅允许写入 src 目录 |
+
+### 三、Managed Settings 安全增强
+
+| 设置项 | 版本 | 功能 |
+|--------|------|------|
+| `enforceAvailableModels` | v2.1.175 | availableModels 白名单强制约束 Default 模型 |
+| `--safe-mode` / `CLAUDECODESAFEMODE` | v2.1.169 | 启动时禁用所有自定义配置 |
+| `requiredMinimumVersion` | v2.1.163 | Claude Code 版本下限强制管控 |
+| `requiredMaximumVersion` | v2.1.163 | Claude Code 版本上限强制管控 |
+| `fallbackModel` | v2.1.166 | 最多3个备用模型（主模型不可用时自动切换） |
+
+### 四、Agent Teams 规模限制更新
+
+鉴于子代理现在可嵌套5层，团队规模模板需增加深度维度：
+
+| 维度 | 推荐值 | 最大值 | 风险 |
+|------|--------|--------|------|
+| 广度（并行 Teammates） | 3-5 | 15 | 协调成本指数增长 |
+| 深度（嵌套层数） | 1-2 | 5 | Token 成本指数增长 |
+| 总子代理数（广度×深度） | 5-10 | 理论无限 | 超过 20 个几乎不可调试 |
+
+**组合约束**：广度 × 深度 ≤ 20 作为硬性上限。例如 4 个并行 Teammates 各嵌套 2 层（4×2=8）是合理的；5 个 Teammates 各嵌套 5 层（5×5=25）超限。
+
+---
+
+## R92 增量：Routines 配置、Managed Agents Vault 与 Security Scanning（2026-06-17）
+
+> 来源：Code with Claude Tokyo (June 10-11, 2026)
+
+### 一、Routines 配置规范
+
+Routines 是云端托管的 Agent 执行环境，通过事件驱动触发。
+
+**配置结构**：
+```yaml
+routines:
+  - name: nightly-security-scan
+    trigger:
+      type: cron
+      schedule: "0 2 * * *"        # 每天凌晨2点
+    agent:
+      prompt: "扫描项目安全漏洞并自动修复"
+      auto_mode: true
+      vault: "security-creds"      # 引用 Managed Agents Vault
+    notify:
+      on_success: slack:#security
+      on_failure: slack:#oncall + email:admin@team.com
+
+  - name: pr-test-runner
+    trigger:
+      type: github
+      event: pull_request.merged
+      branch: main
+    agent:
+      prompt: "运行全量回归测试，失败时自动回滚"
+      auto_mode: false             # 回滚需人工确认
+      vault: "ci-creds"
+
+  - name: issue-triage
+    trigger:
+      type: github
+      event: issues.opened
+    agent:
+      prompt: "自动分类 Issue 并分派到对应负责人"
+      auto_mode: true
+```
+
+### 二、Managed Agents Vault 配置
+
+Vault 为 Routines 提供安全的凭据和环境变量存储：
+
+```yaml
+vaults:
+  - name: security-creds
+    variables:
+      - SNYK_API_KEY: "encrypted:****"
+      - GITHUB_TOKEN: "encrypted:****"
+    scoped_routines: [nightly-security-scan]
+
+  - name: ci-creds
+    variables:
+      - DOCKER_REGISTRY_PASS: "encrypted:****"
+      - AWS_ACCESS_KEY: "encrypted:****"
+    scoped_routines: [pr-test-runner, deploy-routine]
+```
+
+**Vault 安全铁律**：
+1. 每个 Routine 只访问其专属 Vault，不允许跨 Routine 共享
+2. 凭据写入后不可明文读取，仅 Routine 执行时注入环境变量
+3. Vault 凭据变更需额外 MFA 验证
+
+### 三、Security Scanning 配置
+
+Security Scanning 作为"第一个 Routine"的标准模板：
+
+```yaml
+routines:
+  - name: nightly-security-scan
+    trigger:
+      type: cron
+      schedule: "0 2 * * *"
+    agent:
+      prompt: |
+        执行以下安全检查：
+        1. 依赖漏洞扫描（npm audit / pip audit）
+        2. 代码安全模式检测（SQL注入/CSRF/XSS）
+        3. 许可证合规审查
+        4. 敏感信息泄露检查（API Key / 密码硬编码）
+        对每个发现问题自动创建修复 PR。
+      auto_mode: true
+      subagents:
+        - name: dep-scanner
+          tools: [Bash(npm:*), Bash(pip:*)]
+        - name: code-scanner
+          tools: [Read, Glob, Grep]
+        - name: license-checker
+          tools: [Read, Glob]
+    notify:
+      on_complete: slack:#security-daily
+      on_critical: slack:#oncall
+```
+
+### 四、全栈 Agent 平台管理矩阵
+
+| 管理维度 | CLI 配置 | Desktop 可视化管理 | Routines 云端配置 |
+|---------|---------|-------------------|------------------|
+| 子代理定义 | CLAUDE.md | 可视化编辑 | YAML 声明 |
+| 权限控制 | permissions JSON | 图形化权限面板 | Vault 隔离 |
+| 触发器 | 不支持 | 不支持 | Cron/API/GitHub |
+| 密钥管理 | 环境变量 | 系统钥匙串 | Managed Vault |
+| 任务监控 | 终端输出 | Desktop 面板 | Remote Control |

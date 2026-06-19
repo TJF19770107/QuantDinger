@@ -2,6 +2,28 @@
 AIGC:
     Label: "1"
     ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: cf54d54c59baa0ada35a5ecb7c73a584_d0c54ea16a7a11f1a0095254002afed2
+    ReservedCode1: 70Kz/e2jciZZWEpyFV+dRnQbpoB8F+Ihm5HRA8FiSTSIRMPujm635flxecgbgoLm5KnIWDPpPJQ3IrXkTksMbskgzIJqQ+MzK3P31SbHojbgispaEHvtMdcDVBduZj5t6CLV96QfrGuJi4cY8dMLfHpUHUFF7V1P9BrB85KcK9oSha6SPIj73Ws9+wI=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: cf54d54c59baa0ada35a5ecb7c73a584_d0c54ea16a7a11f1a0095254002afed2
+    ReservedCode2: 70Kz/e2jciZZWEpyFV+dRnQbpoB8F+Ihm5HRA8FiSTSIRMPujm635flxecgbgoLm5KnIWDPpPJQ3IrXkTksMbskgzIJqQ+MzK3P31SbHojbgispaEHvtMdcDVBduZj5t6CLV96QfrGuJi4cY8dMLfHpUHUFF7V1P9BrB85KcK9oSha6SPIj73Ws9+wI=
+---
+
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: cf54d54c59baa0ada35a5ecb7c73a584_db364f2e6a3711f1a99c5254007bceed
+    ReservedCode1: qpll170izdBARQAs11r3X+Vh2nEMv9ZfysBMunxakRt/w7Lq0ouOW3cTjRO7inL1UpxwxWREQT/y+8R1zOt7LQqa7Za/TMZl/NWV/CKAJg3HZyKuwNfAd4VViSCymjhz0PTklv64mOgxBku4jJPcAaTVleE6oKzGOcj6TaEjT7A/rcwuN+Bi7JTlaHg=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: cf54d54c59baa0ada35a5ecb7c73a584_db364f2e6a3711f1a99c5254007bceed
+    ReservedCode2: qpll170izdBARQAs11r3X+Vh2nEMv9ZfysBMunxakRt/w7Lq0ouOW3cTjRO7inL1UpxwxWREQT/y+8R1zOt7LQqa7Za/TMZl/NWV/CKAJg3HZyKuwNfAd4VViSCymjhz0PTklv64mOgxBku4jJPcAaTVleE6oKzGOcj6TaEjT7A/rcwuN+Bi7JTlaHg=
+---
+
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
     ProduceID: cf54d54c59baa0ada35a5ecb7c73a584_ad597d0964a711f1b8945254007bceed
     ReservedCode1: exxdt6RtVE+dr4HDwr3+3vzi9CVi4XpdRP4OtH+P935JDpmINLWKudhO5ObjvRPc73tyQ60dujhac4q+Dn8DywWvSu9XR1ntIcPNK5HZe0C/xsPlu0Hlx82rrTnBifH2bM0/XvioCuhrDnGFbltiJ1r6VjQlC3wuEWcgVIh6Kh6XjWw4majHCP2qrC4=
     ContentPropagator: 001191440300708461136T1XGW3
@@ -21,7 +43,7 @@ AIGC:
 ---
 # AGENTS.md — 子代理管理与自动化配置（龙虾AI分身运维手册）
 
-> **版本**：v2.7 (R86迭代) | **创建日期**：2026-06-01 | **更新日期**：2026-06-15
+> **版本**：v2.8 (R88迭代) | **创建日期**：2026-06-01 | **更新日期**：2026-06-15
 > **来源**：Anthropic Claude Code Subagents官方文档(完整frontmatter + 7步创建流程) + Agent SDK子代理编排 + Skills开放标准 + Hooks生命周期 + Plugins打包分发 + 四支柱AI OS架构 + 龙虾全域模板
 > **生效范围**：豆包Agent / Hermes Agent / OpenClaw龙虾Agent / 所有Sub Agent
 > **依赖文件**：SOUL.md / USER.md / 角色总说明书.md / 龙虾全域官方模板-最终版.md / Anthropic官方课程-390节全集.md
@@ -1846,3 +1868,465 @@ PreToolUse Hook (Delete):
   → 拦截危险删除操作
   → 检查操作对象是否在保护列表中
 ```
+
+
+---
+
+## R88迭代更新日志（2026-06-16）
+
+### Claude Code子代理分类体系与Agent Teams更新
+
+> 来源：Claude Code 官方文档 + Agent SDK 0.2.82 + Anthropic 扩展体系官方对照表
+
+**更新内容**：
+
+1. **Claude Code子代理分类体系**（内建三类）：
+
+| 子代理 | 描述 | 工具权限 | 适用场景 |
+|--------|------|---------|---------|
+| **Explore** | 快速、只读 | 仅Read/Grep/Glob | 文件发现、代码搜索、代码库探索 |
+| **Plan** | Plan Mode下做研究 | 仅Read（只读） | 帮助形成计划、架构分析 |
+| **General-purpose** | 探索+修改并存 | 全部工具（Read/Write/Edit/Bash） | 复杂多步任务 |
+
+2. **AgentDefinition 数据结构**（Claude Agent SDK 0.2.82）：
+
+```python
+@dataclass
+class AgentDefinition:
+    description: str          # 编排器用于识别该代理的描述
+    prompt: str               # 子代理系统提示词
+    tools: list[str] | None   # 允许的工具列表
+    model: str | None         # "sonnet" | "opus" | "haiku" | "inherit" | 完整模型ID
+    skills: list[str] | None  # 技能列表（注：tools中传"Skill"已弃用，改用skills字段）
+    memory: Literal["user", "project", "local"] | None  # 记忆类型
+    mcpServers: list[str | dict[str, Any]] | None        # MCP服务器列表
+    initialPrompt: str | None            # 初始提示词
+    maxTurns: int | None                 # 该子代理的最大循环次数
+    background: bool | None              # 是否后台运行
+    effort: EffortLevel | int | None     # 努力级别
+    permissionMode: PermissionMode | None # 权限模式
+```
+
+3. **子代理上下文隔离原则**：
+   - 每个子代理运行在独立上下文窗口中
+   - 只向主Agent返回摘要结果（而非全文转录）
+   - 子代理之间不直接通信，所有信息通过主Agent中转
+   - 子代理失败不污染父上下文
+
+4. **Agent Teams新增功能说明**（2026年4月新增）：
+   - 协调多个独立Claude Code会话，支持成员间直接通信
+   - 适合并行研究、新功能开发、竞争假设调试、跨层协调
+   - 每个成员是完整的Claude实例，可积累领域上下文
+   - Token消耗与活跃成员数成正比（小型2-4成员3-8x成本）
+
+5. **Skills/Hooks/MCP/Subagents四层协同配置模板**：
+
+```yaml
+# 四层协同配置
+extensions:
+  # Layer 1: 持久上下文
+  claude_md:
+    convention: "用pnpm不用npm, 提交前跑测试"
+    always_on: true
+
+  # Layer 2: 按需知识
+  skills:
+    - name: deploy
+      path: .claude/skills/deploy/SKILL.md
+      trigger: 元数据匹配或 /deploy 命令
+    - name: api-docs
+      path: .claude/skills/api-docs/SKILL.md
+
+  # Layer 3: 外部连接
+  mcp_servers:
+    - name: postgres
+      type: database
+      config: mcp-servers/postgres.json
+    - name: slack
+      type: messaging
+
+  # Layer 4: 任务委派
+  subagents:
+    - name: security-reviewer
+      type: General-purpose
+      prompt: "安全审查专家..."
+      tools: ["Read", "Grep"]
+      maxTurns: 6
+
+  # Layer 5: 自动化触发
+  hooks:
+    PostToolUse:
+      - event: Write/Edit
+        action: "eslint --fix $FILE_PATH"
+    PreToolUse:
+      - event: Delete
+        action: "check_protected_paths.sh"
+```
+
+6. **Agent Teams 与 Subagents 选择决策**：
+   - 子任务短、聚焦、产出清晰 → Subagents（子代理）
+   - 子任务需要多步持续工作、积累领域上下文 → Agent Teams
+   - 子代理需保持状态跨调用 → 升级到Agent Teams
+
+---
+
+## R51 Anthropic课程提炼：子代理管理与自动化配置（2026-06-17）
+
+### 子代理配置模板
+```yaml
+---
+name: agent-name
+description: 专长及Claude何时应调用
+model: sonnet
+effort: medium
+maxTurns: 20
+disallowedTools: Write, Edit
+---
+# 详细的系统提示
+```
+
+### 插件目录结构
+```
+my-plugin/
+  .claude-plugin/
+    plugin.json          # 必需
+  skills/                 # 命名空间前缀：/my-plugin:skill-name
+  agents/                 # 子代理定义
+  hooks/hooks.json        # 事件钩子
+  .mcp.json              # MCP工具
+  .lsp.json              # LSP语言服务器
+  settings.json           # 默认设置
+```
+
+### Hooks自动化规则
+- PreToolUse：安全检查（如禁止rm -rf在prod路径）、审计日志
+- PostToolUse：代码检查（tsc/ESLint）、测试运行
+- SessionStart：加载上下文、检查环境
+- SessionEnd：清理、总结
+- 关键优势：无条件触发，不可绕过，比Skill指令更可靠
+
+### 代理团队规模模板
+
+| 规模 | Agent数 | 适用场景 | 管理复杂度 |
+| 微型 | 1-2 | 简单任务 | 低 |
+| 小型 | 3-5 | 代码审查/研究 | 中 |
+| 中型 | 6-10 | 大型重构 | 高 |
+| 大型 | 10+ | 全栈项目 | 极高 |
+
+### MCP最小化原则
+- 每个MCP服务器应做一件事且做好
+- 优先使用官方服务器，自定义服务器需充分测试
+- 生产环境中MCP应设为只读优先、写操作需二次确认
+
+> 来源：Anthropic官方课程·R51轮学习 | 2026-06-17
+
+
+---
+
+## R89 Anthropic 子代理管理与自动化配置深度（2026-06-17）
+
+> 来源：Anthropic Claude Code Docs · Developer Toolkit · 多路信息源交叉验证
+
+### 一、Subagent 文件格式
+
+Subagent 使用 **YAML frontmatter + Markdown system prompt** 格式：
+
+```markdown
+---
+name: code-reviewer
+description: Reviews code for quality, security, and best practices. Use when code changes are made.
+tools: Read, Glob, Grep
+disallowedTools: Write, Edit
+model: sonnet
+permissionMode: acceptEdits
+maxTurns: 10
+effort: medium
+memory: project
+color: blue
+---
+
+You are a senior code reviewer. When invoked, analyze the code and provide
+specific, actionable feedback on quality, security, and best practices.
+
+## Output Format
+- **Severity**: Critical / High / Medium / Low
+- **Issue**: One-line description
+- **Location**: File:Line
+- **Recommendation**: Specific fix
+```
+
+**关键规则**：
+- 文件名不必匹配 `name` 字段（但建议一致）
+- 仅 `name` 和 `description` 为必需字段
+- Subagents 在会话启动时加载——手动编辑文件后需重启会话
+
+### 二、完整 Frontmatter 字段配置表
+
+| 字段 | 必需 | 类型/选项 | 说明 |
+|------|:---:|------|------|
+| `name` | ✅ | 小写+连字符 | 唯一标识符；Hooks 以此作为 agent_type |
+| `description` | ✅ | 自然语言文本 | **最重要字段**——决定 Claude 何时自动委托 |
+| `tools` | ❌ | 逗号分隔列表 | 工具白名单。省略=继承所有（含MCP）。**`Agent(type)` 限制可派生的 subagent 类型** |
+| `disallowedTools` | ❌ | 逗号分隔列表 | 工具黑名单。先应用 disallowedTools 再解析 tools |
+| `model` | ❌ | sonnet / opus / haiku / 完整ID / inherit | 默认 inherit。解析优先级：ENV→调用参数→frontmatter→主对话 |
+| `permissionMode` | ❌ | default / acceptEdits / auto / dontAsk / bypassPermissions / plan | **Plugin subagent 忽略此字段** |
+| `mcpServers` | ❌ | 服务器名或内联定义 | **Plugin subagent 忽略此字段** |
+| `hooks` | ❌ | PreToolUse / PostToolUse / Stop | **Plugin subagent 忽略此字段** |
+| `maxTurns` | ❌ | 整数 | subagent 最大代理轮数 |
+| `skills` | ❌ | 技能名列表 | 启动时预加载到 subagent 上下文（不同于 skills 字段中的 `context: fork`） |
+| `initialPrompt` | ❌ | 字符串 | `--agent` 模式时自动提交为第一个用户轮次 |
+| `memory` | ❌ | user / project / local | 持久记忆范围。project: `.claude/agent-memory/<name>/`；user: `~/.claude/agent-memory/<name>/`；local: `.claude/agent-memory-local/<name>/` |
+| `effort` | ❌ | low / medium / high / xhigh / max | 覆盖会话努力级别 |
+| `background` | ❌ | true / false | 默认 false。true=始终后台运行；后台 subagent 自动拒绝权限提示 |
+| `isolation` | ❌ | worktree | worktree=在临时 git worktree 中运行 |
+| `color` | ❌ | red / blue / green / yellow / purple / orange / pink / cyan | UI 显示颜色 |
+
+### 三、四种部署作用域（优先级从高到低）
+
+| 优先级 | 位置 | 作用域 | 创建方式 | 子文件夹行为 |
+|:---:|------|------|---------|------|
+| **1**（最高） | **Managed** settings `.claude/agents/` | 组织范围 | 管理员部署 | 子文件夹成为 scoped identifier 一部分 |
+| **2** | `--agents` CLI 标志 | 当前会话 | 启动时传递 JSON（不存盘） | N/A |
+| **3** | **Project** `.claude/agents/` | 当前项目 | /agents UI 或手动创建 | 子目录不影响标识符（可自由组织） |
+| **4** | **User** `~/.claude/agents/` | 所有项目 | /agents UI 或手动创建 | 递归扫描 |
+| **5**（最低） | **Plugin** `agents/` 目录 | Plugin 启用位置 | 随 plugin 安装 | 子文件夹成为 scoped identifier 一部分 |
+
+**命名冲突规则**：同名 subagent 时，高优先级定义覆盖低优先级。
+
+### 四、Built-in Subagents 完整配置
+
+| 名称 | Model | Tools | 行为特征 | CLAUDE.md | Git状态 |
+|------|-------|-------|---------|:---:|:---:|
+| **Explore** | Haiku | 只读（Read/Grep/Glob/Bash） | 快速低延迟；**拒绝Write/Edit** | ❌ 跳过 | ❌ 跳过 |
+| **Plan** | 继承主对话 | 只读（Read/Grep/Glob/Bash） | Plan mode 专用；**不可嵌套生成subagents** | ❌ 跳过 | ❌ 跳过 |
+| **General-purpose** | 继承主对话 | 所有工具 | 完整读写能力；**可递归委托** | ✅ 加载 | ✅ 加载 |
+| **statusline-setup** | Sonnet | 受限 | 自动被 `/statusline` 调用 | — | — |
+| **claude-code-guide** | Haiku | 受限 | 自动被 `/` 面板调用 | — | — |
+
+**Explore thoroughness 级别**：
+- `quick`（默认）：快速概览，适合初步定位
+- `medium`：中等深度，适合理解结构
+- `very thorough`：全面搜索，适合审计/重构前
+
+**为什么 Explore/Plan 跳过 CLAUDE.md**：设计目标是快速廉价——主对话使用完整 CLAUDE.md 上下文读取它们的结果，大多数项目规则不需要到达 subagent 本身。
+
+### 五、Agent Teams 引用 Subagent 类型机制
+
+**继承规则**：
+- 队友从引用的 subagent **继承 `tools` 和 `model`**
+- 引用的 subagent 的**正文（Markdown system prompt 部分）作为额外指令追加**到队友的系统提示
+
+```yaml
+# team.yaml 示例
+teams:
+  fullstack:
+    members:
+      - type: code-reviewer        # 引用 ~/.claude/agents/code-reviewer.md
+        role: security-auditor     # 额外角色描述，追加到系统提示
+      - type: test-writer
+        role: unit-test-generator
+      - name: custom-teammate      # 不引用 subagent，直接定义
+        model: sonnet
+        prompt: "You are..."
+```
+
+**不适用于 Agent Teams 的 frontmatter 字段**：`hooks`, `mcpServers`, `permissionMode`, `background`, `isolation` — 这些字段在 Agent Teams 路径下被忽略。
+
+### 六、Plugin Subagents 安全限制
+
+出于安全原因，Plugin subagents 以下三个 frontmatter 字段**被忽略**：
+
+| 字段 | 忽略原因 |
+|------|---------|
+| `hooks` | 防止第三方 plugin 注入持久化钩子 |
+| `mcpServers` | 防止第三方 plugin 声明恶意 MCP 服务器 |
+| `permissionMode` | 防止第三方 plugin 绕过权限控制 |
+
+**绕过方式**：如果需要这些字段，将 subagent 文件**复制到** `.claude/agents/` 或 `~/.claude/agents/`，这些路径不受 plugin 安全限制。
+
+### 七、Managed Settings 优先级覆盖规则
+
+```
+Managed settings（组织管理员）
+    │
+    ├── 覆盖同名 Project/User subagent
+    ├── 覆盖同名 Plugin subagent
+    │
+    └── 但不会覆盖 --agents CLI 标志（会话级别最高）
+```
+
+**覆盖粒度**：
+- 按 `name` 字段精确匹配——同名即覆盖
+- 不同名的 subagent 共存
+- Managed settings 修改后下一次会话启动生效
+
+### 八、会话启动时加载清单
+
+会话启动时的完整加载序列：
+
+```
+1. CLAUDE.md 层次加载
+   ~/.claude/CLAUDE.md → 项目 .claude/CLAUDE.md → CLAUDE.local.md → 托管策略
+
+2. Git 状态快照
+   git status + git diff（仅 General-purpose 和自定义 subagent）
+
+3. Subagent 定义扫描（按优先级）
+   Managed settings → --agents CLI → Project .claude/agents/ → User ~/.claude/agents/ → Plugin agents/
+
+4. MCP Server 连接
+   按 .mcp.json 或 settings.json 中声明顺序启动
+
+5. Hooks 注册
+   SessionStart → 环境中加载 PreToolUse/PostToolUse/Stop/SubagentStop
+
+6. Skills 预加载（L1：name + description）
+   .claude/skills/ + Plugin skills/ + Managed skills/
+```
+
+**不可用工具（Subagent 内）**：`AskUserQuestion` / `EnterPlanMode` / `ExitPlanMode` / `ScheduleWakeup` / `WaitForMcpServers` — 这些始终不可用于任何 subagent。
+
+> 来源：Anthropic Claude Code Docs + 官方文档 · R89轮学习 | 2026-06-17
+
+
+## Anthropic官方课程学习同步 (v3.99 · 2026-06-17)
+
+### 子代理管理与自动化配置（新提炼）
+
+1. **子代理定义规范**：带YAML frontmatter的Markdown文件，包含name/description/model/tools/skills字段
+2. **子代理位置策略**：Personal(~/.claude/agents/) 全局可用，Project(项目内) 项目专属
+3. **子代理调度规则**：Claude根据描述自动匹配任务到最合适的子代理
+4. **工具访问控制**：按需授予最小工具集，避免过度授权
+5. **输出格式约束**：结构化输出 + 障碍报告 + 置信度评分
+6. **分叉子代理**：基于现有子代理创建变体，复用配置
+7. **插件子代理**：插件可定义专用子代理(如code-reviewer、code-architect、code-explorer)
+8. **Agent Teams配置**：跨多会话协调，每个会话独立上下文
+9. **MCP工具集成**：execute(name, input)→string 通用接口，N+M替代N×M集成
+10. **自动化触发**：Hooks在SessionStart/PreToolUse/PostToolUse自动注入 + Skills基于上下文自动匹配
+
+### Plugin JSON 完整规范
+
+```json
+{
+  "name": "my-plugin",
+  "description": "A description of what this plugin does",
+  "author": {"name": "Your Name", "email": "you@example.com"}
+}
+```
+
+### Hook 系统四大节点
+- PreToolUse：安全检查、审计日志
+- PostToolUse：代码检查(tsc/ESLint)、测试运行
+- SessionStart：加载上下文、检查环境
+- SessionEnd：清理、总结
+
+### 5个关键内置Subagent：Explore(Haiku/只读)、Plan(只读/计划)、General-purpose(全权限)、statusline-setup、claude-code-guide
+
+> 来源：Anthropic 全域生态聚合研究 · v3.99 | 2026-06-17 | R100 补充：2026-06-18
+
+### R100 子代理管理增强模式 (2026-06-18)
+
+**1. 对抗性审查子代理配置**：
+```yaml
+---
+name: red-team-reviewer
+description: Security-focused adversarial code review, activated after every code generation task
+tools: Read, Grep, Glob
+model: sonnet
+permissionMode: default
+---
+You are a Red Team security auditor. After Coder Agent generates code, review for:
+- SQL Injection / XSS / Command Injection
+- Prompt Injection vulnerabilities in LLM interactions
+- Credentials or secrets in code
+- Insecure data handling and authorization bypass
+Return structured JSON: {"vulnerabilities": [...], "risk_level": "low|medium|high|critical", "requires_fix": true|false}
+```
+
+**2. Conductor Orchestrator 子代理配置**：
+```yaml
+---
+name: conductor
+description: Task decomposition and agent orchestration for complex multi-module features
+tools: Read, Grep, Glob, Task
+model: opus
+memory: project
+---
+You are a Conductor Agent. You do NOT write code. Your responsibilities:
+1. Decompose user feature requests into structured tickets
+2. Assign tickets to Specialist Agents (frontend/backend/qa)
+3. Monitor agent progress via Shared Blackboard (TASKS.md)
+4. Enforce 3-Strike Rule: escalate failed agents after 3 attempts
+5. Synthesize final PR from specialist outputs
+Output format: JSON tickets with fields: ticket_id, module, spec, output_schema, assigned_agent, dependencies
+```
+
+**3. 3-Strike Rule 子代理实现规范**：
+```yaml
+---
+name: senior-dev
+description: Escalation target for failed sub-agents. Takes over after 3-Strike Rule triggers.
+tools: Read, Write, Edit, Grep, Glob, Bash
+model: sonnet
+---
+You are a Senior Developer escalation agent. When a specialist agent fails 3 times:
+1. Review the failed attempts and error logs
+2. Identify root cause (not symptom)
+3. Implement the fix with root cause addressed
+4. Run full test suite before handoff
+```
+
+**4. 子代理 Docker 沙盒隔离配置**：
+```yaml
+---
+name: sandboxed-executor
+description: Runs untrusted code in isolated Docker sandbox, auto-destroyed after task
+tools: Bash
+model: sonnet
+isolation: sandbox
+---
+All code execution runs in ephemeral Docker containers.
+Container lifecycle: docker run --rm → execute → destroy.
+No persistent state on host machine.
+```
+
+**5. Agent 可观测性子代理**：
+```yaml
+---
+name: agent-observer
+description: Monitors agent decision paths, token consumption, and failure patterns
+tools: Read, Grep, Glob
+model: haiku
+---
+Track per-agent metrics:
+- Token consumption per task
+- Tool selection decision paths (why tool A vs tool B)
+- 3-Strike trigger frequency per agent
+- Context utilization ratio (productive vs overhead tokens)
+Output as structured dashboard data.
+```
+
+**6. Shared Blackboard 任务协调规范**：
+```markdown
+# TASKS.md (Shared Blackboard)
+
+| Task ID | Status | Agent | Module | Dependencies | Attempts |
+|---------|--------|-------|--------|-------------|----------|
+| T-001 | completed | frontend | UI/auth | none | 1 |
+| T-002 | in_progress | backend | API/auth | T-001 | 2 |
+| T-003 | pending | qa | tests/auth | T-001, T-002 | 0 |
+| T-004 | blocked | backend | DB/migration | T-002 | 3 |
+
+STATUS LEGEND: pending → in_progress → completed | blocked (needs escalation)
+3-STRIKE RULE: Attempts=3 → auto-escalate to senior-dev agent
+```
+
+**7. 子代理工具权限最小化模板**：
+| 子代理类型 | 推荐 tools | 禁止 tools | model |
+|-----------|-----------|-----------|-------|
+| 代码探索 | Read, Grep, Glob | Write, Edit, Bash | haiku |
+| 代码生成 | Read, Write, Edit, Grep, Glob, Bash | WebSearch | sonnet |
+| 安全审查 | Read, Grep, Glob | Write, Edit, Bash | sonnet |
+| 测试执行 | Read, Bash | Write, Edit | haiku |
+| 编排调度 | Read, Grep, Glob, Task | Write, Edit | opus |
+*（内容由AI生成，仅供参考）*

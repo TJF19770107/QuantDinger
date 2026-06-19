@@ -1,3 +1,14 @@
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: cf54d54c59baa0ada35a5ecb7c73a584_e26f32d16a3711f1a99c5254007bceed
+    ReservedCode1: mM+9U1yKv1N5ZBGvRaQxk28/UM8YUDVuMUs1iEnjtmL5Q5wXclUulIIjM0u6eB8DpZFW1pmoYed7BWA1LIHEyLtWwzTwYWM3wys399G4A7JTE2qU2nGwRoX4LEGnmQIB6QXTRMFb8BKEXUXqAp4Rp6q+owaKC+CQS9N0hcOEQ6jqo50ZtkxFO2aeJwA=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: cf54d54c59baa0ada35a5ecb7c73a584_e26f32d16a3711f1a99c5254007bceed
+    ReservedCode2: mM+9U1yKv1N5ZBGvRaQxk28/UM8YUDVuMUs1iEnjtmL5Q5wXclUulIIjM0u6eB8DpZFW1pmoYed7BWA1LIHEyLtWwzTwYWM3wys399G4A7JTE2qU2nGwRoX4LEGnmQIB6QXTRMFb8BKEXUXqAp4Rp6q+owaKC+CQS9N0hcOEQ6jqo50ZtkxFO2aeJwA=
+---
+
 # USER.md — 多Agent协作流程
 
 > 基于 Anthropic 官方课程（Subagents + Agent Skills）提炼 | 版本 v1.0 | 2026-06-14
@@ -156,3 +167,51 @@ Skills注入：
 ---
 
 *由 Marvis 基于 Anthropic 官方课程整理 | 2026-06-14 23:58 CST*
+
+---
+
+## 多Agent协调五大模式（Anthropic 2026年4月官方指南）
+
+核心原则：按"需要什么上下文"分解任务，而非按"做什么类型的工作"。
+
+| 模式 | 架构 | 适用场景 | 通信方式 |
+|------|------|---------|---------|
+| Sequential Pipeline | A→B→C链式 | 翻译→润色→排版 | 数据传递 |
+| Parallel Fan-out | 中央→多Worker | 同时分析多文档 | 独立上下文 |
+| Orchestrator-Worker | 主Agent调度子Agent | 复杂代码审查 | 结构化任务 |
+| Agent Debate | 多Agent辩论收敛 | 高风险决策 | 对抗验证 |
+| Swarm Autonomy | 自组织无中央控制 | 大规模并行探索 | 共享黑板 |
+
+决策口诀：Skills打包可复用程序 / MCP连接外部系统 / Subagents专业化并行 / RAG检索密集型
+
+
+## Anthropic官方课程学习同步 (v3.99 · 2026-06-17)
+
+### 多Agent协作流程（新提炼）
+
+1. **任务分解原则**：复杂任务→独立子任务→分配给专职subagent
+2. **Subagent创建流程**：/agents → 选择位置(Library/Personal) → 描述任务 → 生成
+3. **Agent Teams协作**：跨多会话协调，适用于需要多个代理并行通信的场景
+4. **Feature-dev 7阶段工作流**：需求分析→并行探索→架构方案→确认→实现→并行审查→部署
+5. **PR-review 6代理并行**：从CLAUDE.md合规性、Bug检测、历史上下文等维度独立评审
+6. **模型分层策略**：简单任务→Haiku(快速便宜)、复杂推理→Sonnet、重度分析→Opus
+7. **上下文管理**：Claude memory files + /init + auto compaction + 子代理摘要
+8. **插件即用**：/plugin install 一键安装，Plugin = Skills + Hooks + MCP + Commands
+9. **Hook自动化**：用自然语言定义规则，/hookify 自动生成并立即生效
+10. **Slash Commands**：用户主动调用，Skills自动注册为Slash Commands
+
+### 25个官方插件速查
+
+| 分类 | 数量 | 关键插件 |
+|------|:---:|------|
+| LSP语言支持 | 12 | pyright-lsp, typescript-lsp, rust-analyzer-lsp等 |
+| 开发工作流 | 8 | feature-dev, pr-review-toolkit, commit-commands, agent-sdk-dev |
+| 代码质量 | 4 | code-review, security-guidance, code-modernization |
+| 外部合作 | 15 | github, linear, firebase, terraform, playwright |
+
+### Anthropic Academy 18门课程
+
+入门→进阶→全栈三阶段，Claude Code/API/MCP/云平台全覆盖，全部免费含证书
+
+> 来源：Anthropic 全域生态聚合研究 · v3.99 | 2026-06-17
+*（内容由AI生成，仅供参考）*

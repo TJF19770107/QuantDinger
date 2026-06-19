@@ -677,7 +677,555 @@ claude mcp list
 
 ---
 
-> **版本更新声明**
-> 更新：2026-06-16 第三轮循环
-> 本轮新增：Managed Agents 多Agent会话流程（Coordinator-Thread模型、Shared Sandbox、Vault凭证共享、三模式编排）、Plugin 安装与分发工作流（命名空间机制、创建-测试-发布全流程）、Claude Cowork 项目协作完整流程（文件夹组织、API集成、MCP标准化、Hooks自动化）
-> 情报来源：docs.anthropic.com/managed-agents + code.claude.com/plugins + anthropic.com/learn/courses
+## 九、Dynamic Workflows：大规模并行协作模式
+
+> 来源：Anthropic 2026-06-03 发布 | 面向 Max/Team plan 用户
+
+### 9.1 模式定义
+
+Dynamic Workflows 是多Agent协作的第五种模式——**自动规模化并行**：
+
+```
+模式 5: Dynamic Workflows（自动规模化并行）
+适用场景：超大规模任务，可拆分为 10+ 独立并行子任务
+触发方式：直接描述复杂任务，Claude 自动拆解
+依赖要求：Max / Team plan
+```
+
+### 9.2 执行流程
+
+```
+用户：迁移项目从 Express 到 FastAPI
+          │
+          ▼
+    ┌─────────────────────────┐
+    │  Claude 主Agent（编排器）│
+    │  自动拆解任务            │
+    └───────┬─────────────────┘
+            │
+    ┌───────┼───────┬───────┬───────┐
+    ▼       ▼       ▼       ▼       ▼
+ [路由]  [控制器] [模型]  [测试]  [文档]
+ Sub 1   Sub 2   Sub 3   Sub 5   Sub N
+    │       │       │       │       │
+    └───────┴───────┴───────┴───────┘
+            │ 结果汇总
+            ▼
+    主Agent 审核关键决策 → 呈现最终结果
+```
+
+### 9.3 与现有四种模式的对比
+
+| 维度 | Subagent委派 | Agent Teams | Workflow编排 | Skills+Hooks | Dynamic Workflows |
+|------|:---:|:---:|:---:|:---:|:---:|
+| 子代理数量 | 1-3 | 3-5 | 固定流程 | 0（自动触发） | **10-100+** |
+| 任务拆分 | 手动 | 手动 | 预定义 | 不需要 | **自动** |
+| 并行度 | 低 | 中 | 流程定义 | 事件驱动 | **极高** |
+| 人工介入 | 每步可选 | 关键节点 | 检查点 | 自动 | **仅关键决策** |
+| 适用规模 | 小任务 | 中型项目 | 固定流程 | 日常自动化 | **超大规模** |
+
+### 9.4 最佳实践
+
+**何时使用**：
+- 代码跨语言/跨框架大规模迁移
+- 全量API接口重构
+- 多模块独立开发
+- 批量测试用例生成
+
+**何时避免**：
+- 子任务间存在复杂依赖关系
+- 需要频繁人工决策的创意性工作
+- 小型任务（传统Subagent更高效）
+
+### 9.5 人工介入策略
+
+```
+默认自动化执行 → 仅以下情况介入：
+  1. 架构级决策（如技术选型变更）
+  2. 安全敏感操作（如数据库迁移）
+  3. 子代理执行失败需要重新规划
+  4. 最终结果审核
+```
+
+---
+
+## 十、Skills 链式编排与 Generator→Evaluator 循环
+
+### 10.1 链式编排六步法
+
+```
+Step 1: 规划定义 → SPEC.md
+Step 2: 技能选择 → 匹配技能列表
+Step 3: 外部连接 → MCP/Proxy 配置
+Step 4: Generator→Evaluator 验证循环 → 通过/失败日志
+Step 5: 状态交接 → NOTES.md + Files API
+Step 6: 链入下一步 → 迭代至完成
+```
+
+### 10.2 Generator→Evaluator 协作模式
+
+这是 Anthropic 推荐的质量保证核心模式：
+
+```
+┌──────────┐    产物     ┌──────────┐
+│ Generator │ ─────────→ │ Evaluator│
+│  (生成器) │            │ (评估器) │
+└──────────┘            └────┬─────┘
+                             │
+                    通过阈值？──→ 链入下一步
+                    未通过？────→ 修复循环或人工介入
+```
+
+**关键约束**：
+- Generator 和 Evaluator 使用**独立上下文窗口**
+- Evaluator 从零重新推导检查条件（不继承 Generator 推理）
+- 每次验证产生独立日志，支持可追溯审计
+
+### 10.3 实操示例：内容生产流水线
+
+```
+brief → draft → SEO检查 → slides → exec summary PDF
+  │       │        │         │          │
+  │       │     Evaluator   │     Evaluator
+  │    Evaluator 检查元数据  │     检查摘要准确性
+  │    检查覆盖度            │
+  └─────── 每个产出物经过独立验证 ──────┘
+```
+
+### 10.4 npx 技能安装协作流程
+
+2026年新技能安装体系简化了团队协作配置：
+
+```bash
+# 团队成员只需执行一条命令即可获得相同技能
+npx skills add claudeception
+npx skills add op7418/NanoBanana-PPT-Skills
+
+# 无需手动管理文件，无需重启，全局生效
+```
+
+
+---
+
+## 十一、Agent SDK 集成协作模式（第5轮学习·R92新增）
+
+> 来源：platform.claude.com Agent SDK Python 参考
+
+### 11.1 协作模式选型：query() vs ClaudeSDKClient
+
+| 协作特征 | `query()` | `ClaudeSDKClient` |
+|---------|-----------|-------------------|
+| 一次任务·独立会话 | ✅ 天然匹配 | ❌ 生命周期开销 |
+| 多轮对话·上下文累积 | ⚠️ 需 `resume` | ✅ 自动累积 |
+| 大规模并行 | ✅ 无状态即并行 | ❌ 需管理多个客户端 |
+| 长期项目·持续协作 | ❌ 每次重建上下文 | ✅ 会话复用 |
+| 团队共享状态 | 需 Files API 中转 | 需外部持久化 |
+
+**集成原则**：团队协作场景下，`query()` 用于独立可并行的微任务分发（如"每人审一个模块"），`ClaudeSDKClient` 用于需要累积上下文的长对话（如"本周需求迭代对话"）。
+
+### 11.2 会话生命周期管理
+
+```python
+from claude import ClaudeSDKClient, SessionQuery
+
+# 按项目过滤——多项目环境中精准定位协作会话
+sessions = client.list_sessions(SessionQuery(directory="/project-A"))
+for s in sessions:
+    msgs = client.get_session_messages(s.id)
+    # 分析协作轨迹：谁在何时做了何决策
+```
+
+**协作价值**：
+- `list_sessions()` → 团队 Agent 协作审计（谁做了什么）
+- `get_session_messages()` → Agent 执行历史回放（为什么这样做）
+- `continue_conversation=True` → 跨会话任务延续（断点续传）
+
+### 11.3 自定义 MCP 工具的团队共享
+
+```python
+@tool("query_database", "安全查询生产数据库（只读）", {"sql": str})
+async def query_db(args):
+    # 沙箱执行，仅允许 SELECT
+    ...
+
+server = create_sdk_mcp_server("team-db", tools=[query_db])
+```
+
+**设计原则**：
+- MCP 工具即 API 合约——定义后团队成员调用同一接口
+- `create_sdk_mcp_server()` 进程内服务器 → 零网络依赖的内联协作
+- Vault credential 共享 → 所有 Agent 用同一凭据访问外部服务
+> 更新：2026-06-16 第四轮循环
+> 本轮新增：Dynamic Workflows 大规模并行协作模式（第5种协作模式、自动拆解-并行执行-关键决策审核）、Generator→Evaluator 验证循环协作模式、Skills 链式编排六步法、npx 技能安装协作流程
+
+
+---
+
+## 五、多Agent协调五大模式（Anthropic 2026年4月官方指南）
+
+### 5.1 上下文中心分解方法论
+多Agent系统的价值在于特定场景，而非默认选择。核心判断标准：
+- **不要按"做什么工作"分解，要按"需要什么上下文"分解**
+- 上下文重叠的子任务用一个Agent，上下文隔离的子任务用多个Agent
+
+### 5.2 五大协调模式速查
+
+| 模式 | 架构 | 适用场景 | 通信方式 |
+|------|------|---------|---------|
+| Sequential Pipeline | A→B→C 链式 | 文本翻译→润色→排版 | 数据传递 |
+| Parallel Fan-out | 中央→多Worker并发 | 同时分析多个文档 | 独立上下文 |
+| Orchestrator-Worker | 主Agent调度子Agent | 复杂代码审查 | 结构化任务 |
+| Agent Debate | 多Agent辩论收敛 | 高风险决策 | 对抗验证 |
+| Swarm Autonomy | 自组织、无中央控制 | 大规模并行探索 | 共享黑板 |
+
+### 5.3 Skills / MCP / Subagents / RAG 决策口诀
+- 打包可复用程序 → Agent Skills
+- 连接外部系统 → MCP
+- 需要专业化并行 → Subagents（注意协调成本）
+- 检索密集型 → RAG
+
+---
+
+## 六、Agent Teams 实战操作手册（R89新增）
+
+> 来源：Anthropic 官方 Agent Teams 文档 + Claude Code Best Practices
+> 更新：2026-06-16 第四轮循环
+
+### 6.1 启动 Agent Team
+
+```bash
+# 自然语言描述即可，Claude 自动创建团队
+"I'm designing a CLI tool that helps developers track TODO comments across
+their codebase. Create an agent team to explore this from different angles:
+one teammate on UX, one on technical architecture, one playing devil's advocate."
+```
+
+### 6.2 四种协作流程
+
+#### 流程 A：探索-计划-编码-提交（最佳实践标准流）
+
+```
+Explore (Plan Mode) → Plan (生成蓝图) → Implement (Edit Mode) → Commit (PR)
+```
+
+每阶段产出物：研究摘要 → 实现计划 → 代码+测试 → PR描述
+
+#### 流程 B：并行研究审查
+
+```
+Team Lead 创建研究任务
+  ├── Teammate A: 调查方案X的可行性
+  ├── Teammate B: 调查方案Y的可行性
+  └── Teammate C: 对抗验证（Devil's Advocate）
+         ↓
+    三方向步执行，结果自动汇总至 Lead
+         ↓
+    Lead 合成最终报告
+```
+
+#### 流程 C：竞合调试
+
+```
+复现间歇性Bug（每50次挂1次）
+  ├── Teammate A: 假设A→复现→验证
+  ├── Teammate B: 假设B→复现→验证
+  └── Teammate C: 假设C→复现→验证
+         ↓
+    某假设成立前不停止（Loop until done 模式）
+```
+
+#### 流程 D：跨层协调开发
+
+```
+Lead: 新增OAuth登录功能
+  ├── Teammate Frontend: 登录页面 + Token管理
+  ├── Teammate Backend: OAuth回调 + Session管理
+  └── Teammate Test: 端到端测试用例
+         ↓
+    各自独立 worktree，完成后 Lead 合并审查
+```
+
+### 6.3 上下文管理铁律
+
+Claude 的上下文窗口是最宝贵的资源，性能随填充率线性下降。
+
+| 策略 | 操作 | 效果 |
+|------|------|------|
+| **/context** | 查看当前 Token 使用量 | 知情决策 |
+| **/compact** | 高密度压缩对话历史 | 延长有效对话长度 |
+| **/clear** | 完全清空对话记忆 | 切换到全新任务 |
+| **Subagent 委派** | 繁重检索交给子代理独立上下文 | 主对话保持精简 |
+
+### 6.4 验证闭环设计
+
+给 Claude 一个可运行的检查是"监督"和"放手"的分界线：
+
+```
+Prompt 级： "run the tests after implementing"
+/gool 级： 设定目标条件，每轮自动检测
+Hook 级：  Stop hook 运行检查脚本，不通过不结束
+对抗验证级：独立 Agent 验证主 Agent 输出
+```
+
+**关键原则**：让 Claude 展示证据（测试输出、命令结果、截图对比），而非仅声明"已完成"。
+
+---
+
+## 2026-06-16 更新：多 Agent 协作流程进阶
+
+### 一、Subagent 委派流程
+
+```
+主 Agent 识别任务 → 匹配 Subagent 描述 → 委托执行 → 独立上下文工作 → 结果摘要回传
+```
+
+**详细步骤**：
+1. **任务识别**：主 Agent 分析用户需求，判断是否可委派
+2. **描述匹配**：扫描 `~/.claude/agents/` 和 `.claude/agents/`，匹配 Subagent 的 `description` 字段
+3. **委托执行**：将任务 + 上下文摘要发送给匹配的 Subagent
+4. **独立工作**：Subagent 在自己的上下文窗口中执行（可使用受限工具集）
+5. **结果回传**：Subagent 完成后返回结果摘要，主会话接收并整合
+
+**委派时机判断**：
+- ✅ 委派：专注型任务（只读探索、安全审查、代码分析）、上下文可能被污染的繁重检索
+- ❌ 不委派：需要主会话全程参与的多步骤协调任务、需要即时反馈的交互任务
+
+### 二、Agent Teams 并行协作流程
+
+```
+Lead 分配任务 → Teammates 独立执行 → Mailbox 通信 → 自我协调 → Lead 汇总
+```
+
+**Lead 职责**：
+1. 分解上层目标为可独立执行的子任务
+2. 将子任务写入共享任务列表
+3. 监控进度（非微观管理，信任 Teammate 自主完成）
+4. 汇总各 Teammate 输出，消除冲突
+5. 执行团队清理
+
+**Teammate 职责**：
+1. 从共享任务列表中认领任务
+2. 独立在自身上下文中执行
+3. 遇到阻塞时通过 Mailbox 求助其他 Teammate
+4. 完成后更新任务状态 + 通知 Lead
+
+**通信规则**：
+- Teammate ↔ Teammate：Mailbox 直接通信，无需经 Lead 中转
+- Teammate → Lead：任务完成通知 + 结果输出
+- Lead → Teammate：任务分配 + 全局调度指令
+
+### 三、Skills 触发机制
+
+Skills 通过 **SKILL.md 的 YAML frontmatter 自动匹配触发**：
+
+**触发流程**：
+1. Claude 接收用户输入
+2. 扫描已加载的 Skills 列表
+3. 用 Skill 的 `name` 和 `description` 与用户意图做语义匹配
+4. 匹配成功 → 将 Skill 的指令注入当前上下文
+5. 按 Skill 指令执行任务
+
+**SKILL.md 结构**：
+```yaml
+---
+name: skill-name           # 唯一标识
+description: 一句话说明     # 用于自动匹配触发
+---
+# Skill 正文（Markdown）
+```
+
+**渐进式加载**：Skill 正文中的示例和模板应拆分到独立文件，仅在需要时加载，避免上下文膨胀。
+
+### 四、Hooks 事件驱动流程
+
+Hooks 是**确定性脚本**——不需要 LLM 推理判断，在特定事件触发时自动执行。
+
+**四大事件类型和处理流程**：
+
+| 事件类型 | 触发时机 | 流程 | 用途 |
+|---------|---------|------|------|
+| `SessionStart` | 会话开始时 | 执行脚本 → 注入上下文 | 初始化环境、加载项目配置 |
+| `PreToolUse` | 工具调用前 | 执行校验脚本 → Exit 0 放行 / Exit 2 阻止 | 安全门禁、危险命令拦截 |
+| `PostToolUse` | 工具调用后 | 执行日志脚本 | 审计日志、通知推送 |
+| `Notification` | 自定义事件 | 转发到外部系统 | Slack 通知、状态同步 |
+
+**配置位置**：`settings.json` 中的 `hooks` 字段。支持项目级、用户级。
+
+**关键原则**：
+- Hooks 是确定性代码，不依赖 LLM 判断
+- PreToolUse 用 Exit code 2 阻止危险操作
+- PostToolUse 用于记录和通知，不应阻塞流程
+
+### 五、MCP 工具集成流程
+
+```
+mcp.json 配置 → 服务启动 → 工具发现 → 标准化调用 → 结果返回
+```
+
+**详细步骤**：
+1. **配置**：在 `.mcp.json`（项目级）或 `~/.claude/.mcp.json`（用户级）定义 MCP 服务器
+2. **启动**：Claude Code 按配置启动 MCP 服务器进程（stdio 本地或 HTTP/SSE 远程）
+3. **工具发现**：Claude 通过 MCP 协议发现服务器暴露的工具列表
+4. **标准化调用**：使用完全限定名 `ServerName:tool_name` 调用
+5. **结果返回**：MCP 服务器执行操作，返回结构化结果
+
+**三作用域配置示例**：
+```json
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      }
+    }
+  }
+}
+```
+
+**凭证管理原则**：密钥只用环境变量引用（如 `${GITHUB_TOKEN}`），绝不硬编码。
+
+### 六、四模式协作决策树
+
+```
+                  ┌─ 任务是否可拆为确定性步骤？
+                  │
+         是 ──────┼────── 否
+         │                 │
+   规模 > 100 子任务？    任务需要多角色协商？
+    │          │           │
+   是          否     是 ──┼── 否
+    │          │      │         │
+Dynamic   Subagent  Agent    单 Agent
+Workflows  委派     Teams    直接处理
+```
+
+**决策规则**：
+1. 简单任务（单步、无依赖）→ 单 Agent 直接处理
+2. 可委派的专注任务 → Subagent 委派（上下文隔离 + 成本最低）
+3. 需要多角色协商/交叉验证 → Agent Teams（实验性，Token 成本高）
+4. 超大规模确定性并行任务（100+ 子任务）→ Dynamic Workflows
+
+---
+
+## R91 增量：多Agent 5层嵌套协作流程 & Agent SDK 新定价（2026-06-17）
+
+> 来源：Claude Code v2.1.172 + Agent SDK 2026-06-15 新定价
+
+### 一、5层嵌套协作流程
+
+```
+用户请求 → 主Agent 拆解为顶层子任务
+  ├── Layer 1 子代理 A: 整体架构分析
+  │     ├── Layer 2 子代理 A1: 安全审计
+  │     │     └── Layer 3 子代理 A1a: SQL注入检测
+  │     └── Layer 2 子代理 A2: 性能分析
+  ├── Layer 1 子代理 B: 模块重构
+  │     └── Layer 2 子代理 B1: 单元测试生成
+  └── Layer 1 子代理 C: 文档更新
+
+所有结果逐层汇总 → 主Agent 综合呈现
+```
+
+**协作流程要点**：
+
+1. **分层责任**：每层子代理只对自己层的任务负责，不越界
+2. **摘要回传**：深层子代理返回结构化摘要（JSON/Markdown），不返回原始上下文
+3. **失败隔离**：任一层子代理失败，不影响兄弟节点，只上报给父级
+4. **成本模型**：深度 N 的嵌套≈ Token 消耗 ≈ 2^N × 单层成本（指数增长）
+
+### 二、Agent SDK 新定价（2026年6月15日起）
+
+**独立 credit 体系**：Agent SDK 调用从独立的月度 Agent SDK credit 中扣除，与交互式对话额度分离。
+
+影响：
+- 批量 Agent 编排不再消耗对话额度，适合 CI/CD 流水线集成
+- 需要建立 Agent SDK 调用成本监控
+- 大规模多 Agent 系统需考虑 credit 预算
+
+**Python SDK 快速接入**：
+```python
+from claude_agent_sdk import query, ClaudeAgentOptions, AgentDefinition
+
+async for msg in query(
+    prompt="审查整个代码库的安全性",
+    options=ClaudeAgentOptions(
+        allowed_tools=["Read", "Glob", "Grep", "Agent"],
+        agents={
+            "security-scanner": AgentDefinition(
+                description="安全漏洞扫描专家",
+                tools=["Read", "Glob", "Grep"],
+            ),
+            "compliance-checker": AgentDefinition(
+                description="合规性检查专家",
+                tools=["Read", "Glob"],
+            ),
+        },
+    ),
+):
+    # 处理多层嵌套返回的结构化结果
+    pass
+```
+
+### 三、协作模式升级
+
+原四模式协作架构增加深度维度：
+
+```
+Subagent 委派 → Agent Teams → 嵌套 Agent 树 → Workflow 编排
+     ↓              ↓              ↓                ↓
+  简单任务分配    专业团队协作    分层递归分解    流程引擎驱动
+  深度=1         深度=1        深度≤5          深度=动态
+```
+
+**选择升级路径**：
+- 单 Agent 足够 → Subagent 委派（深度=1）
+- 多角色并行 → Agent Teams（深度=1，广度≤5）
+- 复杂分层任务 → 嵌套 Agent 树（深度≤3 推荐，≤5 上限）
+- 超大规模确定任务 → Dynamic Workflows（深度动态，广度可达100+）
+- 定时/事件驱动长期任务 → Routines（云端异步，Remote Control 监控）← NEW
+
+---
+
+## R92 增量：Routines 与异步 Agent 协作流程（2026-06-17）
+
+> 来源：Code with Claude Tokyo (June 10-11, 2026)
+
+### 一、Routines 协作模式
+
+Routines 为多 Agent 系统引入了"异步协作"维度——任务不再需要开发者在场。
+
+```
+同步协作（传统）：
+用户 → 主Agent → Subagents → 结果 → 用户审查
+
+异步协作（Routines）：
+触发器 → Routine Agent → Subagents → 自动PR/通知 → 用户异步审查
+```
+
+### 二、Routines 触发类型与协作场景
+
+| 触发方式 | 协作场景 | 典型 Routine |
+|---------|---------|-------------|
+| **Cron 定时** | 周期性任务 | 每日凌晨2点代码安全扫描 → 自动修复PR |
+| **Webhook/API** | 外部系统事件 | PR合并后全量回归测试 → 失败自动回滚 |
+| **GitHub Events** | 代码仓库事件 | Issue创建 → 自动分类 → 分派到对应Agent |
+
+### 三、Routines + Agent Teams 组合
+
+```
+Routine 触发器
+  ├── 启动 Agent Team（安全审查组）
+  │     ├── security-scanner: SQL注入/CSRF/权限检查
+  │     ├── dependency-checker: 依赖版本漏洞扫描
+  │     └── license-auditor: 许可证合规审查
+  └── 汇总结果 → 自动创建修复 PR → Slack 通知
+```
+
+### 四、异步协作铁律
+
+1. **结果可审计**：每个 Routine 执行生成完整日志，失败时保留现场
+2. **Remote Control 兜底**：关键 Routine 开启 Remote Control，手机上可随时介入
+3. **Vault 隔离**：不同 Routine 使用独立 Vault 凭据，互不污染
+4. **告警优先**：Routine 异常 > 自动通知 > 人工介入（而非静默失败）

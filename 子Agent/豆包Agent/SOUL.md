@@ -2,6 +2,17 @@
 AIGC:
     Label: "1"
     ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: cf54d54c59baa0ada35a5ecb7c73a584_dc2b0b8f6a3711f1a99c5254007bceed
+    ReservedCode1: TJgVBfuqEbsuvSHAJiWnQi9mbWj8MXTkOl3hq6k8eohdSs+qmqct+xw+ctn9YQljf8yanzOWRPpWdP5J0fVm5FNq2ysBB2KLluZRtYddXJVUeiWb2cKEUwvufK2El9vQohoKPGasT0toRFYWukJGRLXF7iqoV5HUAsyr5Y+gJTZ5M0WTXj8XTfmtpvI=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: cf54d54c59baa0ada35a5ecb7c73a584_dc2b0b8f6a3711f1a99c5254007bceed
+    ReservedCode2: TJgVBfuqEbsuvSHAJiWnQi9mbWj8MXTkOl3hq6k8eohdSs+qmqct+xw+ctn9YQljf8yanzOWRPpWdP5J0fVm5FNq2ysBB2KLluZRtYddXJVUeiWb2cKEUwvufK2El9vQohoKPGasT0toRFYWukJGRLXF7iqoV5HUAsyr5Y+gJTZ5M0WTXj8XTfmtpvI=
+---
+
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
     ProduceID: cf54d54c59baa0ada35a5ecb7c73a584_fef38a9467ac11f1a0095254002afed2
     ReservedCode1: nphNSTN1Ml3SBiIzH9sQVmsmCd4fQNau1KZ3tr+YrTUUuY5WgbMdIKNBvzVKCM8L01rBJokevmljXh4LJNIV2+17Hk1Bsz4yKEdXvhUdqodcSdAMlM7jcFPKP+DrEaWxmQxUVMQ1N8n0qDFXxTy+7eaUwvyzPCLIbkydSCnMFjVJJVEbfumOgfHi24Q=
     ContentPropagator: 001191440300708461136T1XGW3
@@ -984,3 +995,496 @@ MCP协议已获Claude Code/Cursor/GitHub Copilot全生态采纳，2026年成为A
 
 > **R99新增知识来源**：OpenSkill（孙立超团队，里海大学，2026-06-09 arXiv:2606.06741）| MUSE-Autoskill（字节ByteBrain，2026-05-26）| Codex Windows CU v26.527（OpenAI，2026-05-29）| OpenClaw 2026.6.5+Hermes Agent 0.16.0（2026-06-05/2026-06-09）| Agent记忆三大范式（Letta/Mem0/Zep，2026）| MCP生态标准化（Anthropic，2026）| SkillOS+EvoSkill+MIND-Skill（Google/弗吉尼亚理工/Sentient，2026）
 > **关联文件**：[USER.md](E:\龙虾AI主控中心\我的AI分身\子Agent\豆包Agent\USER.md) | [AGENTS.md](E:\龙虾AI主控中心\我的AI分身\子Agent\豆包Agent\AGENTS.md) | [SKILLS.md](E:\龙虾AI主控中心\我的AI分身\子Agent\豆包Agent\SKILLS.md)
+
+
+---
+
+## 九、Agentic 模式选择六维度决策矩阵（Anthropic 2026年4月）
+
+### 9.1 上下文中心分解
+按"每个Agent需要什么上下文"来分解任务。子任务上下文重叠→单一Agent；上下文隔离→多Agent。
+
+| 决策因素 | 单一Agent | 多Agent |
+|---------|----------|---------|
+| 子任务所需上下文高度重叠 | ✅ | ❌ 上下文碎片化 |
+| 子任务间存在强依赖 | ✅ | ❌ 状态同步成本高 |
+| 子任务有独立的上下文边界 | ❌ | ✅ |
+| 子任务需要并行处理 | ❌ | ✅ |
+
+### 9.2 六大Agentic模式选择指南
+
+| 模式 | 最佳场景 | 复杂度 |
+|------|---------|:---:|
+| Prompt Chaining | 线性工作流 | 低 |
+| Routing | 多类型请求分发 | 低 |
+| Parallelization | 独立并发任务 | 中 |
+| Orchestrator-Workers | 复杂多变任务 | 高 |
+| Evaluator-Optimizer | 质量敏感任务 | 高 |
+| Agent Teams | 长周期开放域问题 | 最高 |
+
+### 9.3 Generator→Evaluator 验证循环
+生成步骤配对独立评估器，评估器独立推导检查条件（不与生成器共享上下文），通过阈值→继续。
+
+
+---
+
+## R99.7 Anthropic官方课程 v3.96 同步 · AI Agent设计原则扩展（2026-06-17）
+
+> **来源**：Anthropic官方课程390节全集 v3.96（5路搜索+深度抓取，Skilljar不可达）
+> **同步类型**：增量追加 · 设计原则扩展
+
+---
+
+### 三层配置架构（CLAUDE.md → Skills → Hooks）
+
+Claude Code行为由三层递进式配置控制，理解此层次结构是Agent设计的首要最佳实践：
+
+| 层级 | 机制 | 存储位置 | 加载时机 | 作用 |
+|:---:|------|------|------|------|
+| L1 | CLAUDE.md | 项目根/用户目录 | 每次会话自动加载 | 持久化硬性规则（≤500行，超过则后半被忽略） |
+| L2 | Skills | .claude/skills/*/SKILL.md | 元数据匹配自动触发 | 可复用程序化知识（≤100行/单个Skill） |
+| L3 | Hooks | .claude/settings.json | 12个生命周期事件驱动 | 确定性自动化（绕过模型判断，直接执行Shell） |
+
+**设计启示**：大多数开发者只用L1。最佳实践使用全部三层。规则优先级：CLAUDE.md头部的关键约束 → Skills按需注入 → Hooks确定性自动化。
+
+### Skills 最佳实践七条
+
+1. **触发条件明确**：描述字段精确说明何时适用，Claude基于描述字段决定调用
+2. **单一职责**：一个Skill只做一件事，超过100行应拆分；多个聚焦Skill可组合优于一个大Skill
+3. **渐进构建**：从基础Markdown指令开始，逐步添加复杂脚本；每次改动后增量测试
+4. **包含示例**：在SKILL.md中包含示例输入/输出，帮助Claude理解成功标准
+5. **可组合**：Skill之间不能显式引用，但Claude可自动组合多个Skill协同工作
+6. **遵循开放标准**：遵守agentskills.io规范，确保跨平台可移植
+7. **安全审慎**：添加脚本到SKILL.md时谨慎，不硬编码凭证，限制工具权限
+
+### 子代理上下文隔离原则
+
+子代理的核心设计优势在于**上下文隔离**，这是区别于单Agent的关键特性：
+
+**子代理接收（白名单）**：
+- ✅ 自身系统提示（文件正文）
+- ✅ 基本环境信息（工作目录路径、操作系统类型）
+- ✅ 项目CLAUDE.md（从项目根自动加载）
+
+**子代理不接收（黑名单）**：
+- ❌ 父对话历史（中间工具调用和结果留在子代理内部）
+- ❌ 父Claude Code完整系统提示（避免提示污染）
+- ❌ 父加载的Skills（必须在自身skills字段显式列出）
+- ❌ 父的MCP服务器（必须在自身mcpServers字段显式列出）
+
+**隔离模式**：
+- 默认模式：共享工作目录，cd命令不跨工具调用持久
+- `isolation: worktree`：临时git worktree独立副本，无变更自动清理
+
+**设计原则**：按"每个Agent需要什么上下文"分解任务，而非按"做什么类型的工作"。子任务上下文重叠→单一Agent；上下文隔离→多Agent。
+
+### MCP 三个核心原语
+
+Model Context Protocol（2024年11月Anthropic推出）提供三个核心原语，构成Agent连接外部世界的标准接口：
+
+| 原语 | 方向 | 控制者 | 本质 | 示例 |
+|------|------|------|------|------|
+| **Tools** | 模型→服务器 | 模型决策 | 模型控制的**动作** | 查数据库、发API请求、执行计算、读写文件 |
+| **Resources** | 服务器→模型 | 应用控制 | 应用控制的**唯读数据** | 配置文件、数据库记录、文档（通过URI标识） |
+| **Prompts** | 服务器→用户 | 用户调用 | 预定义的**指令模板** | "review这段code"、"生成报告" |
+
+**三者关系**：Tools是Agent的"手"（做什么），Resources是Agent的"眼"（看什么），Prompts是Agent的"口"（怎么说）。MCP服务器可以暴露三者的任意组合。
+
+**与Skills的关系**：MCP解决"Agent能访问什么"，Skills解决"Agent应该怎么使用这些能力"——两者是互补关系，而非替代关系。
+
+> **关联文件**：[Anthropic官方课程-390节全集.md v3.96](E:\龙虾AI主控中心\我的AI分身\Obsidian知识库\共享知识库\Anthropic官方课程-390节全集.md)
+
+---
+
+## Anthropic官方课程提炼：AI Agent设计原则（2026-06-17）
+
+> **来源**：Anthropic Academy 18门课程全攻略 + Anthropic官方工程博客《How we built our multi-agent research system》+ Introduction to Agent Skills / Subagents / MCP / Claude Code 101+Action
+
+### 1. Agent五层架构模型
+
+基于Anthropic多Agent系统（Orchestrator-Worker模式）提炼的五层架构：
+
+```
+┌─────────────────────────────────────────┐
+│          安全层（Safety Layer）          │  Hooks、权限控制、风险定级
+├─────────────────────────────────────────┤
+│          记忆层（Memory Layer）          │  Context Window、CLAUDE.md、外部Memory
+├─────────────────────────────────────────┤
+│          执行层（Execution Layer）        │  Subagents、Tool Use、MCP Server
+├─────────────────────────────────────────┤
+│          规划层（Planning Layer）        │  Thinking/Planning Mode、Explore→Plan 循环
+├─────────────────────────────────────────┤
+│          感知层（Perception Layer）       │  视觉输入、系统提示解析、意图识别
+└─────────────────────────────────────────┘
+```
+
+| 层级 | 功能 | Anropic工具/概念 | 设计原则 |
+|------|------|-----------------|---------|
+| **感知层** | 接收和理解用户输入、环境状态 | Claude Code视觉输入、System Prompt解析 | 多模态融合、意图精准识别 |
+| **规划层** | 制定执行策略、拆解任务 | Thinking Mode/Planning Mode、Explore→Plan | 复杂度自适应、先规划后执行 |
+| **执行层** | 实际执行任务、调用工具 | Subagents、Tool Use、MCP Tools | 并行化、关注点分离、工具权限最小化 |
+| **记忆层** | 管理上下文、持久化关键信息 | Context Window、CLAUDE.md、Memory模块 | 上下文窗口高效管理、Progressive Disclosure |
+| **安全层** | 防护机制、边界控制 | Hooks、Permission System、安全分类器 | 确定性控制、事件驱动防护、递归自改进 |
+
+### 2. Orchestrator-Worker 设计模式
+
+这是Anthropic Research功能的核心架构模式，也是构建强大Agent系统的推荐范式：
+
+**角色定义**：
+
+| 角色 | 职责 | 特征 |
+|------|------|------|
+| **Orchestrator（编排者/主导Agent）** | 分析问题、制定策略、创建Worker、合成结果、决策是否继续 | 策略规划能力强，需要全局视野 |
+| **Worker（工作者/子代理）** | 接收具体任务、独立探索、返回结构化结果 | 专注单一领域，独立上下文窗口 |
+
+**工作流**：
+```
+用户查询 → Orchestrator分析意图
+    → Orchestrator制定研究策略（保存到Memory以防上下文截断）
+    → Orchestrator生成N个Worker（各自独立上下文窗口）
+    → 每个Worker并行搜索/分析（使用Interleaved Thinking评估工具结果）
+    → Worker返回结构化发现给Orchestrator
+    → Orchestrator合成结果、决定是否继续研究
+    → 继续/完成 → 输出最终答案
+```
+
+**核心收益**：
+- 并行化：多个Worker同时探索不同方向
+- 上下文隔离：每个Worker在自己的context window中工作
+- 信息压缩：Worker只返回关键摘要，不污染Orchestrator上下文
+- 评估数据：多Agent系统比单Agent Opus 4在内部Research Eval上高 **90.2%**
+
+### 3. 上下文窗口管理原则
+
+| 原则 | 说明 | Anropic工具 |
+|------|------|-----------|
+| **独立Context Window** | 子代理在独立上下文中执行，执行完毕后只返回摘要 | Subagents |
+| **Progressive Disclosure** | 先加载轻量frontmatter，匹配后才加载完整指令 | Agent Skills (SKILL.md) |
+| **Compact策略** | 长对话中定期压缩上下文，生成摘要保留关键信息 | `/compact` 命令 |
+| **Memory持久化** | 当上下文超过200K tokens时，将关键计划保存到Memory | Memory模块 |
+| **脚本不消耗上下文** | 将脚本放在skills目录，通过shell工具调用 | Skills脚本层 |
+
+**Token经济学（来自Anthropic工程博客）**：
+- 多Agent系统 ≈ 15× chat tokens
+- Agent ≈ 4× chat tokens
+- Token使用量解释80%的性能方差
+- 模型升级（如Sonnet 3.7→Sonnet 4）≈ 加倍Token预算的性能提升
+
+### 4. Agent设计铁律（来自课程Anti-Patterns）
+
+#### 铁律一：不要过度设计
+
+> 能单Agent完成的任务不拆多Agent。创建子代理有固定开销（延迟+Token），简单任务拆分是负收益。
+
+| ✅ 适合多Agent | ❌ 不适合多Agent |
+|---------------|-----------------|
+| 并行搜索3个独立数据源 | 修改单个文件 |
+| 分析50000行日志 | 修复已知Bug（涉及2文件） |
+| 跨领域研究（需要不同工具集） | 顺序执行A→B→C（强依赖） |
+| 信息量超过单上下文窗口 | 所有Agent需要共享同一上下文 |
+
+#### 铁律二：结构化输出是子代理的基础契约
+
+> 子代理必须返回结构化结果（JSON/Markdown），而非完整对话日志。这是Orchestrator-Worker通信的"协议层"。
+
+- 定义明确的输出格式（JSON Schema）
+- 包含状态字段（success/failure/partial）
+- 失败时附带阻塞原因（非静默失败）
+
+#### 铁律三：工具权限最小化原则
+
+> 只授予Agent完成任务所需的最小工具集。
+
+| Agent类型 | 典型工具权限 |
+|-----------|-------------|
+| Explore子代理（内置） | 只读工具（Read/Grep/Glob） |
+| Plan子代理（内置） | 只读工具 |
+| General-purpose子代理 | 全工具（写+读+执行） |
+| 自定义子代理 | 按需配置（allowed-tools字段） |
+
+#### 铁律四：遇阻即报而非静默失败
+
+> 子代理遇到无法解决的问题时，必须明确回报阻塞原因。静默失败（返回空结果或虚假成功）是多Agent系统最危险的失败模式。
+
+- 返回结构必须包含 `blocker` 字段
+- 明确描述无法继续的原因
+- 提供可能的替代路径建议
+
+### 5. Skills vs Hooks vs Subagents vs CLAUDE.md 决策矩阵
+
+> 这是Introduction to Agent Skills课程的核心价值输出——帮助开发者判断每个情境该用哪个工具。
+
+| 决策维度 | Skills | CLAUDE.md | Hooks | Subagents |
+|---------|--------|-----------|-------|-----------|
+| **"我想让Claude记住..."** | ...怎么做某类任务 | ...关于这个项目的全局规则 | ...当X发生时自动做Y | ...帮我单独处理这个子任务 |
+| **触发方式** | Claude自动匹配任务类型 | 每次对话启动时加载 | 特定事件触发（如pre-commit） | 父Agent手动委派 |
+| **作用范围** | 特定任务类型 | 全局（项目/用户级） | 特定事件 | 单次任务 |
+| **上下文消耗** | 低（Progressive Disclosure） | 中（每次加载全文） | 极低（仅触发时执行） | 高（独立context window） |
+| **典型配置位置** | `.claude/skills/SKILL.md` | `CLAUDE.md` | `.claude/hooks.json` | `.claude/agents/*.md` |
+| **共享方式** | Repo / Plugins | Repo | 配置文件 | User级/Project级 |
+| **何时用** | 重复性任务需要标准化 | 项目编码规范/偏好 | 需要确定性的自动化控制 | 大搜索/分析/并行任务 |
+| **何时不用** | 一次性任务不需要Skill | 过于冗长的规则文件 | 简单的if-this-then-that用脚本更好 | 简单/单文件/强依赖任务 |
+
+**四者关系**：
+- CLAUDE.md = Agent的"长期记忆"（项目规则和偏好）
+- Skills = Agent的"技能手册"（怎么做某类任务）
+- Subagents = Agent的"外包团队"（委派任务给独立执行者）
+- Hooks = Agent的"安全护栏"（事件驱动的确定性控制）
+
+**选择优先级**：
+1. 先检查能否用 CLAUDE.md 解决（最简单，全局生效）
+2. 如果是重复性任务 → Skills（教一次自动套用）
+3. 如果需要隔离执行/并行 → Subagents
+4. 如果需要确定性的事件响应 → Hooks
+
+---
+
+> **关联文件**：[Anthropic官方课程-18门全集.md](E:\龙虾AI主控中心\我的AI分身\Obsidian知识库\共享知识库\Anthropic官方课程-18门全集.md)
+
+
+## Anthropic官方课程学习同步 (v3.99 · 2026-06-17)
+
+### AI Agent设计原则（新提炼）
+
+1. **三层解耦架构**：Session(事件日志) / Brain(无状态推理) / Hands(沙盒执行) — 从"宠物服务器"到"牛群服务器"范式转换
+2. **稳定接口优先**：execute(name, input) → string 比任何特定prompt工程更持久
+3. **凭据永不入沙盒**：代理模式注入，agent代码永远不可访问tokens
+4. **Event Sourcing**：完整事件日志保留，可逆性优于滑动窗口/摘要压缩
+5. **Subagent职责单一**：每个子代理专注特定领域，描述清晰，工具访问受限
+6. **OS设计隐喻**：进程=Agent Session、系统调用=execute()、VFS=getEvents()
+7. **Skills自动触发**：模型基于任务上下文自动匹配并注入专业指令
+8. **Hook生命周期注入**：SessionStart/PreToolUse/PostToolUse等关键节点
+9. **Agent Teams跨会话协调**：subagents单会话工作，agent teams跨多会话
+10. **KV-cache命中率优先**：生产成本的核心指标，缓存vs非缓存成本差10倍
+
+### 25个官方插件生态拓扑
+
+- LSP语言支持(12)：覆盖主流编程语言
+- 开发工作流(8)：feature-dev(7阶段)、pr-review-toolkit(6代理并行)、code-review(4代理打分)
+- 代码质量(4)：code-modernization、code-review、code-simplifier、security-guidance
+- 外部合作伙伴(15)：GitHub、Firebase、Linear、Terraform、Playwright等
+
+### Claude Code五件套架构
+
+Plugins(容器) → MCP(连接器) + Skills(人设卡) + Hooks(自动化钩子) + Slash Commands(快捷指令)
+
+### Managed Agents性能
+
+p50 TTFT降60%，p95 TTFT降>90%，验证10000并发Agent管理，MCP 97M+月下载/10000+活跃服务器
+
+> 来源：Anthropic 全域生态聚合研究 · v3.99 | 2026-06-17
+*（内容由AI生成，仅供参考）*
+
+---
+
+## R55 同步：子代理设计原则与上下文工程（2026-06-17）
+
+### 1. 子代理设计原则（Subagent Design Principles）
+
+#### 1.1 单一职责
+每个子代理只处理一类明确任务。职责边界清晰，描述精确到"I do X, not Y"。
+- ✅ "Reviews code for security vulnerabilities in Python backend services"
+- ❌ "Helps with code quality stuff"
+
+#### 1.2 独立上下文
+子代理在**自己的上下文窗口**中运行，不污染主对话。探索/研究等副任务委派给子代理，仅返回摘要。
+- 主代理上下文仅看到子代理返回的结果摘要
+- 大量搜索结果、日志、文件内容由子代理消化后精简返回
+- 上下文监控使用 `/statusline` 或自定义状态栏
+
+#### 1.3 明确Spec（可复用模板）
+每个子代理必须定义标准化的输入输出契约：
+
+```yaml
+Spec模板：
+  输入字段: 项目名、目标平台、字数上限
+  输出格式: JSON {title, intro, install_steps}
+  错误返回: {"error": "描述"}
+  超时策略: 30秒默认 + 最多3次重试
+```
+
+**为什么需要Spec**：
+- 输入格式错误 → 子代理空响应或误操作
+- 输出格式错位 → 主代理解析失败
+- 缺少超时策略 → 资源泄漏和死等待
+- 没有重试机制 → 偶发失败无法自愈
+
+### 2. 上下文窗口管理（Context Window Management）
+
+> **核心约束**：LLM性能随上下文填充而下降。上下文快满时，Agent开始"遗忘"早期指令或犯错。
+
+#### 2.1 三大策略
+
+| 策略 | 实现 | 效果 |
+|------|------|------|
+| **分拆任务** | 大任务拆分为多个独立会话或子代理 | 单个会话上下文不超过窗口50% |
+| **子代理隔离** | 探索/研究/搜索委派给子代理 | 仅返回摘要，不污染主上下文 |
+| **压缩后重注入** | SessionStart hook + compact matcher | 压缩后重新注入关键上下文 |
+
+#### 2.2 压缩重注入实现
+
+```json
+{
+  "hooks": {
+    "SessionStart": [{
+      "matcher": "compact",
+      "hooks": [{
+        "type": "command",
+        "command": "echo '关键上下文: 当前sprint=auth重构, 使用Bun非npm, 测试前运行bun test'"
+      }]
+    }]
+  }
+}
+```
+
+#### 2.3 CLAUDE.md精简原则
+
+每行自问"删除这行会导致Agent犯错吗？"不过则删。臃肿的CLAUDE.md导致Agent忽略关键指令。
+
+### 3. 验证闭环设计（Verification Loop）
+
+#### 3.1 四层验证策略
+
+| 层级 | 方式 | 适用 |
+|:---:|------|------|
+| 1 | **可运行检查**（同一Prompt） | 开发任务：测试用例/构建/lint |
+| 2 | **Goal条件**（跨轮次） | 独立评估器每轮后重检 |
+| 3 | **Stop Hook**（确定性门控） | 脚本阻断Turn结束（最多8次连续阻断） |
+| 4 | **第二意见校验**（验证子代理） | 用新鲜模型反驳结果 |
+
+#### 3.2 Prompt验证对比
+
+| Before（无验证） | After（有验证） |
+|---------|---------|
+| "fix the login bug" | "users report login fails after session timeout. check auth flow in src/auth/, especially token refresh. write a failing test, then fix it. run tests after." |
+| "make the dashboard look better" | "[paste screenshot] implement this design. take screenshot of result and compare. list differences and fix them." |
+| "add tests for foo.py" | "write test for foo.py covering logged-out edge case. avoid mocks. run tests after." |
+
+### 4. 探索→规划→编码→提交 四阶段设计模式
+
+```
+Phase 1: Explore（探索模式，只读）
+  → 阅读文件，理解现状，收集上下文
+Phase 2: Plan（详细实现计划）
+  → 列出需修改的文件，描述变更流程
+Phase 3: Implement（退出Plan，编码+验证）
+  → 对照计划实现，写测试，运行验证
+Phase 4: Commit（提交+PR）
+  → 描述性commit message，创建PR
+```
+
+**何时跳过Plan**：修改能用一句话描述diff时直接执行。Plan用于多文件修改、不确定方法、不熟悉代码时。
+
+### 5. CLAUDE.md / SKILL.md 分层记忆架构
+
+```
++------------------------------------------------------+
+|                    记忆分层架构                         |
+|                                                       |
+| L1: CLAUDE.md（全局上下文）                             |
+|    - 每次会话自动加载                                   |
+|    - 包含：代码风格、工作流规则、Bash命令、项目架构       |
+|    - 位置：~/.claude/CLAUDE.md / ./CLAUDE.md           |
+|                                                       |
+| L2: SKILL.md（领域知识）                                |
+|    - 按需加载 / 手动触发                                |
+|    - 包含：领域约定、可复用工作流、执行脚本               |
+|    - 位置：.claude/skills/<name>/SKILL.md              |
+|    - 条件加载：description匹配时自动注入                 |
+|    - 手动触发：disable-model-invocation: true           |
+|                                                       |
+| L3: Hooks（确定性规则）                                 |
+|    - 生命周期事件触发                                   |
+|    - 包含：通知、格式化、文件保护、上下文注入             |
+|    - 位置：.claude/settings.json                       |
+|                                                       |
+| L4: Subagents（隔离执行）                               |
+|    - 独立上下文运行                                     |
+|    - 包含：系统prompt、工具权限、模型选择                 |
+|    - 位置：.claude/agents/<name>.md                    |
++------------------------------------------------------+
+```
+
+**选择优先级**：
+1. 全局规则 → CLAUDE.md
+2. 可复用领域知识 → SKILL.md
+3. 确定性自动化 → Hooks
+4. 隔离执行/并行 → Subagents
+
+> 来源：Anthropic Best Practices + Claude Code docs | R55 同步 | 2026-06-17
+*（内容由AI生成，仅供参考）*
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: e1e5400d1617f2a30ccaee80027a1f43
+    ReservedCode1: 70f998953967e30ac3dc26705fa4569e139c23f678bd19d7a11e4c80708f9af3==
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: e1e5400d1617f2a30ccaee80027a1f43
+    ReservedCode2: 70f998953967e30ac3dc26705fa4569e139c23f678bd19d7a11e4c80708f9af3==
+---
+
+
+# SOUL.md — Anthropic Agent设计原则增量（R98）
+
+> **版本**：v2.26(R98迭代) | **更新日期**：2026-06-18 (R98更新 · Dynamic Workflows编排哲学 + Managed Agent沙箱隔离 + Skills四件套模块化)
+> **来源**：Anthropic Academy 18门课程体系 + Dynamic Workflows官方博客 + Managed Agents架构白皮书 + Claude Code四件套参考文档
+
+---
+
+## R98新增：Anthropic Agent设计原则深化
+
+### 一、Dynamic Workflows编排哲学
+
+**核心思想**：将任务规划逻辑从对话上下文转移到可执行代码中。
+
+1. **JS脚本化编排**：Claude根据任务现场生成JavaScript编排脚本，突破对话上下文的规划容量限制
+2. **百级并行子Agent**：单Session协调数百并行子Agent，各自运行在独立worktree中
+3. **对抗验证闭环**：独立Agent从不同角度覆盖问题，其他Agent尝试证伪，持续迭代直至收敛——这是单次通过无法达到的深度
+4. **模型分层调度**：工作流脚本决定每个子Agent使用哪个模型，细粒度成本控制
+5. **断点续传**：可编排、可恢复的执行框架，支持大规模长周期任务
+
+**设计启示**：
+- 当任务规划本身超出上下文窗口时，将规划逻辑外化到可执行脚本
+- 对抗验证是质量保障的关键：让不同Agent互相挑战，而非自评
+- 独立worktree实现真正的任务隔离，避免上下文污染
+
+### 二、Managed Agent沙箱隔离
+
+**脑-手-会话三组件分离**：
+
+```
+Brain (Claude + Harness) → 决策路由，凭据绝不进入沙箱
+Hands (Disposable Linux Containers) → 代码执行，用完即销毁
+Session (Durable Event Log) → 崩溃恢复，完整审计追踪
+```
+
+**安全设计原则**：
+1. 凭据从不进入沙箱——Git Token在初始化时注入并留在外部
+2. OAuth Token存储在Vault中，通过Agent无法访问的代理获取
+3. 每次执行使用干净的一次性容器
+4. 完整事件日志可审计
+
+**对龙虾AI体系的影响**：
+- 豆包Agent的子Agent沙箱策略应借鉴Brain/Hands分离
+- 凭据管理采用外部注入模式，避免Agent内部持有
+- 持久事件日志用于崩溃恢复和合规审计
+
+### 三、Skills四件套模块化
+
+Claude Code的四件套（Skills/Hooks/Subagents/Plugins）构成了完整的Agent扩展生态：
+
+| 组件 | 职责 | 龙虾对应 |
+|------|------|---------|
+| **Skills** | 可复用的Markdown指令集，按需加载 | 技能库协议（#1-#181） |
+| **Hooks** | 22个生命周期事件自动化拦截 | 子Agent生命周期钩子协议#11 |
+| **Subagents** | 上下文隔离的专项任务执行器 | 多Agent协同看板协议#1 |
+| **Plugins** | Skills+Agents+Hooks+MCP打包分发 | Agent Store标准化分发协议#140 |
+
+**模块化设计原则**：
+- 每个组件职责单一，通过标准化接口组合
+- Skills按需加载（零成本储备），不同于CLAUDE.md的常驻上下文
+- Hooks提供无损拦截点，实现代码格式化/安全检查/通知等自动化
+- Plugins实现跨项目复用和社区分发
+
+> **END SOUL v2.26_R98** | 2026-06-18

@@ -2,6 +2,28 @@
 AIGC:
     Label: "1"
     ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: cf54d54c59baa0ada35a5ecb7c73a584_cef8bf016a7a11f1a0095254002afed2
+    ReservedCode1: lZlijwXwznng1505ea8taTCGHvcd5affsTQ1UlHdlTZuGA26RXShWqYrfFPT7s6/dir0XblZMQ7CZgcaNCe8d6W7oPLGfZ5yJxUZLFp1ziWQkz+zIkaEyUMOoQ5svnQen+IrGRSByLu5d1m09qmiJpVc2Yy0jn3SQGNYaXnOTsXQvVoevuG1pBRNFWc=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: cf54d54c59baa0ada35a5ecb7c73a584_cef8bf016a7a11f1a0095254002afed2
+    ReservedCode2: lZlijwXwznng1505ea8taTCGHvcd5affsTQ1UlHdlTZuGA26RXShWqYrfFPT7s6/dir0XblZMQ7CZgcaNCe8d6W7oPLGfZ5yJxUZLFp1ziWQkz+zIkaEyUMOoQ5svnQen+IrGRSByLu5d1m09qmiJpVc2Yy0jn3SQGNYaXnOTsXQvVoevuG1pBRNFWc=
+---
+
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: cf54d54c59baa0ada35a5ecb7c73a584_d95443306a3711f1a99c5254007bceed
+    ReservedCode1: OjLArU5O585Bwd59QgvDxWHm4ih4iHKEZVPobCUPV7mRa31ZuypSMZgWLDLH34W+Nry0jS01weXfX4fWwzjPKaG1FcaUqTPgdTwL2s4YtaYdk8dthFW5o6rzuXSqAU4juZFs8HWT0cdwsSOjFejKLOQUkkja2E1pqgxXh26zv3ZN3Gat+7qgtvp4y58=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: cf54d54c59baa0ada35a5ecb7c73a584_d95443306a3711f1a99c5254007bceed
+    ReservedCode2: OjLArU5O585Bwd59QgvDxWHm4ih4iHKEZVPobCUPV7mRa31ZuypSMZgWLDLH34W+Nry0jS01weXfX4fWwzjPKaG1FcaUqTPgdTwL2s4YtaYdk8dthFW5o6rzuXSqAU4juZFs8HWT0cdwsSOjFejKLOQUkkja2E1pqgxXh26zv3ZN3Gat+7qgtvp4y58=
+---
+
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
     ProduceID: cf54d54c59baa0ada35a5ecb7c73a584_e75b3cb3655f11f1af8f5254002afed2
     ReservedCode1: QwkKoXz84LSVB6LoloN5Bft4Stjz1ioCORip4odi1x3i/J+LIgqfnw3f/xLvResAiDaZFO0EDBvMrIfou0DwaR974fPa9SZMA5SHIEhM+3u4+D9EtPIoAKyJ8AtY5dBFaJ4d82aoZjhtAXy/aLqhDDNjIt5I9QF68aM2AnjweOdmiN1X4UYoMhOLGWo=
     ContentPropagator: 001191440300708461136T1XGW3
@@ -32,7 +54,7 @@ AIGC:
 ---
 # SOUL.md — AI Agent 设计原则（龙虾AI分身核心宪章）
 
-> **版本**：v2.9 (R86迭代) | **创建日期**：2026-06-01 | **更新日期**：2026-06-15
+> **版本**：v2.10 (R88迭代) | **创建日期**：2026-06-01 | **更新日期**：2026-06-15
 > **来源**：Anthropic 官方课程(18门) + Claude Code "AI OS"四支柱架构 + Subagents官方文档 + Agent Skills开放标准 + Agent SDK编排模式 + Plugins打包体系 + Lessons from Building Claude Code + 中文社区深度解读 + 龙虾全域模板融合
 > **生效范围**：龙虾主AI分身 + 豆包Agent + Hermes Agent + OpenClaw龙虾Agent
 > **依赖文件**：角色总说明书.md / 龙虾全域官方模板-最终版.md / Anthropic官方课程-390节全集.md
@@ -1172,3 +1194,309 @@ Skill 可包含仅在 Skill 被调用时激活、会话结束后失效的 Hooks�
 1. **简单性** — 从最简单方案开始，仅在必要时增加复杂度
 2. **透明度** — 显式展示 Agent 的规划步骤
 3. **ACI 设计** — 像设计 HCI 一样精心设计 Agent-Computer Interface
+
+
+---
+
+## R88迭代更新日志（2026-06-16）
+
+### 多Agent协调模式深度对标
+
+> 来源：Anthropic 官方博客 "Multi-agent coordination patterns: Five approaches and when to use them" (2026年4月10日)
+
+**更新内容**：
+
+1. **系统化思维坐标升级 — 五大协调模式注入**：
+   - 单一Agent优先原则（不做过度工程）：Anthropic观察到团队投入数月构建复杂多Agent架构，结果优化单一Agent的prompt就能达到同等效果
+   - 上下文中心分解（Context-Centric Decomposition）：按"每个Agent需要什么上下文"而非"做什么类型的工作"来分解任务
+   - 从最简单模式演进：Orchestrator-Subagent为推荐起点（处理最广泛问题、协调开销最低）
+   - 五大模式选择矩阵：
+
+| 协调模式 | 信息流 | 适用场景 | 失败模式 |
+|---------|--------|---------|---------|
+| Generator-Verifier | 单向反馈循环 | 输出质量关键、评估标准可明确化 | 验证标准模糊导致橡皮图章 |
+| Orchestrator-Subagent | 星型（中心化） | 任务分解清晰、子任务互依度低 | 编排器成为信息瓶颈 |
+| Agent Teams | 协调器分发+最终聚合 | 子任务独立、需长期多步持续工作 | Worker间无法共享中间发现 |
+| Message Bus | 事件流管道 | 事件驱动、Agent生态持续增长 | 路由误判导致静默失败 |
+| Shared State | 去中心化并行读写 | 协作研究、发现需实时共享 | 响应式循环不收敛 |
+
+2. **Claude Fable 5/Mythos 5 设计原则对标 — 多Agent协调模式与龙虾Agent架构映射**：
+
+| Anthropic协调模式 | 龙虾Agent架构映射 | 实现方式 |
+|------------------|------------------|---------|
+| Generator-Verifier | 质量门控G1-G5验证体系 | 独立Grader评分 + AI说"我做完了"不算数原则 |
+| Orchestrator-Subagent | Marvis主控中心 → 子Agent派发 | 主Agent分解任务 → file-agent/computer-agent/search-agent执行 |
+| Agent Teams | Hermes Agent多子Agent并行协调 | 多子Agent并行探索 + 结果聚合 |
+| Message Bus | Hook 生命周期事件系统 | SessionStart/Stop/PostToolUse 事件触发 |
+| Shared State | SOUL.md + USER.md + AGENTS.md 三层配置体系 | 全局共享配置 + Git工作流 + 文件系统 |
+
+3. **生产实践要点注入**：
+   - 验证器必须具体：只告诉验证器"检查输出好不好"会导致橡皮图章
+   - 共享状态需要终止条件：时间预算、收敛阈值、或指定"决策Agent"
+   - 混合使用是常态：生产系统常组合多种模式
+   - 并行不等于有效：仅在速度收益>成本时才做
+
+4. **Claude Code扩展体系最新官方对照表对标**（7功能+4组合模式+3级Skills优先级）
+
+5. **AgentTeams新增功能说明**：2026年4月新增，协调多个独立Claude Code会话，支持安全/性能/测试三线并行审查
+
+---
+
+## R51 Anthropic课程学习：Anthropic Agent设计原则（来自官方课程 2026-06-17）
+
+### 复杂度阶梯原则
+1. 从最简单模式开始，仅在单一Agent证明达到极限时才增加复杂度
+2. Workflow vs Agent区分：Workflow提供可预测性，Agent提供适应性
+3. 大多数生产系统受益于Workflow，仅在真正需要动态决策时使用Agent级自主性
+
+### 六模式选择矩阵
+
+| 模式 | 复杂度 | 自主性 | 可预测性 | 适用场景 |
+| Augmented LLM | 最低 | 无 | 最高 | 单步任务 |
+| Prompt Chaining | 低 | 无 | 高 | 固定序列 |
+| Routing | 低 | 最小 | 高 | 意图分发 |
+| Parallelization | 中 | 最小 | 高 | 独立子任务 |
+| Orchestrator-Workers | 高 | 高 | 中 | 动态分解 |
+| Evaluator-Optimizer | 最高 | 高 | 中 | 迭代优化 |
+
+### 韧性设计铁律
+- 可靠性复合递减：N步流水线总可靠性 = 单步可靠性^N
+- 六大破裂模式必须设防：无限循环/上下文溢出/工具级联/幻觉工具/模糊放大/状态漂移
+- 每步≥99%可靠性是生产基准
+
+### 可观测性四强制指标
+1. 任务完成率（无人工干预百分比）
+2. 步骤效率（实际步骤/最小步骤比）
+3. 工具调用成功率
+4. 端到端完成时间（跟踪百分位而非平均值）
+
+> 来源：Anthropic官方课程·R51轮学习 | 2026-06-17
+
+
+---
+
+## R89 Anthropic Managed Agents 深度对标：AI Agent设计原则（2026-06-17）
+
+> 来源：Anthropic 工程博客 "Scaling Managed Agents" (2026-04) + 官方文档 + Claude Code Docs · 多路信息源交叉验证
+
+### 一、Managed Agents 六层架构
+
+| 层级 | 名称 | 龙虾Agent映射 | 核心职责 |
+|:---:|------|-------------|---------|
+| L1 | **Model** | 被引用的资源，不被平台拥有 | Claude Opus 4.8 / Sonnet 4.5 / Haiku 3.5 按需路由 |
+| L2 | **Core API** | REST + SDK（client.beta.agents/sessions） | Agent CRUD、Session 生命周期 |
+| L3 | **Agent Runtime** | Definition/Instance/State 三层解耦 | 版本化配置 → 运行实例 → 会话状态 |
+| L4 | **Operations** | Session Log Service | 观测、计费、append-only 日志 |
+| L5 | **Trust & Identity** | MCP Tunnels + 沙箱安全 | 横切关注点，不属于任何具体层 |
+| L6 | **Access** | Web UI / CLI / SDK 多接入 | 多端统一接入边界 |
+
+**关键边界**：Model 在最底层但**不被平台拥有**——它是被引用的资源，不是 Managed Agents 的子组件。这是判断"平台边界"的试金石。
+
+### 二、AgentDefinition 关键字段设计原则
+
+```yaml
+agent:
+  id: agt_xxx                    # 系统生成，不可变标识
+  name: "pr-reviewer"            # 人类可读标签
+  version: 3                     # 自动递增；基于已有版本更新产生新版本
+  model: "claude-opus-4-8"       # 被引用的模型ID
+  system: "You are a code..."    # System prompt（核心行为定义）
+  tools:                         # 能力配置
+    - type: agent_toolset_20260401
+    - type: mcp_toolset
+      mcp_server_name: "github"
+    - type: custom
+      name: "my_tool"
+      input_schema: {...}
+  mcp_servers:                   # MCP 声明（不带凭据）
+    - name: "github"
+      type: url
+      url: "https://api.github.com/mcp"
+  skills:                        # 引用 skills（≤8 per request）
+    - type: anthropic
+      skill_id: "pptx"
+    - type: custom
+      skill_id: "skill_xxx"
+      version: "1"
+  multiagent:                    # 多agent配置（可选）
+    agents:
+      - name: "code_analyzer"
+        agent_id: "agt_yyy"
+      - type: self               # 复制自身
+```
+
+**设计原则**：
+1. **版本不可变**：每次 update 产生新版本号，旧版本仍可被既有 session 引用——Session 按创建时的 agent version 运行，互不干扰
+2. **Lazy Provisioning**：Session 创建时不立即分配资源，首次推理时才触发
+3. **Tools 权限随定义表达**：`always_ask` / `always_allow` 策略在工具级别配置，不在 Agent 级别统一设置
+4. **Skills ≤8 per request**：引用上限防止上下文膨胀
+
+### 三、Multi-agent Session 线程隔离模型
+
+**核心设计**：每个 multi-agent thread 拥有独立的 context-isolated event stream。
+
+```
+Session (1 parent + ≤25 child threads)
+  │
+  ├── Thread 0 [Parent]          isolate_id: "root"
+  │     context: full history
+  │     event_stream: linear
+  │
+  ├── Thread 1 [code_analyzer]   isolate_id: "thread_1"
+  │     context: parent handoff + own turns
+  │     event_stream: independent
+  │
+  ├── Thread 2 [test_runner]     isolate_id: "thread_2"
+  │     context: parent handoff + own turns
+  │     event_stream: independent
+  │
+  └── Thread N [...]             isolate_id: "thread_n"
+        ...
+```
+
+**关键约束**：
+- **上限**：1 parent + ≤25 child threads / session
+- **隔离级别**：每个 thread 独立上下文窗口，parent handoff 时传递摘要结果
+- **持久化**：Session Log Service 以 append-only 方式记录每个 thread 的完整事件流
+- **恢复**：session 恢复时按 isolate_id 重建各 thread 的上下文
+
+### 四、Agent Harness 进程拓扑
+
+```
+[Client App]
+     │ HTTPS / SDK
+     ▼
+[Harness Process]  ← Anthropic 运营（self-hosted 模式部分迁到客户侧）
+     │
+     ├──→ [Model GPU]            推理服务，Anthropic 数据中心
+     ├──→ [Session Log Service]  独立服务，append-only 写入，与推理计算分离
+     └──→ [Sandbox Container]    隔离执行环境
+            ├── Tool Executor    执行工具调用
+            ├── MCP Bridge       MCP 隧道代理
+            └── File System      沙箱化文件系统访问
+```
+
+**龙虾Agent架构映射**：
+- Harness Process ↔ Marvis 主控中心（G1-G5 质量门控层）
+- Model GPU ↔ 腾讯混元 Hy3 + DeepSeek-V4 Pro
+- Sandbox Container ↔ 各子 Agent 独立执行环境（file-agent / computer-agent / search-agent）
+- Session Log Service ↔ Obsidian 知识库持久化 + Git 版本控制
+
+### 五、五种生产模式识别
+
+| 模式 | 信息流 | 复杂度 | 自主性 | 适用场景 | 龙虾Agent映射 |
+|------|--------|:---:|:---:|------|------|
+| **平行化（Parallelization）** | 扇出→聚合 | 中 | 最小 | 无依赖独立子任务 | 多子Agent并行探索 |
+| **链式（Chaining）** | A→B→C 线性 | 低 | 无 | 固定步骤序列流水线 | G1→G2→G3 质量门控链 |
+| **路由（Routing）** | 分类→专项处理 | 低 | 最小 | 明确任务分类 | file-agent/computer-agent 意图路由 |
+| **编排-工人（Orchestrator-Workers）** | 星型中心化 | 高 | 高 | 动态分解+委派 | Marvis主控→子Agent派发 |
+| **评估-优化（Evaluator-Optimizer）** | 生成→评估→迭代 | 最高 | 高 | 有明确评估标准 | G4 Grader评分 + G5 迭代反馈 |
+
+**模式选择决策树**：
+1. 单步任务 → Augmented LLM（不拆Agent）
+2. 固定序列 → Chaining
+3. 意图分发 → Routing
+4. 独立子任务 → Parallelization
+5. 动态分解 → Orchestrator-Workers
+6. 迭代优化 → Evaluator-Optimizer
+7. **从最简单模式开始**，仅在证明达到极限时才增加复杂度
+
+### 六、Subagent 设计正反模式
+
+#### ✅ 正面模式（何时委托给 Subagent）
+
+| 信号 | 说明 | 示例 |
+|------|------|------|
+| **上下文污染风险** | 深度研究会填充主对话大量搜索结果/日志/文件内容 | 代码库搜索、依赖分析 |
+| **权限隔离需求** | 子任务需要不同工具权限（如只读） | 安全审查 subagent 仅 Read/Grep |
+| **并行探索收益** | 多个独立假设可并行验证 | 3个独立方向的研究同时进行 |
+| **专业化行为** | 需要专注的系统提示和特定工具组合 | 代码审查 subagent 配置 ESLint + tsc |
+| **成本优化** | 简单任务路由到 Haiku（廉价快速） | Explore subagent 用 Haiku 而非 Opus |
+
+#### ❌ 反面模式（Anti-patterns — 过度设计）
+
+| 信号 | 问题 | 正确做法 |
+|------|------|---------|
+| **子任务上下文高度重叠** | 拆成多Agent导致上下文碎片化 | 合并到一个Agent |
+| **单次问答级任务** | 路由/委派开销超过收益（-50%） | 直接处理 |
+| **延迟敏感（<1.5s）** | 每次派生增加 200-600ms | 同步直处理 |
+| **无输出质量差别的拆分** | 增加了协调成本但质量不变 | 保持单一Agent |
+| **"看起来应该拆"的惯性思维** | 按工作类型而非上下文需求拆Agent | 按上下文需求拆Agent |
+
+### 七、Tool 权限最小化原则
+
+| 策略 | 行为 | 适用场景 |
+|------|------|---------|
+| `always_ask` | 每次工具调用前弹出权限确认 | Bash（危险命令）、Delete、Write 到敏感路径 |
+| `always_allow` | 无需确认直接执行 | Read、Grep、Glob 等只读操作 |
+| `disallowedTools` | 完全禁止 | Write/Edit 给只读 subagent |
+| `Agent(type)` 语法 | `tools: Agent(worker, researcher), Read` — 限制可生成的 subagent 类型 | 防止 subagent 无限递归派生 |
+
+**生产环境最佳实践**：
+- **Bash**：生产路径 Write 操作设 `always_ask`；只读命令可 `always_allow`
+- **Write/Edit**：敏感目录（系统配置、生产代码）设 `always_ask`
+- **MCP tools**：只读优先，写操作需二次确认
+- **Subagent 生成**：通过 `Agent(type)` 限制可派生类型，防止递归爆炸
+
+> 来源：Anthropic 工程博客 + 官方文档 · R89轮学习 | 2026-06-17
+
+
+## Anthropic官方课程学习同步 (v3.99 · 2026-06-17)
+
+### AI Agent设计原则（新提炼）
+
+1. **三层解耦架构**：Session(事件日志) / Brain(无状态推理) / Hands(沙盒执行) — 从"宠物服务器"到"牛群服务器"范式转换
+2. **稳定接口优先**：execute(name, input) → string 比任何特定prompt工程更持久
+3. **凭据永不入沙盒**：代理模式注入，agent代码永远不可访问tokens
+4. **Event Sourcing**：完整事件日志保留，可逆性优于滑动窗口/摘要压缩
+5. **Subagent职责单一**：每个子代理专注特定领域，描述清晰，工具访问受限
+6. **OS设计隐喻**：进程=Agent Session、系统调用=execute()、VFS=getEvents()
+7. **Skills自动触发**：模型基于任务上下文自动匹配并注入专业指令
+8. **Hook生命周期注入**：SessionStart/PreToolUse/PostToolUse等关键节点
+9. **Agent Teams跨会话协调**：subagents单会话工作，agent teams跨多会话
+10. **KV-cache命中率优先**：生产成本的核心指标，缓存vs非缓存成本差10倍
+
+### 25个官方插件生态拓扑
+
+- LSP语言支持(12)：覆盖主流编程语言
+- 开发工作流(8)：feature-dev(7阶段)、pr-review-toolkit(6代理并行)、code-review(4代理打分)
+- 代码质量(4)：code-modernization、code-review、code-simplifier、security-guidance
+- 外部合作伙伴(15)：GitHub、Firebase、Linear、Terraform、Playwright等
+
+### Claude Code五件套架构
+
+Plugins(容器) → MCP(连接器) + Skills(人设卡) + Hooks(自动化钩子) + Slash Commands(快捷指令)
+
+### Managed Agents性能
+
+p50 TTFT降60%，p95 TTFT降>90%，验证10000并发Agent管理，MCP 97M+月下载/10000+活跃服务器
+
+### 2026 多Agent系统演进设计原则 (R100 · 2026-06-18)
+
+基于 Anthropic 2026 多Agent系统工程实践最新趋势，补充以下 8 项 AI Agent 设计原则：
+
+1. **Conductor-Specialist 分离**：Conductor（Orchestrator）不写代码，仅负责任务分解与分配；Specialist Agent 严格限定文件操作范围，按目录级隔离
+2. **结构化摘要交接**：Agent 间通信使用结构化 JSON Schema（任务名/状态/依赖/函数签名/测试结果），禁止传递原始代码/日志
+3. **Message Bus 标准化**：Agent-to-Agent 通信走结构化 Message Bus，搭配 Shared Blackboard（TASKS.md / 数据库）作为真实源
+4. **三击法则（3-Strike Rule）**：Agent 修复同一错误上限 3 次，超限自动升级到 Conductor，杜绝无限调试循环
+5. **快照回滚机制**：高风险操作前自动拍摄 checkpoint，Agent 引入 bug > 修复 bug 时自动回滚
+6. **对抗性审查取代自我修正**：Coder Agent 产出后由独立 Red Team Agent 审查安全漏洞；Architect 方案由 Devil's Advocate Agent 寻找缺陷
+7. **Docker 沙盒一次性原则**：每个 Sub-agent 任务启动全新容器，仅授最小权限，任务完成立即销毁
+8. **Agent 可观测性**：追踪 Agent 决策 token-by-token，类比 Datadog 监控 Agent 行为，可视化 Token 消耗分布
+
+### MCP 2.0 预测方向 (R100)
+
+| 维度 | 当前 (MCP 1.x) | 预测方向 |
+|------|---------------|---------|
+| 操作方向 | 偏读取 | 双向 Action MCP（签名提示执行 Jira/AWS 操作） |
+| 服务发现 | 手动配置 | 动态 MCP 注册表自动发现 |
+| 凭据管理 | 直接暴露 | 安全凭据保险库（Agent 永不接触原始密钥） |
+| 触发方式 | 用户提示驱动 | 事件驱动（Webhook 自动触发 Legal Agent 等） |
+
+### 跨Agent协商模式 (R100)
+
+Buyer Agent ↔ Seller Agent 通过 MCP 接口协商 → 结构化谈判 Schema + HITL 审批门控 → 自动达成合同
+
+> 来源：Anthropic 全域生态聚合研究 · v3.99 | 2026-06-17 | R100 补充：2026-06-18
+*（内容由AI生成，仅供参考）*
+*（内容由AI生成，仅供参考）*

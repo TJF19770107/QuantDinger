@@ -500,3 +500,20 @@ Agent自主性提升带来的边界重新定义：
 
 ### 长期运行驾驭
 初始化Agent(feature_list+init.sh) → 编码Agent(每次会话一个功能+git+progress)
+
+
+---
+
+## 五、多Agent协调五大模式（Anthropic 2026年4月官方指南）
+
+核心原则：按"需要什么上下文"分解任务。
+
+| 模式 | 架构 | 适用场景 | 通信方式 |
+|------|------|---------|---------|
+| Sequential Pipeline | A→B→C链式 | 翻译→润色→排版 | 数据传递 |
+| Parallel Fan-out | 中央→多Worker | 同时分析多文档 | 独立上下文 |
+| Orchestrator-Worker | 主Agent调度子Agent | 复杂代码审查 | 结构化任务 |
+| Agent Debate | 多Agent辩论收敛 | 高风险决策 | 对抗验证 |
+| Swarm Autonomy | 自组织无中央控制 | 大规模并行探索 | 共享黑板 |
+
+决策口诀：Skills打包可复用程序 / MCP连接外部系统 / Subagents专业化并行 / RAG检索密集型

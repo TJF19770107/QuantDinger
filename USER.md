@@ -2,6 +2,28 @@
 AIGC:
     Label: "1"
     ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: cf54d54c59baa0ada35a5ecb7c73a584_cfe2e2816a7a11f1a0095254002afed2
+    ReservedCode1: N5OOuMq++jpeJegXevrey4LZdRpiXq0DbbJCIgmnffiv8/pOFHjZvjPYHPpskh7056NPOcVm4YI3Hh9F5GEsKAM7f0m9IFagLRyKua5hgA4LHN+NslBkD6HmMfFgdQ3+Kg2vuKDnBuIrFSePMjMBdz3yDL5kV0xRfY3KjQeqqLYwe9J3VBSiy03yrO8=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: cf54d54c59baa0ada35a5ecb7c73a584_cfe2e2816a7a11f1a0095254002afed2
+    ReservedCode2: N5OOuMq++jpeJegXevrey4LZdRpiXq0DbbJCIgmnffiv8/pOFHjZvjPYHPpskh7056NPOcVm4YI3Hh9F5GEsKAM7f0m9IFagLRyKua5hgA4LHN+NslBkD6HmMfFgdQ3+Kg2vuKDnBuIrFSePMjMBdz3yDL5kV0xRfY3KjQeqqLYwe9J3VBSiy03yrO8=
+---
+
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: cf54d54c59baa0ada35a5ecb7c73a584_da44166b6a3711f1a0095254002afed2
+    ReservedCode1: HHdgCBD7VNLD2NmiFQxDj6dw9JOgND0s6KdHDY1lrIndPLayDeEoCcIk0J8aHFXWIxrJ0CQpVDp75ZF5I53f+T/wupIO2yoPYZALfk+M3ESOAoBFpuBZ1TTqREdkivxIs9y98zkwKYiUd+LtETnlhWGuIUj4QRYcX3TnT8pBvE0q0T/jtgxVIux5ib8=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: cf54d54c59baa0ada35a5ecb7c73a584_da44166b6a3711f1a0095254002afed2
+    ReservedCode2: HHdgCBD7VNLD2NmiFQxDj6dw9JOgND0s6KdHDY1lrIndPLayDeEoCcIk0J8aHFXWIxrJ0CQpVDp75ZF5I53f+T/wupIO2yoPYZALfk+M3ESOAoBFpuBZ1TTqREdkivxIs9y98zkwKYiUd+LtETnlhWGuIUj4QRYcX3TnT8pBvE0q0T/jtgxVIux5ib8=
+---
+
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
     ProduceID: cf54d54c59baa0ada35a5ecb7c73a584_e804bb2f655f11f192bd5254007bceed
     ReservedCode1: vSFXJl9XJ3qdvlPkfTkM7HEPp9VvN0NMnhOLUb2jKN+CngYaWiLGmU40hySXgwMd/94gAt1MWGmENU3sVWrFVneAL33QjlkfCL5JCK26EztUEHCAaTS6dyODzo06/EtZhwjjP7dQ/ABSDk71fLmNUJKUkqcrt312a0z1r8nsHxkk/DtrJMOd3Fd/jL4=
     ContentPropagator: 001191440300708461136T1XGW3
@@ -32,7 +54,7 @@ AIGC:
 ---
 # USER.md — 多Agent协作流程（龙虾AI分身用户指南）
 
-> **版本**：v2.8 (R86迭代) | **创建日期**：2026-06-01 | **更新日期**：2026-06-15
+> **版本**：v2.9 (R88迭代) | **创建日期**：2026-06-01 | **更新日期**：2026-06-15
 > **来源**：Anthropic Agent Teams官方文档 + Agent SDK编排模式（Orchestrator/Pipeline/Mesh） + Plugins打包协作体系 + Claude Code Subagents + Skills九类分类法 + 四支柱AI OS架构 + 龙虾全域模板融合
 > **生效范围**：所有子Agent协作任务
 > **依赖文件**：SOUL.md / AGENTS.md / 角色总说明书.md / Anthropic官方课程-390节全集.md
@@ -1263,3 +1285,324 @@ Session 2-N（编码 Agent）：
 | 50 页研究报告 | ✅ 是 | 并行研究 5 角度，节省 77% |
 | 聊天回复 < 1.5s | ❌ 否 | 延迟敏感，每次派生增加 200-600ms |
 | 30 轮编码循环 | ✅ 是 | 专家路由 + 上下文隔离 |
+
+
+---
+
+## R88迭代更新日志（2026-06-16）
+
+### 多Agent协作流程升级 — Anthropic官方五大协调模式最佳实践
+
+> 来源：Anthropic 官方博客 "When to use multi-agent systems" + "Multi-agent coordination patterns" (2026年4月)
+
+**更新内容**：
+
+1. **何时用单一Agent vs 多Agent的判断矩阵**：
+
+| 决策因素 | 单一Agent | 多Agent |
+|---------|----------|---------|
+| 子任务所需的上下文高度重叠 | ✅ 推荐 | ❌ 上下文碎片化 |
+| 不同专业能力需要不同工具权限 | ❌ | ✅ 权限隔离 |
+| 并行探索多个独立假设 | ❌ | ✅ 并行加速 |
+| 单一Agent上下文窗口可容纳全部任务 | ✅ 推荐 | ❌ 过度工程 |
+
+2. **上下文中心分解的实操方法**：
+   - 不是按"做什么类型的工作"来分解（如：一个Agent写前端、一个Agent写后端）
+   - 而是按"每个Agent需要什么上下文"来分解
+   - 如果两个子任务需要相同的上下文，交给一个Agent比拆成两个Agent更优
+   - 实操步骤：①列出所有子任务 → ②标注每个子任务需要的上下文类型 → ③将上下文高度重叠的子任务合并到同一Agent → ④仅将上下文互斥的子任务拆分为独立Agent
+
+3. **五大协调模式的场景匹配表**：
+
+| 场景 | 推荐模式 | 触发条件 |
+|------|---------|---------|
+| 代码生成+测试验证 | Generator-Verifier | 输出质量关键 + 评估标准明确 |
+| PR多维度审查 | Orchestrator-Subagent | 任务分解清晰 + 子任务互依度低 |
+| 大代码库迁移 | Agent Teams | 并行独立 + 长期多步工作 |
+| 安全运维自动化 | Message Bus | 事件驱动 + Agent生态增长 |
+| 研究综合调研 | Shared State | 协作研究 + 发现需实时共享 |
+
+4. **模式演进路径图**：
+```
+起点: Orchestrator-Subagent（推荐）
+  │
+  ├── 子代理需保持状态跨调用 → Agent Teams
+  ├── 条件逻辑积累过多 → Message Bus
+  │
+  ├── Agent Teams → Worker需要彼此发现 → Shared State
+  └── Message Bus → 去中心化需求 → Shared State
+```
+
+5. **Claude Code扩展体系最新官方对照表**（7功能+4组合模式+官方推荐引入顺序）
+
+---
+
+## R51 Anthropic课程提炼：多Agent协作流程（2026-06-17）
+
+### 上下文隔离原则
+- 每个Agent独立上下文窗口，仅接收相关任务信息
+- 协调器管理Agent间信息流，过滤和摘要后再传递
+- 降低幻觉风险，使个体Agent行为可预测可测试
+
+### 任务拆解矩阵
+
+| 任务类型 | 推荐模式 | Agent数量 | 协作方式 |
+| 代码审查>20文件 | Parallelization | 3（安全/性能/风格） | 扇出-聚合 |
+| 多文件重构 | Orchestrator-Workers | 1主+N工 | 动态分解 |
+| 跨领域研究 | Parallelization | N领域专精 | 并行搜索+综合 |
+| 质量验证 | Evaluator-Optimizer | 1生成+1评估 | 迭代反馈 |
+
+### Subagent委派四原则
+1. 独立性：子任务无数据依赖，可完全并行
+2. 上下文隔离：深度研究不污染主会话
+3. 专业化：配置不同于父级的Skills
+4. 边界清晰：明确输入输出格式和完成标准
+
+> 来源：Anthropic官方课程·R51轮学习 | 2026-06-17
+
+
+---
+
+## R89 Anthropic 多Agent协作流程深度（2026-06-17）
+
+> 来源：Anthropic 官方文档 · Claude Code Docs · Developer Toolkit · 多路信息源交叉验证
+
+### 一、Multi-agent 协作场景分类
+
+| 场景 | 子任务数 | 推荐模式 | 典型Agent数 | 关键考量 |
+|------|:---:|------|:---:|------|
+| **代码审查** | 3-5 | Generator-Verifier | 1生成 + 2审查（安全/风格） | 安全审查Agent仅Read/Grep，禁止Write |
+| **测试生成** | 3-5 | Orchestrator-Subagent | 1编排 + N测试写手 | 每个测试写手独立上下文，互不污染 |
+| **多角度研究** | 3-5 | Parallelization | 3-5领域专家 | 并行搜索后交叉验证，投票机制去伪 |
+| **多文件审计** | 10+ | Dynamic Workflow | 10-50 agent/run | ultracode脚本编排，16并发上限 |
+| **500文件迁移** | 500+ | Dynamic Workflow | 50-200 agent/run | 独立agent per文件，脚本协调 |
+| **PR多维度审查** | 3 | Orchestrator-Subagent | 1编排 + 3审查 | 安全/性能/风格三维独立评估 |
+| **端到端全栈开发** | 多阶段 | Agent Teams | 3-5持久化队友 | 队友保持状态跨调用 |
+
+### 二、Agent Teams 配置模式
+
+#### 2.1 team.yaml 配置
+
+```yaml
+teams:
+  fullstack:
+    members:
+      - type: code-reviewer       # 引用 subagent 类型
+        role: security-auditor
+      - type: test-writer         # tools+model 从 subagent 定义继承
+        role: test-generator
+      - type: doc-writer
+        role: documenter
+    strategy: parallel            # parallel / sequential / adaptive
+    max_concurrency: 3
+```
+
+#### 2.2 队友角色分配模型
+
+| 角色 | 推荐Model | Tools | 行为特征 |
+|------|----------|-------|---------|
+| **安全审查员** | Sonnet | Read, Grep, Glob | 只读，检测注入/越权/泄露 |
+| **性能分析员** | Sonnet | Read, Grep, Bash(profile) | 只读+性能分析命令 |
+| **代码风格审查员** | Haiku | Read, Grep | 廉价快速，仅风格检查 |
+| **测试生成员** | Opus | Read, Write, Bash | 完整读写，生成测试代码 |
+| **文档编写员** | Sonnet | Read, Write | 生成文档和注释 |
+
+#### 2.3 模型异构策略
+
+- **核心推理/复杂决策** → Opus（高准确率）
+- **代码审查/标准操作** → Sonnet（性价比最优）
+- **批量扫描/风格检查/简单分类** → Haiku（速度优先，成本最低）
+- **关键原则**：不为所有队友使用同一模型——按角色复杂度路由
+
+### 三、Dynamic Workflows 使用流程
+
+#### 3.1 三步触发
+
+```
+用户输入含 ultracode 关键词
+  → Claude Code 高亮关键词
+  → Claude 编写 JavaScript 编排脚本
+  → Runtime 在后台并行执行 subagents
+  → 会话保持响应，/workflows 监控进度
+```
+
+#### 3.2 脚本编排→后台执行→结果汇报
+
+```
+Phase 1: SCOPE — 1 agent 扫描代码库范围
+    │
+Phase 2: AUDIT ──→ [agent 1] [agent 2] ... [agent N]  ← 16并发
+    │                   并行审计每个端点/文件
+    ▼
+Phase 3: CROSS-CHECK — 交叉验证结果，投票去伪
+    │
+Phase 4: REPORT — 汇总为结构化报告，过滤失败项
+    │
+结果写入会话（仅最终报告，不含中间产物）
+```
+
+#### 3.3 监控快捷键（/workflows 面板）
+
+| 键 | 功能 |
+|:---:|------|
+| `Enter`/`→` | 深入阶段查看 prompt + 工具调用 + 结果 |
+| `Esc` | 回退一级 |
+| `p` | 暂停/恢复运行 |
+| `s` | 保存脚本为命令（选 `.claude/workflows/` 或 `~/.claude/workflows/`） |
+| `x` | 停止 agent 或整个 workflow |
+
+### 四、Claude Code 完整工作流（四阶段）
+
+```
+EXPLORE → PLAN → CODE → COMMIT
+  │         │       │        │
+  │         │       │        └── git commit + PR 描述生成
+  │         │       │
+  │         │       └── 实际代码修改/生成
+  │         │
+  │         └── 制定实施方案（Plan mode）
+  │               - Explore subagent (Haiku, 只读) 研究代码库
+  │               - 跳过 CLAUDE.md 保持快速
+  │
+  └── 代码库搜索与理解
+        - Explore subagent 快速扫描
+        - thoroughness 级别：quick / medium / very thorough
+```
+
+**四阶段判断标准**：
+- **Explore**：需要了解现有代码结构时才进入，简单任务直接跳过
+- **Plan**：复杂多文件变更必须 Plan；单文件修改可跳过
+- **Code**：Plan完成后 Claude 输出实施计划供用户审核，确认后进入 Code
+- **Commit**：生成符合 conventional commits 规范的 commit message
+
+### 五、上下文管理策略
+
+| 工具 | 时机 | 效果 | 使用频率 |
+|------|------|------|:---:|
+| **`/compact`** | 对话达到上下文预算上限时 | 摘要压缩历史，保留关键决策和代码 | 按需（每 50-80 轮一次） |
+| **`/clear`** | 切换全新任务时 | 完全清空上下文，从零开始 | 任务切换时 |
+| **`/context`** | 需要了解当前上下文状态时 | 显示上下文使用量和预算 | 按需查询 |
+
+**三角使用策略**：
+1. 先用 `/context` 查看当前消耗
+2. 接近上限但任务未完 → `/compact` 压缩历史
+3. 任务彻底切换 → `/clear` 全新开始
+4. 关键判断：压缩会丢失细节但保留摘要——适合"已完成的阶段不再需要中间细节"的场景
+
+### 六、视觉输入工作流
+
+```
+截图 UI 问题
+  → 拖拽图片到 Claude Code 会话
+  → Claude 读取图片描述 UI 问题
+  → 在代码库中定位对应组件
+  → 实施修改
+  → git diff 验证变更
+```
+
+**适用场景**：UI bug、设计偏离、组件布局问题——用图片代替长篇文字描述，Claude 直接理解"所见"并定位代码。
+
+### 七、GitHub 集成自动化 Code Review 流程
+
+```
+PR 触发 webhook
+  → Claude Code 拉取 PR diff
+  → 派生 3 个 subagent 并行审查：
+      ├── security-reviewer：注入/越权/敏感数据
+      ├── performance-reviewer：N+1查询/内存泄漏/阻塞
+      └── style-reviewer：命名/格式/最佳实践
+  → 各 subagent 返回结构化审查报告
+  → Claude 聚合为统一 PR Review Comment
+  → 自动提交到 PR
+```
+
+**关键配置**：
+- security-reviewer：`tools: Read, Grep`，`model: sonnet`
+- performance-reviewer：`tools: Read, Grep, Bash`，`model: sonnet`
+- style-reviewer：`tools: Read, Grep`，`model: haiku`（廉价）
+
+### 八、学习路径推荐（三阶段）
+
+| 阶段 | 定位 | 推荐课程 | 预计时长 |
+|:---:|------|------|:---:|
+| **新手** | 刚接触 Claude Code | Claude Code 101 → AI Fluency 框架 | 3-6h |
+| **进阶** | 已会基础操作，需系统化 | Claude Code in Action → Agent Skills → Sub-agents | 8-12h |
+| **全栈** | 从 API 建应用，深入生态 | Building with Claude API → MCP 入门+进阶 → 云平台部署 | 15-20h |
+
+**课程入口**：[anthropic.com/learn](https://www.anthropic.com/learn) | 课程平台：Skilljar（独立账号）| 全部免费
+
+> 来源：Anthropic Academy + 官方文档 · R89轮学习 | 2026-06-17
+
+
+## Anthropic官方课程学习同步 (v3.99 · 2026-06-17)
+
+### 多Agent协作流程（新提炼）
+
+1. **任务分解原则**：复杂任务→独立子任务→分配给专职subagent
+2. **Subagent创建流程**：/agents → 选择位置(Library/Personal) → 描述任务 → 生成
+3. **Agent Teams协作**：跨多会话协调，适用于需要多个代理并行通信的场景
+4. **Feature-dev 7阶段工作流**：需求分析→并行探索→架构方案→确认→实现→并行审查→部署
+5. **PR-review 6代理并行**：从CLAUDE.md合规性、Bug检测、历史上下文等维度独立评审
+6. **模型分层策略**：简单任务→Haiku(快速便宜)、复杂推理→Sonnet、重度分析→Opus
+7. **上下文管理**：Claude memory files + /init + auto compaction + 子代理摘要
+8. **插件即用**：/plugin install 一键安装，Plugin = Skills + Hooks + MCP + Commands
+9. **Hook自动化**：用自然语言定义规则，/hookify 自动生成并立即生效
+10. **Slash Commands**：用户主动调用，Skills自动注册为Slash Commands
+
+### 25个官方插件速查
+
+| 分类 | 数量 | 关键插件 |
+|------|:---:|------|
+| LSP语言支持 | 12 | pyright-lsp, typescript-lsp, rust-analyzer-lsp等 |
+| 开发工作流 | 8 | feature-dev, pr-review-toolkit, commit-commands, agent-sdk-dev |
+| 代码质量 | 4 | code-review, security-guidance, code-modernization |
+| 外部合作 | 15 | github, linear, firebase, terraform, playwright |
+
+### Anthropic Academy 18门课程
+
+入门→进阶→全栈三阶段，Claude Code/API/MCP/云平台全覆盖，全部免费含证书
+
+> 来源：Anthropic 全域生态聚合研究 · v3.99 | 2026-06-17 | R100 补充：2026-06-18
+
+### R100 多Agent协作新模式 (2026-06-18)
+
+**1. Conductor-Specialist 任务分发流程**：
+```
+用户需求 → Conductor(Opus) 拆解tickets → [Frontend Agent] [Backend Agent] [QA Agent] → 并行执行 → Merge Agent 合成PR → 人类最终确认
+```
+- Conductor 输出结构化 ticket（非自然语言），格式：`{"ticket_id": "T-001", "module": "auth", "spec": "...", "output_schema": "..."}`
+- Specialist Agent 严格限定目录范围，跨目录操作由 Conductor 协调
+
+**2. 结构化Agent间通信协议**：
+```json
+{"agent_id": "backend", "task_id": "T-003", "status": "blocked", "reason": "Missing API key in .env", "depends_on": ["T-001"]}
+```
+- 禁止自然语言 Agent-to-Agent 通信
+- Shared Blackboard（TASKS.md）作为任务真实源
+
+**3. 三击法则错误升级流程**：
+```
+Agent 修复失败(1) → 重试(2) → 重试(3) → 自动升级到 Conductor → Conductor 分配 Senior Developer Agent 接管
+```
+
+**4. 对抗性审查流程**：
+```
+Coder Agent 产出代码 → Red Team Agent 安全审查 → Security Report → 通过/驳回
+Architect Agent 出方案 → Devil's Advocate Agent 寻找缺陷 → 方案修正 → Conductor 确认
+```
+
+**5. Docker沙盒一次性Agent部署**：
+```bash
+# 每个 Sub-agent 任务：
+docker run --rm -v $(pwd):/workspace:ro agent-image task-runner
+# 任务完成 → 容器自动销毁 → 无残留
+```
+
+**6. Agent可观测性监控指标**：
+| 指标 | 说明 |
+|------|------|
+| Token消耗/Agent | 按 Agent 追踪 Token 分配 |
+| 决策路径追踪 | Agent 为什么选择工具A而非工具B |
+| 3-Strike 触发率 | 监控 Agent 失败模式，优化提示词 |
+| 上下文利用率 | 消耗 vs 有效产出 Token 比 |
+*（内容由AI生成，仅供参考）*

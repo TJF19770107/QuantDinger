@@ -2,6 +2,17 @@
 AIGC:
     Label: "1"
     ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: cf54d54c59baa0ada35a5ecb7c73a584_dd17b3486a3711f1a99c5254007bceed
+    ReservedCode1: 5vUJuj8ME8c3GIJaANs8GbWk1YQ2ECnDU5nIbChl6AFWKgKTNYkt47d3wBN30OK/BTGta+elBlg8HgoasQvLmwIDG1CyAzMl10seTBYVgTBgtJU1yd+LBwPYYzSu55vot2FKWvpIN7D3baDZ7n4DM0sISZoBS5xFZV306DZD+Us1VDPMlHhacmSOzKM=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: cf54d54c59baa0ada35a5ecb7c73a584_dd17b3486a3711f1a99c5254007bceed
+    ReservedCode2: 5vUJuj8ME8c3GIJaANs8GbWk1YQ2ECnDU5nIbChl6AFWKgKTNYkt47d3wBN30OK/BTGta+elBlg8HgoasQvLmwIDG1CyAzMl10seTBYVgTBgtJU1yd+LBwPYYzSu55vot2FKWvpIN7D3baDZ7n4DM0sISZoBS5xFZV306DZD+Us1VDPMlHhacmSOzKM=
+---
+
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
     ProduceID: cf54d54c59baa0ada35a5ecb7c73a584_ff7da1ce67ac11f1a99c5254007bceed
     ReservedCode1: f9qId79uwtWQlTt7A2NH0IDbQxUHzbDi/7ENzJKsjImkgtVx2ThrvbAsNlC9YzXwUZx8oJOXb/8Ykqr90DZn7rzt9JSfn7o/pgxwW92E0D4Jdya139e9Z2GKwXjkVXjkDoCTWsqsEeHGbGVQR9Pc0EstQd2gXUHYNQNOulIP7G+Ai1OxoLa+a00Z3Fo=
     ContentPropagator: 001191440300708461136T1XGW3
@@ -677,3 +688,550 @@ R98判定6大能力"全部闭合"。R99基于7项外部情报重新审视，发�
 > **R99新增知识来源**：同SOUL.md R99节
 > **关联文件**：[SOUL.md](E:\龙虾AI主控中心\我的AI分身\子Agent\豆包Agent\SOUL.md) | [AGENTS.md](E:\龙虾AI主控中心\我的AI分身\子Agent\豆包Agent\AGENTS.md) | [SKILLS.md](E:\龙虾AI主控中心\我的AI分身\子Agent\豆包Agent\SKILLS.md)
 
+
+
+---
+
+## 五、多Agent协调五大模式（Anthropic 2026年4月官方指南）
+
+核心原则：按"需要什么上下文"分解任务，而非按"做什么类型的工作"。
+
+| 模式 | 架构 | 适用场景 | 通信方式 |
+|------|------|---------|---------|
+| Sequential Pipeline | A→B→C链式 | 翻译→润色→排版 | 数据传递 |
+| Parallel Fan-out | 中央→多Worker | 同时分析多文档 | 独立上下文 |
+| Orchestrator-Worker | 主Agent调度子Agent | 复杂代码审查 | 结构化任务 |
+| Agent Debate | 多Agent辩论收敛 | 高风险决策 | 对抗验证 |
+| Swarm Autonomy | 自组织无中央控制 | 大规模并行探索 | 共享黑板 |
+
+决策口诀：Skills打包可复用程序 / MCP连接外部系统 / Subagents专业化并行 / RAG检索密集型
+
+
+---
+
+## R99.7 Anthropic官方课程 v3.96 同步 · 多Agent协作流程扩展（2026-06-17）
+
+> **来源**：Anthropic官方课程390节全集 v3.96（5路搜索+深度抓取，Skilljar不可达） + Subagents完整指南
+> **同步类型**：增量追加 · 多Agent协作流程扩展
+
+---
+
+### Agent Teams 机制
+
+Agent Teams是Claude Code的**实验性多Agent协作机制**（启用：`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`），与标准Subagents并行Task模式有本质差异：
+
+| 特性 | Subagents（并行Task） | Agent Teams |
+|------|------|------|
+| 状态 | 稳定，生产就绪 | 实验性 |
+| 通信拓扑 | 星型：Worker仅向父返回结果 | Mesh：任意Agent可互发消息 |
+| 协调方式 | 父管理所有排序和依赖 | 共享任务列表，Agent自组织协调 |
+| 单Agent配置 | 完整（工具/模型/hooks/记忆/权限均生效） | 最小（仅spawn提示有效，多数配置被忽略） |
+| 成本 | 较低（子代理摘要返回父） | ~3-7倍更高（每个队友持有完整上下文） |
+| 最佳场景 | 聚焦委派、独立并行、上下文隔离 | 并行研究、竞争假设、对等协调 |
+
+**适用条件**：子任务上下文独立、并行处理有益、通信开销可接受。不适用：子任务上下文高度重叠（走单一Agent）、子任务间强依赖（走顺序流水线）。
+
+### Orchestrator-Worker 模式
+
+动态任务分解模式，适用于复杂多变且无法预定义固定步骤的任务：
+
+```
+Orchestrator（主Agent）
+    ├── 接收复杂需求
+    ├── 动态分析 → 拆解为子任务
+    ├── 分配Worker（每个Worker = 独立子代理）
+    ├── Worker返回结果 → Orchestrator综合
+    └── 循环直到需求满足
+```
+
+**与顺序流水线的区别**：Orchestrator-Worker**动态决策**下一步做什么，而非遵循预定义步骤序列。适合代码重构（不确定性高）、跨领域研究（领域边界模糊）、大型多文件改动（文件间动态依赖）。
+
+**设计原则**：
+- Orchestrator应保持轻量（只负责分解和综合，不执行具体工作）
+- Worker应专业化（每个Worker有明确职责和受限工具集）
+- 通信单向（Worker→Orchestrator），减少协调成本
+
+### 子代理四种类型说明
+
+| 类型 | 定义方式 | 加载来源 | 优先级 | 持久性 | 安全限制 |
+|------|------|------|:---:|------|------|
+| **内置（Built-in）** | Claude Code源码内置 | 全局可用 | - | 永久 | Explore(只读Haiku)/Plan(只读)/General-purpose(全工具) |
+| **文件定义（File-based）** | `.claude/agents/*.md` Markdown文件 | 项目目录/用户目录 | 中 | 跨会话 | 遵循frontmatter的tools/permissionMode |
+| **托管（Managed）** | 组织管理员在managed settings目录部署 | 组织统一配置 | 高于项目/用户 | 永久 | 企业级统一管控策略 |
+| **插件（Plugin）** | 插件安装目录的agents子目录 | 插件包 | 最低 | 插件生命周期 | 不支持hooks/mcpServers/permissionMode |
+
+**优先级链**：CLI标志 > Managed Settings > Project(.claude/agents/) > User(~/.claude/agents/) > Plugin
+
+**选择指南**：
+- 团队统一标准→托管（Managed）
+- 项目特定→文件定义（Project级）
+- 个人偏好→文件定义（User级）
+- 临时需求→内置通用子代理
+- 扩展生态→插件
+
+> **关联文件**：[Anthropic官方课程-390节全集.md v3.96](E:\龙虾AI主控中心\我的AI分身\Obsidian知识库\共享知识库\Anthropic官方课程-390节全集.md)
+
+---
+
+## Anthropic官方课程提炼：多Agent协作流程（2026-06-17）
+
+> **来源**：Anthropic Academy Building with Claude API课程 + 官方工程博客 Multi-Agent Research System + Introduction to Subagents课程 + Dynamic Workflows文档
+
+### 1. 多Agent协作模式
+
+Anthropic在Building with the Claude API课程和工程实践中定义了四种核心协作模式：
+
+| 模式 | 示意图 | 适用场景 | 典型案例 |
+|------|-------|---------|---------|
+| **Parallelization（并行）** | Agent A ←┐<br>Agent B ←┼→ 合并<br>Agent C ←┘ | 广度优先查询、独立子任务、多数据源同时检索 | Anthropic Research：3个子代理同时搜索不同数据源 |
+| **Chaining（链式）** | Agent A → Agent B → Agent C | 有依赖关系的步骤、产出物需经多道工序 | 生成草稿→LLM审查→基于审查优化 |
+| **Routing（路由）** | 请求 → 分类器 → Agent A/B/C | 按任务类型分发专家Agent、多类型任务入口 | 代码问题→Code Agent，法律问题→Legal Agent |
+| **Orchestrator-Worker（编排）** | Orchestrator → [W1,W2,W3] → 合成 | 最强大的通用模式、需动态决策的开放式问题 | Anthropic Research核心架构 |
+
+#### 1.1 Parallelization（并行模式）
+
+```
+主Agent
+  ├─→ 子Agent A：搜索数据源1 ──→ 结果A ──┐
+  ├─→ 子Agent B：搜索数据源2 ──→ 结果B ──┼→ 主Agent合并输出
+  └─→ 子Agent C：搜索数据源3 ──→ 结果C ──┘
+```
+
+**优势**：速度、独立上下文窗口（每个子Agent不互相污染）
+**约束**：仅适用于无依赖的独立子任务
+
+#### 1.2 Chaining（链式模式）
+
+```
+输入 → Agent A（生成） → Agent B（审查） → Agent C（优化） → 输出
+```
+
+**优势**：每一步质量可控、中间结果可审查
+**约束**：延迟叠加、错误会链式传播
+
+#### 1.3 Routing（路由模式）
+
+```
+用户请求 → Router（分类Agent）→ 分发
+                ├─→ Code Agent（代码相关）
+                ├─→ Research Agent（研究相关）
+                └─→ UI Agent（界面相关）
+```
+
+**优势**：专业化处理、降低单一Agent复杂度
+**约束**：Router分类准确性是天花板
+
+#### 1.4 Orchestrator-Worker（编排模式）
+
+```
+Orchestrator
+  ├─ 分析意图 → 制定策略 → 写入Memory
+  ├─ 创建Worker A → 独立搜索 → 返回发现
+  ├─ 创建Worker B → 独立搜索 → 返回发现
+  ├─ 合成结果 → 评估是否继续
+  │     ├─ 继续 → 创建新一轮Worker
+  │     └─ 完成 → 输出最终答案
+  └─ CitationAgent验证引用
+```
+
+**优势**：动态决策、上下文隔离、最大灵活性
+**约束**：Token消耗高（约15× chat）、编排复杂度高
+
+### 2. 任务拆解矩阵
+
+按任务类型推荐Agent数和协作模式：
+
+| 任务类型 | 复杂度 | 推荐Agent数 | 协作模式 | Token预估（vs Chat） | 示例 |
+|---------|--------|------------|---------|---------------------|------|
+| 简单查询 | 低 | 1 | 单Agent | 1× | "这段代码是什么意思" |
+| 多源信息检索 | 中 | 2-3 | Parallelization | 3-5× | "对比AWS和GCP的Claude定价" |
+| 多步骤分析 | 中 | 2-3 | Chaining | 3-5× | "分析这份报告的质量并优化" |
+| 广度优先研究 | 高 | 3-8 | Orchestrator-Worker | 8-15× | 深度研究某主题 |
+| 跨领域复杂任务 | 极高 | 5-15 | Orchestrator-Worker + Routing | 15-30× | 全栈应用架构设计+实现 |
+| 超大规模审计 | 极高 | 10-100 | Dynamic Workflows | 30-100× | 500文件代码库安全审计 |
+
+### 3. 协作流程SOP
+
+#### 标准多Agent协作流程
+
+```
+Step 1: 意图分析
+   │   Orchestrator分析用户意图，判断任务复杂度
+   │   输出：任务类型、复杂度评估、是否需要多Agent
+   │
+Step 2: 拆解为子目标
+   │   将任务分解为独立可执行的子目标
+   │   输出：子目标列表、依赖关系图、并行/串行判断
+   │
+Step 3: 匹配Agent类型
+   │   按子目标特性选择Agent类型和模型
+   │   - 只读探索 → Explore Agent (Haiku)
+   │   - 研究深度 → 自定义 Research Agent (Sonnet)
+   │   - 代码操作 → General-purpose Agent (Sonnet)
+   │   输出：Agent配置清单（类型、工具权限、输出格式）
+   │
+Step 4: 并行/串行调度
+   │   无依赖子目标 → 并行派发
+   │   有依赖子目标 → 按依赖顺序串行
+   │   输出：执行计划时序
+   │
+Step 5: 结果融合
+   │   收集所有子Agent返回的结构化结果
+   │   交叉验证、去重、冲突解决
+   │   输出：融合后的综合结果
+   │
+Step 6: 验证输出
+   │   Citation验证、事实核对、一致性检查
+   │   输出：最终答案（含引用）
+```
+
+### 4. Agent间通信协议
+
+#### 4.1 结构化JSON输出格式规范
+
+所有子Agent必须返回统一的结构化JSON：
+
+```json
+{
+  "task_id": "unique-task-identifier",
+  "status": "success | partial_success | failure",
+  "summary": "一句话总结结果",
+  "findings": [
+    {
+      "source": "数据来源",
+      "content": "发现内容",
+      "confidence": "high | medium | low",
+      "citations": ["引用1", "引用2"]
+    }
+  ],
+  "blockers": [
+    {
+      "type": "access_denied | timeout | not_found | ...",
+      "description": "阻塞描述",
+      "suggested_alternative": "建议替代方案"
+    }
+  ],
+  "token_usage": {
+    "input": 12345,
+    "output": 678,
+    "total": 13023
+  }
+}
+```
+
+#### 4.2 状态传递约定
+
+| 状态 | 含义 | 主Agent处理方式 |
+|------|------|---------------|
+| `success` | 完全完成任务 | 结果直接纳入合成 |
+| `partial_success` | 部分完成（有缺失） | 评估缺失部分是否需要重试或换方向 |
+| `failure` | 完全失败 | 分析blocker，决定是否换Agent/换策略 |
+| `needs_clarification` | 需要上级澄清 | 向上级Agent或用户提问 |
+
+#### 4.3 失败回退策略
+
+```
+子Agent失败
+    │
+    ├─ 分析失败原因（blocker类型）
+    │
+    ├─ 可重试（timeout/rate_limit）→ 同Agent重试（最多2次）
+    │
+    ├─ 参数问题 → 调整参数重新派发
+    │
+    ├─ 工具缺失 → 换用有正确工具的Agent
+    │
+    └─ 无法解决 → 标记为 blocked，由Orchestrator决策
+        ├─ 降级处理（跳过该子任务）
+        ├─ 人工介入（ask_user）
+        └─ 报告部分结果
+```
+
+**重试上限**：同一子Agent同一任务最多重试2次，超出后必须降级或报告失败。
+
+---
+
+> **关联文件**：[Anthropic官方课程-18门全集.md](E:\龙虾AI主控中心\我的AI分身\Obsidian知识库\共享知识库\Anthropic官方课程-18门全集.md)
+
+
+## Anthropic官方课程学习同步 (v3.99 · 2026-06-17)
+
+### 多Agent协作流程（新提炼）
+
+1. **任务分解原则**：复杂任务→独立子任务→分配给专职subagent
+2. **Subagent创建流程**：/agents → 选择位置(Library/Personal) → 描述任务 → 生成
+3. **Agent Teams协作**：跨多会话协调，适用于需要多个代理并行通信的场景
+4. **Feature-dev 7阶段工作流**：需求分析→并行探索→架构方案→确认→实现→并行审查→部署
+5. **PR-review 6代理并行**：从CLAUDE.md合规性、Bug检测、历史上下文等维度独立评审
+6. **模型分层策略**：简单任务→Haiku(快速便宜)、复杂推理→Sonnet、重度分析→Opus
+7. **上下文管理**：Claude memory files + /init + auto compaction + 子代理摘要
+8. **插件即用**：/plugin install 一键安装，Plugin = Skills + Hooks + MCP + Commands
+9. **Hook自动化**：用自然语言定义规则，/hookify 自动生成并立即生效
+10. **Slash Commands**：用户主动调用，Skills自动注册为Slash Commands
+
+### 25个官方插件速查
+
+| 分类 | 数量 | 关键插件 |
+|------|:---:|------|
+| LSP语言支持 | 12 | pyright-lsp, typescript-lsp, rust-analyzer-lsp等 |
+| 开发工作流 | 8 | feature-dev, pr-review-toolkit, commit-commands, agent-sdk-dev |
+| 代码质量 | 4 | code-review, security-guidance, code-modernization |
+| 外部合作 | 15 | github, linear, firebase, terraform, playwright |
+
+### Anthropic Academy 18门课程
+
+入门→进阶→全栈三阶段，Claude Code/API/MCP/云平台全覆盖，全部免费含证书
+
+> 来源：Anthropic 全域生态聚合研究 · v3.99 | 2026-06-17
+*（内容由AI生成，仅供参考）*
+
+---
+
+## R55 同步：Agent Teams 架构与协作协议（2026-06-17）
+
+### 1. Leader-Teammate 架构
+
+Agent Teams 采用**一个Leader + 多个Teammate**架构：
+
+```
+Leader会话（主控）
+  ├── 创建共享任务列表
+  ├── 分配任务 + 协调Teammate
+  ├── 综合各方结果
+  └── 直接与用户交互
+
+Teammate会话（独立上下文窗口）
+  ├── 各自独立运行，完整Claude Code会话
+  ├── 可与其他Teammate直接通信
+  ├── 自协调任务认领（文件锁竞争机制）
+  └── 用户可直接干预任意Teammate
+```
+
+**推荐角色划分**：
+```bash
+# 示例：UX + 架构 + 反对派 三角色探索
+"I'm designing a CLI tool for TODO comment tracking. 
+Spawn three teammates: one on UX, one on technical architecture, 
+one playing devil's advocate."
+```
+
+#### 1.1 启用方式
+```json
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  }
+}
+```
+
+#### 1.2 显示模式
+| 模式 | 说明 | 配置 |
+|------|------|------|
+| **In-process** | 所有Teammate在主终端内，Shift+Down切换 | `"teammateMode": "in-process"` |
+| **Split panes** | 每个Teammate独立窗格，同时可见 | 需要tmux或iTerm2 |
+
+#### 1.3 Plan审批流程（可选）
+```bash
+"Spawn an architect teammate to refactor auth module. 
+Require plan approval before they make any changes."
+```
+- Teammate在只读Plan模式中制定方案
+- 提交审批请求给Leader
+- Leader审查 → 批准/拒绝（含反馈）
+- 批准后Teammate退出Plan模式开始实施
+
+### 2. 并行任务拆分策略
+
+```
+任务分析 → 判断依赖关系 → 选择协作模式
+                              │
+            ┌─────────────────┼─────────────────┐
+            ▼                                    ▼
+   子任务间无依赖                           子任务间有顺序依赖
+            │                                    │
+   Agent Teams（并行）                     单会话或子代理（串行）
+```
+
+#### 2.1 并行条件判断
+
+| 条件 | 模式选择 |
+|------|---------|
+| 任务可独立探索、互不阻塞 | Agent Teams |
+| 各角色可同时工作不等待 | Agent Teams |
+| 需要跨角色讨论和挑战 | Agent Teams |
+| 有明确数据依赖（A→B→C） | 单会话或子代理串行 |
+| 同一文件的并发修改 | 单会话（避免冲突） |
+
+#### 2.2 典型并行场景
+
+| 场景 | 拆分方式 | 适用模式 |
+|------|---------|:---:|
+| 研究审查 | 多维度同时调查，互相挑战发现 | Teams |
+| 新模块开发 | 各Teammate负责独立模块/层 | Teams |
+| 竞争假设调试 | 并行测试不同理论 | Teams |
+| 跨层协调 | 前端+后端+测试 各一Teammate | Teams |
+| 文档多平台生成 | iOS/macOS/Android/Web 并行 | Subagents |
+
+### 3. 跨Agent通信协议
+
+#### 3.1 共享任务列表（Shared Task List）
+
+```
+Task States:
+  [pending] ──→ [in_progress] ──→ [completed]
+                   ↑
+            (任务依赖：依赖未完成不可认领)
+```
+
+- Leader创建任务，可显式分配或Teammate自认领
+- **文件锁竞争**：多Teammate同时认领同一任务时以文件锁保护
+- 任务可设置依赖关系，被依赖任务未完成前不可认领
+
+#### 3.2 Teammate间直接通信
+
+与Subagents（仅能向主代理汇报）不同，Agent Teams的Teammate可**直接互相发消息**：
+- In-process模式：Shift+Down 循环切换，直接输入发送
+- Split-pane模式：点击窗格直接交互
+
+#### 3.3 关闭Teammate
+
+```bash
+"Ask the researcher teammate to shut down"
+```
+- Leader发送关闭请求
+- Teammate可批准（优雅退出）或拒绝（附原因）
+- 会话结束时共享目录自动清理
+
+### 4. 模板化Spec
+
+每个子代理/Teammate任务必须包含标准Spec：
+
+```yaml
+Task Spec Template:
+  输入字段:
+    - task_name: string      # 任务名称
+    - context: object        # 上下文数据
+    - constraints: object    # 约束条件（字数/格式/时间）
+  输出格式:
+    - result: object         # JSON结构化结果
+    - summary: string        # 人类可读摘要
+  失败返回:
+    - error: string          # 错误描述
+    - retry_count: int       # 已重试次数
+  超时策略:
+    - timeout_seconds: 60    # 默认60秒
+    - max_retries: 3         # 最多3次重试
+    - fallback: string       # 降级策略
+```
+
+**Spec验证清单**：
+- [ ] 输入字段是否完整定义？
+- [ ] 输出格式是否明确（JSON schema）？
+- [ ] 错误返回是否包含"error"字段？
+- [ ] 超时+重试策略是否设定？
+- [ ] 降级策略是否定义？
+
+### 5. 子代理 vs Agent Teams 决策矩阵
+
+| 维度 | Subagents | Agent Teams |
+|------|-----------|-------------|
+| **上下文** | 独立窗口，结果返回调用者 | 独立窗口，完全独立 |
+| **通信** | 仅向主代理汇报 | Teammate间直接通信 |
+| **协调** | 主代理管理所有工作 | 共享任务列表+自协调 |
+| **最佳场景** | 聚焦任务，只关心结果 | 需要讨论和协作的复杂工作 |
+| **Token成本** | 较低（结果摘要返回） | 较高（每个Teammate独立实例） |
+| **用户干预** | 通过主代理间接 | 可直接与任意Teammate交互 |
+| **并行** | 多个子代理可同时运行 | 多个Teammate可同时运行 |
+| **文件竞争** | 无（子代理间不共享状态） | 文件锁保护共享任务列表 |
+| **Plan审批** | 不支持 | 支持（require plan approval） |
+| **启用** | 始终可用 | 需 `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` |
+
+**决策流程**：
+```
+任务是否需要多Agent间讨论？
+  ├── 是 → Agent Teams（ENABLE experimental flag）
+  └── 否 → 任务量大需要隔离上下文？
+            ├── 是 → Subagents
+            └── 否 → 单会话处理
+```
+
+> 来源：Anthropic Agent Teams docs + Subagents docs | R55 同步 | 2026-06-17
+*（内容由AI生成，仅供参考）*
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: d40a9798a1a71208249271b18743182d
+    ReservedCode1: 5d261b476feaa6cdc88d7eb9a0d1d7db5b3b8c6c1ba100d1155a775e85d6563a==
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: d40a9798a1a71208249271b18743182d
+    ReservedCode2: 5d261b476feaa6cdc88d7eb9a0d1d7db5b3b8c6c1ba100d1155a775e85d6563a==
+---
+
+
+# USER.md — 多Agent协作流程增量（R98）
+
+> **版本**：v2.25(R98迭代) | **更新日期**：2026-06-18 (R98更新 · 编排器-子Agent模式操作指南 + 模型分层调度 + 对抗验证质量保障)
+> **来源**：Anthropic多Agent生产级编排模式 + 10步组建Agent团队指南 + Dynamic Workflows对抗验证
+
+---
+
+## R98新增：多Agent协作深化
+
+### 一、编排器-子Agent模式操作指南
+
+**四大生产级模式选用决策矩阵**：
+
+| 条件 | 推荐模式 | 说明 |
+|------|---------|------|
+| 子任务完全独立、共享截止时间 | **Parallel Fan-Out** | N路并行，受最慢节点限制 |
+| 需要Reviewer与Producer不同视角 | **Sequential Review Chains** | 串行质量门 |
+| 证据模糊、需要多种解读 | **Adversarial Dual-Analysis** | 双路并行→综合 |
+| 任务可分解为规划→执行→整合 | **Hierarchical Planner-Executor** | 三层架构 |
+
+**五模式演进路径**（按复杂度递增）：
+1. Generator-Verifier → 最简单，生产部署最多
+2. Orchestrator-Subagent → **推荐起点**，覆盖最广泛问题类型
+3. Agent Teams → Worker持久化，长时间运行子任务
+4. Message Bus → 共享通信层
+5. Shared State → 去中心化终极形态
+
+**操作原则**：
+- 从Orchestrator-Subagent开始，观察它在哪里挣扎，再演进
+- 更少更精准的专家胜过许多模糊的专家（角色重叠即合并）
+- 每个子Agent严格限定工具集
+- 多Agent系统Token消耗约为单Agent的15倍，成本意识前置
+
+### 二、模型分层调度策略
+
+**核心洞察**：团队中每个Agent可以运行不同模型——这是影响成本和速度的最大杠杆。
+
+| 角色 | 推荐模型 | 理由 |
+|------|---------|------|
+| **协调员(Orchestrator)** | Haiku | 仅路由和排序，快速廉价模型即可 |
+| **简单执行者** | Sonnet | 常规任务，性价比最优 |
+| **复杂专家** | Opus | 困难子任务路由给最强模型 |
+| **对抗验证者** | Opus | 需要强推理能力证伪 |
+
+**成本优化案例**：Every公司Spiral生产模式——Haiku协调员+Opus写作子Agent，仅在需要处使用昂贵模型。
+
+### 三、对抗验证质量保障
+
+Dynamic Workflows的对抗验证机制提供了质量保障新范式：
+
+**三段对抗验证流程**：
+1. **多角度覆盖**：多个Agent从独立角度处理问题
+2. **对抗证伪**：独立Agent尝试推翻其他Agent的结论
+3. **收敛判定**：迭代直至答案收敛，产出单次通过无法达到的结果
+
+**对抗验证适用条件**：
+- 错误成本高（如代码审查、安全审计）
+- 问题有多种合理解读
+- 单Agent输出不可靠（需要交叉验证）
+
+**龙虾AI体系应用**：
+- 关键任务启用对抗验证：主Agent拆解→并行子Agent→对抗Agent证伪→收敛
+- 对应协议#128（多Agent对抗验证协议v1.0）
+- 对抗Agent与执行Agent使用不同模型，确保独立视角
+
+> **END USER v2.25_R98** | 2026-06-18

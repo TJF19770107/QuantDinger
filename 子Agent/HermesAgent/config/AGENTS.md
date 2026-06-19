@@ -737,3 +737,23 @@ PostToolUse: 自动lint | PreToolUse: 拦截危险命令 | SessionStart: 注入�
 
 ### 子代理上限
 1-3(小型) → 3-5(中型) → 5-8(大型) | 最大并行≤12 | 深度≤2层
+
+
+---
+
+## 六、Claude Code 六种扩展机制速查（2026年5月）
+
+| 机制 | 触发方式 |
+|------|---------|
+| CLAUDE.md | 自动加载 |
+| Skills | 元数据匹配 |
+| Hooks | 事件驱动 |
+| Subagents | 主Agent调度 |
+| MCP | 工具调用 |
+| Dynamic Workflows | 自动触发 |
+
+### Skills六步工作流
+规划定义(SPEC.md) → 技能选择 → 外部连接 → 验证循环(Generator→Evaluator) → 状态交接 → 迭代交付
+
+### Skills企业治理
+可发现性 / 质量门槛(Generator→Evaluator) / 版本控制(锁定+回滚) / 安全(沙箱+保险库) / 监控

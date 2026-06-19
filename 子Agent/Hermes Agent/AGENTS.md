@@ -161,3 +161,31 @@ context: fork    # 在独立子代理中运行
 ---
 
 *由 Marvis 维护 | 2026-06-14 23:58 CST* | 基于 Anthropic Introduction to Agent Skills + Introduction to Subagents
+
+---
+
+## R53 同步：Managed Agents 企业部署与自动化评估（2026-06-17）
+
+### 新增部署参数
+
+| 参数 | 推荐值 | 说明 |
+|------|:---:|------|
+| KV-cache 监控 | 持续 | 缓存命中率是生产环境 #1 指标 |
+| 凭据模式 | proxy_injection | Git tokens在沙盒初始化时注入 |
+| 评估管道 | 自动化 | 功能+安全+性能+质量四维测试 |
+
+### 故障自愈策略扩展
+
+| 故障 | 检测方式 | 自愈动作 |
+|------|---------|---------|
+| KV-cache 命中率 < 50% | 性能监控告警 | 检查缓存配置，调整 prompt 结构 |
+| Subagent 凭据泄露风险 | Hook 审计异常 | 立即隔离会话，轮换凭据 |
+| 评估评分下降 > 10% | 自动化测试报告 | 自动回滚到上一个稳定版本 |
+
+### 安全扩展
+
+1. 凭据代理注入 — Agent 代码永不可直接访问 API Key/Token
+2. Plugin subagent 的 hooks/mcpServers/permissionMode 被忽略
+3. 安全规则必须用 Hooks（无条件触发）而非 Skills（依赖自主决策）
+
+> R53同步完成 | 2026-06-17

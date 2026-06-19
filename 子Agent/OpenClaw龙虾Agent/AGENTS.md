@@ -1,3 +1,14 @@
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: cf54d54c59baa0ada35a5ecb7c73a584_e3404a586a3711f1a99c5254007bceed
+    ReservedCode1: 5SpAE2oSqenwhdrV1FLNog/0HJucpaZf4UZG81gtDwCfE6KGo+gjDuVAgDjICqh2m1+W5rnol/9lI6OOG38hypEOPO8TqRTGyNL+HkbErmDsiExoywunGWEx719pmll2xef2RFj4TYNAkId8LfpYTEwkq5UP7gLtLDVK+9zzh3D+YmqaUvPZVKb1Eyg=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: cf54d54c59baa0ada35a5ecb7c73a584_e3404a586a3711f1a99c5254007bceed
+    ReservedCode2: 5SpAE2oSqenwhdrV1FLNog/0HJucpaZf4UZG81gtDwCfE6KGo+gjDuVAgDjICqh2m1+W5rnol/9lI6OOG38hypEOPO8TqRTGyNL+HkbErmDsiExoywunGWEx719pmll2xef2RFj4TYNAkId8LfpYTEwkq5UP7gLtLDVK+9zzh3D+YmqaUvPZVKb1Eyg=
+---
+
 # AGENTS.md — 子代理管理与自动化配置
 
 > 基于 Anthropic 官方课程（Agent Skills + Subagents） | 版本 v1.1 | 2026-06-14
@@ -161,3 +172,97 @@ context: fork    # 在独立子代理中运行
 ---
 
 *由 Marvis 维护 | 2026-06-14 23:58 CST* | 基于 Anthropic Introduction to Agent Skills + Introduction to Subagents
+
+---
+
+## Claude Code 六种扩展机制速查（2026年5月）
+
+| 机制 | 用途 | 触发方式 |
+|------|------|---------|
+| CLAUDE.md | 持久化上下文 | 自动加载 |
+| Skills | 可复用程序化知识 | 元数据匹配 |
+| Hooks | 事件触发处理器 | 事件驱动 |
+| Subagents | 独立上下文委派 | 主Agent调度 |
+| MCP | 外部工具连接 | 工具调用 |
+| Dynamic Workflows | 大规模并行拆分 | 自动触发 |
+
+### Skills六步工作流
+规划定义(SPEC.md) → 技能选择 → 外部连接 → 验证循环(Generator→Evaluator) → 状态交接 → 迭代交付
+
+### Skills企业治理
+可发现性 / 质量门槛(Generator→Evaluator循环) / 版本控制(锁定+回滚) / 安全(沙箱+保险库) / 监控(指标+重评)
+
+
+## Anthropic官方课程学习同步 (v3.99 · 2026-06-17)
+
+### 子代理管理与自动化配置（新提炼）
+
+1. **子代理定义规范**：带YAML frontmatter的Markdown文件，包含name/description/model/tools/skills字段
+2. **子代理位置策略**：Personal(~/.claude/agents/) 全局可用，Project(项目内) 项目专属
+3. **子代理调度规则**：Claude根据描述自动匹配任务到最合适的子代理
+4. **工具访问控制**：按需授予最小工具集，避免过度授权
+5. **输出格式约束**：结构化输出 + 障碍报告 + 置信度评分
+6. **分叉子代理**：基于现有子代理创建变体，复用配置
+7. **插件子代理**：插件可定义专用子代理(如code-reviewer、code-architect、code-explorer)
+8. **Agent Teams配置**：跨多会话协调，每个会话独立上下文
+9. **MCP工具集成**：execute(name, input)→string 通用接口，N+M替代N×M集成
+10. **自动化触发**：Hooks在SessionStart/PreToolUse/PostToolUse自动注入 + Skills基于上下文自动匹配
+
+### Plugin JSON 完整规范
+
+```json
+{
+  "name": "my-plugin",
+  "description": "A description of what this plugin does",
+  "author": {"name": "Your Name", "email": "you@example.com"}
+}
+```
+
+### Hook 系统四大节点
+- PreToolUse：安全检查、审计日志
+- PostToolUse：代码检查(tsc/ESLint)、测试运行
+- SessionStart：加载上下文、检查环境
+- SessionEnd：清理、总结
+
+### 5个关键内置Subagent：Explore(Haiku/只读)、Plan(只读/计划)、General-purpose(全权限)、statusline-setup、claude-code-guide
+
+> 来源：Anthropic 全域生态聚合研究 · v3.99 | 2026-06-17
+
+---
+
+## R53 同步：Subagents 企业部署与评估自动化（2026-06-17）
+
+### Managed Agents 三层部署参数
+
+| 参数 | 推荐值 | 说明 |
+|------|:---:|------|
+| maxTurns | 15-30 | 子代理最大轮数 |
+| model | inherit | 继承主对话模型 |
+| permissionMode | acceptEdits | 子代理始终以此模式运行 |
+| background | true | 长时间任务后台运行 |
+| KV-cache 监控 | 持续 | 命中率是生产 #1 指标 |
+
+### 生产环境 Hook 扩展
+
+- PreToolUse: Bash 命令审计 + 危险命令拦截(rm -rf)
+- PreToolUse: Write/Edit 路径验证(生产路径保护)
+- PostToolUse: tsc --noEmit + ESLint + 关联测试运行
+- SessionStart: git pull + npm ci + 环境变量验证
+- SessionEnd: 会话摘要 + 临时文件清理
+
+### Agent 评估自动化管道
+
+```
+Subagent更新 → 功能测试(≥95%) + 安全测试(100%) + 性能测试(p95) + 质量测试 → 评分报告 → 部署/回滚
+```
+
+### 安全管理五原则
+
+1. 凭据代理注入 — Agent代码不直接持有API Key
+2. 工具白名单 + 黑名单双重约束
+3. Plugin subagent 忽略 hooks/mcpServers/permissionMode
+4. 追加式不可变事件日志 — 完整审计链
+5. 安全规则用Hooks(无条件触发)而非Skills
+
+> R53同步完成 | Anthropic Managed Agents + Enterprise Deployment | 2026-06-17
+*（内容由AI生成，仅供参考）*

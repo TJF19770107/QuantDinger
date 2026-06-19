@@ -1,3 +1,14 @@
+---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: cf54d54c59baa0ada35a5ecb7c73a584_e18b82f16a3711f1a99c5254007bceed
+    ReservedCode1: /82/6naOgRRtDD097MoqFi7DhTLmsmXDMQaK3Lz402Lou2KEo5WZBxMPm0yMMs62HT2LlhRqrP3TZSJ56vuQrgAPnuBj0yaumStUTX4GzGuTqLcH7Paowu05sBBILn/t/7SdmKoEChiNpy57G2Xvc4SMmPbCQAuMdSILJyjV6dIwX8x+RwQxHu8u6VE=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: cf54d54c59baa0ada35a5ecb7c73a584_e18b82f16a3711f1a99c5254007bceed
+    ReservedCode2: /82/6naOgRRtDD097MoqFi7DhTLmsmXDMQaK3Lz402Lou2KEo5WZBxMPm0yMMs62HT2LlhRqrP3TZSJ56vuQrgAPnuBj0yaumStUTX4GzGuTqLcH7Paowu05sBBILn/t/7SdmKoEChiNpy57G2Xvc4SMmPbCQAuMdSILJyjV6dIwX8x+RwQxHu8u6VE=
+---
+
 # SOUL.md — AI Agent 设计原则
 
 > 基于 Anthropic 官方课程提炼 | 版本 v1.0 | 2026-06-14
@@ -95,3 +106,65 @@
 ---
 
 *由 Marvis 基于 Anthropic 官方课程（Introduction to Agent Skills + Introduction to Subagents）整理 | 2026-06-14 23:58 CST*
+
+---
+
+## Agentic 模式选择六维度决策矩阵（Anthropic 2026年4月）
+
+### 上下文中心分解
+按"每个Agent需要什么上下文"来分解任务。子任务上下文重叠→单一Agent；上下文隔离→多Agent。
+
+| 决策因素 | 单一Agent | 多Agent |
+|---------|----------|---------|
+| 子任务所需上下文高度重叠 | ✅ | ❌ |
+| 子任务间存在强依赖 | ✅ | ❌ |
+| 子任务有独立的上下文边界 | ❌ | ✅ |
+| 子任务需要并行处理 | ❌ | ✅ |
+
+### 六大Agentic模式选择指南
+
+| 模式 | 最佳场景 | 复杂度 |
+|------|---------|:---:|
+| Prompt Chaining | 线性工作流 | 低 |
+| Routing | 多类型请求分发 | 低 |
+| Parallelization | 独立并发任务 | 中 |
+| Orchestrator-Workers | 复杂多变任务 | 高 |
+| Evaluator-Optimizer | 质量敏感任务 | 高 |
+| Agent Teams | 长周期开放域 | 最高 |
+
+### Generator→Evaluator 验证循环
+生成步骤配对独立评估器，评估器独立推导检查条件（不与生成器共享上下文），通过阈值→继续，未通过→修复或人工介入。
+
+
+## Anthropic官方课程学习同步 (v3.99 · 2026-06-17)
+
+### AI Agent设计原则（新提炼）
+
+1. **三层解耦架构**：Session(事件日志) / Brain(无状态推理) / Hands(沙盒执行) — 从"宠物服务器"到"牛群服务器"范式转换
+2. **稳定接口优先**：execute(name, input) → string 比任何特定prompt工程更持久
+3. **凭据永不入沙盒**：代理模式注入，agent代码永远不可访问tokens
+4. **Event Sourcing**：完整事件日志保留，可逆性优于滑动窗口/摘要压缩
+5. **Subagent职责单一**：每个子代理专注特定领域，描述清晰，工具访问受限
+6. **OS设计隐喻**：进程=Agent Session、系统调用=execute()、VFS=getEvents()
+7. **Skills自动触发**：模型基于任务上下文自动匹配并注入专业指令
+8. **Hook生命周期注入**：SessionStart/PreToolUse/PostToolUse等关键节点
+9. **Agent Teams跨会话协调**：subagents单会话工作，agent teams跨多会话
+10. **KV-cache命中率优先**：生产成本的核心指标，缓存vs非缓存成本差10倍
+
+### 25个官方插件生态拓扑
+
+- LSP语言支持(12)：覆盖主流编程语言
+- 开发工作流(8)：feature-dev(7阶段)、pr-review-toolkit(6代理并行)、code-review(4代理打分)
+- 代码质量(4)：code-modernization、code-review、code-simplifier、security-guidance
+- 外部合作伙伴(15)：GitHub、Firebase、Linear、Terraform、Playwright等
+
+### Claude Code五件套架构
+
+Plugins(容器) → MCP(连接器) + Skills(人设卡) + Hooks(自动化钩子) + Slash Commands(快捷指令)
+
+### Managed Agents性能
+
+p50 TTFT降60%，p95 TTFT降>90%，验证10000并发Agent管理，MCP 97M+月下载/10000+活跃服务器
+
+> 来源：Anthropic 全域生态聚合研究 · v3.99 | 2026-06-17
+*（内容由AI生成，仅供参考）*
